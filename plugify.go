@@ -79,7 +79,7 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	C.Plugify_SetDeleteVectorDataCStr(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetPluginHandle(unsafe.Pointer(handle))
 	
-	plugify.Id = C.Plugify_GetPluginId()
+	plugify.Id = int64(C.Plugify_GetPluginId())
 	plugify.Name = C.GoString(C.Plugify_GetPluginName())
 	plugify.FullName = C.GoString(C.Plugify_GetPluginFullName())
 	plugify.Description = C.GoString(C.Plugify_GetPluginDescription())
@@ -124,7 +124,7 @@ func (p *Plugify) FindResource(path string) string {
     C_output := C.Plugify_FindPluginResource(C_path)
 	output := C.GoString(C_output)
 	C.Plugify_DeleteCStr(C_output)
-	C.free(C_path)
+	C.free(unsafe.Pointer(C_path))
     return output
 }
 

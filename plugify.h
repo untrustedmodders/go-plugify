@@ -40,7 +40,7 @@ const char* Plugify_GetPluginVersion();
 const char* Plugify_GetPluginAuthor();
 const char* Plugify_GetPluginWebsite();
 const char* Plugify_GetPluginBaseDir(); // Plugify_DeleteCStr
-const char** Plugify_GetPluginDependencies(); // Plugify_DeleteVectorDataCStr
+void* Plugify_GetPluginDependencies(); // Plugify_DeleteVectorDataCStr
 ptrdiff_t Plugify_GetPluginDependenciesSize();
 const char* Plugify_FindPluginResource(const char* path); // Plugify_DeleteCStr
 void Plugify_DeleteCStr(const char* path);

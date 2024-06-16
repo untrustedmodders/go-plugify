@@ -14,7 +14,7 @@ typedef const char* (*GetPluginVersionFunc)(void*);
 typedef const char* (*GetPluginAuthorFunc)(void*);
 typedef const char* (*GetPluginWebsiteFunc)(void*);
 typedef const char* (*GetPluginBaseDirFunc)(void*);
-typedef const char** (*GetPluginDependenciesFunc)(void*);
+typedef void* (*GetPluginDependenciesFunc)(void*);
 typedef ptrdiff_t (*GetPluginDependenciesSizeFunc)(void*);
 typedef const char* (*FindPluginResourceFunc)(void*, const char*);
 typedef void (*DeleteCStrFunc)(const char*);
@@ -115,7 +115,7 @@ const char* Plugify_GetPluginWebsite() {
 const char* Plugify_GetPluginBaseDir() {
 	return getPluginBaseDir(pluginHandle);
 }
-const char** Plugify_GetPluginDependencies() {
+void* Plugify_GetPluginDependencies() {
 	return getPluginDependencies(pluginHandle);
 }
 ptrdiff_t Plugify_GetPluginDependenciesSize() {
