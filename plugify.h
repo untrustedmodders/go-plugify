@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,6 +29,8 @@ enum DataType {
 };
 
 void* Plugify_GetMethodPtr(const char* methodName);
+bool Plugify_IsModuleLoaded(const char* moduleName, int requiredVersion = INT_MAX, bool minimum = false);
+bool Plugify_IsPluginLoaded(const char* pluginName, int requiredVersion = INT_MAX, bool minimum = false);
 
 void Plugify_SetPluginHandle(void* handle);
 ptrdiff_t Plugify_GetPluginId();
@@ -37,9 +40,10 @@ const char* Plugify_GetPluginDescription();
 const char* Plugify_GetPluginVersion();
 const char* Plugify_GetPluginAuthor();
 const char* Plugify_GetPluginWebsite();
-const char** Plugify_GetPluginDependencies();
+const char* Plugify_GetPluginBaseDir(); // Plugify_DeleteCStr
+const char** Plugify_GetPluginDependencies(); // Plugify_DeleteVectorDataCStr
 ptrdiff_t Plugify_GetPluginDependenciesSize();
-const char* Plugify_FindPluginResource(const char* path);
+const char* Plugify_FindPluginResource(const char* path); // Plugify_DeleteCStr
 void Plugify_DeleteCStr(const char* path);
 
 void* Plugify_AllocateString();
@@ -53,7 +57,7 @@ void Plugify_DeleteString(void* ptr);
 void* Plugify_CreateVector(void* arr, ptrdiff_t len, enum DataType type);
 void* Plugify_AllocateVector(enum DataType type);
 ptrdiff_t Plugify_GetVectorSize(void* ptr, enum DataType type);
-void* Plugify_GetVectorData(void* ptr, enum DataType type);
+void* Plugify_GetVectorData(void* ptr, enum DataType type); // Plugify_DeleteVectorDataCStr for STRING / Plugify_DeleteVectorDataBool for BOOL
 void Plugify_AssignVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type);
 void Plugify_DeleteVector(void* ptr, enum DataType type);
 void Plugify_FreeVector(void* ptr, enum DataType type);
@@ -62,6 +66,8 @@ void Plugify_DeleteVectorDataBool(void* ptr);
 void Plugify_DeleteVectorDataCStr(void* ptr);
 
 void Plugify_SetGetMethodPtr(void* func);
+void Plugify_SetIsModuleLoaded(void* func);
+void Plugify_SetIsPluginLoaded(void* func);
 void Plugify_SetGetPluginId(void* func);
 void Plugify_SetGetPluginName(void* func);
 void Plugify_SetGetPluginFullName(void* func);
@@ -69,6 +75,7 @@ void Plugify_SetGetPluginDescription(void* func);
 void Plugify_SetGetPluginVersion(void* func);
 void Plugify_SetGetPluginAuthor(void* func);
 void Plugify_SetGetPluginWebsite(void* func);
+void Plugify_SetGetPluginBaseDir(void* func);
 void Plugify_SetGetPluginDependencies(void* func);
 void Plugify_SetGetPluginDependenciesSize(void* func);
 void Plugify_SetFindPluginResource(void* func);

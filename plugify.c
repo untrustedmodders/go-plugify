@@ -3,7 +3,9 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 #include "plugify.h"
 // Function typedefs
 typedef void* (*GetMethodPtrFunc)(const char*);
-
+typedef bool (*IsModuleLoadedFunc)(const char*, int, bool);
+typedef bool (*IsPluginLoadedFunc)(const char*, int, bool);
+	
 typedef ptrdiff_t (*GetPluginIdFunc)(void*);
 typedef const char* (*GetPluginNameFunc)(void*);
 typedef const char* (*GetPluginFullNameFunc)(void*);
@@ -40,6 +42,8 @@ void* pluginHandle = NULL;
 
 // Variable declarations
 GetMethodPtrFunc getMethodPtr = NULL;
+IsModuleLoadedFunc isModuleLoaded = NULL;
+IsPluginLoadedFunc isPluginLoaded = NULL;
 
 GetPluginIdFunc getPluginId = NULL;
 GetPluginNameFunc getPluginName = NULL;
@@ -76,6 +80,12 @@ DeleteVectorDataCStrFunc deleteVectorDataCStr = NULL;
 // Call methods
 void* Plugify_GetMethodPtr(const char* methodName) {
 	return getMethodPtr(methodName);
+}
+bool Plugify_IsModuleLoaded(const char* moduleName, int requiredVersion, bool minimum) {
+	return isModuleLoaded(moduleName, requiredVersion, minimum);
+}
+bool Plugify_IsPluginLoaded(const char* pluginName, int requiredVersion, bool minimum) {
+	return isPluginLoaded(pluginName, requiredVersion, minimum);
 }
 
 void Plugify_SetPluginHandle(void* handle) {
@@ -180,6 +190,12 @@ void Plugify_DeleteVectorDataCStr(void* ptr) {
 // Setter methods
 void Plugify_SetGetMethodPtr(void* func) {
 	getMethodPtr = (GetMethodPtrFunc)func;
+}
+void Plugify_SetIsModuleLoaded(void* func) {
+	isModuleLoaded = (IsModuleLoadedFunc)func;
+}
+void Plugify_SetIsPluginLoaded(void* func) {
+	isPluginLoaded = (IsPluginLoadedFunc)func;
 }
 
 void Plugify_SetGetPluginId(void* func) {
