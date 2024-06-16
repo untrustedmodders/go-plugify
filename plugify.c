@@ -11,10 +11,11 @@ typedef const char* (*GetPluginDescriptionFunc)(void*);
 typedef const char* (*GetPluginVersionFunc)(void*);
 typedef const char* (*GetPluginAuthorFunc)(void*);
 typedef const char* (*GetPluginWebsiteFunc)(void*);
+typedef const char* (*GetPluginBaseDirFunc)(void*);
 typedef const char** (*GetPluginDependenciesFunc)(void*);
 typedef ptrdiff_t (*GetPluginDependenciesSizeFunc)(void*);
 typedef const char* (*FindPluginResourceFunc)(void*, const char*);
-typedef void (*FreePluginResourceFunc)(const char*);
+typedef void (*DeleteCStrFunc)(const char*);
 
 typedef void* (*AllocateStringFunc)();
 typedef void* (*CreateStringFunc)(_GoString_);
@@ -47,10 +48,11 @@ GetPluginDescriptionFunc getPluginDescription = NULL;
 GetPluginVersionFunc getPluginVersion = NULL;
 GetPluginAuthorFunc getPluginAuthor = NULL;
 GetPluginWebsiteFunc getPluginWebsite = NULL;
+GetPluginBaseDirFunc getPluginBaseDir = NULL;
 GetPluginDependenciesFunc getPluginDependencies = NULL;
 GetPluginDependenciesSizeFunc getPluginDependenciesSize = NULL;
 FindPluginResourceFunc findPluginResource = NULL;
-FreePluginResourceFunc freePluginResource = NULL;
+DeleteCStrFunc deleteCStr = NULL;
 
 AllocateStringFunc allocateString = NULL;
 CreateStringFunc createString = NULL;
@@ -100,6 +102,9 @@ const char* Plugify_GetPluginAuthor() {
 const char* Plugify_GetPluginWebsite() {
 	return getPluginWebsite(pluginHandle);
 }
+const char* Plugify_GetPluginBaseDir() {
+	return getPluginBaseDir(pluginHandle);
+}
 const char** Plugify_GetPluginDependencies() {
 	return getPluginDependencies(pluginHandle);
 }
@@ -109,8 +114,8 @@ ptrdiff_t Plugify_GetPluginDependenciesSize() {
 const char* Plugify_FindPluginResource(const char* path) {
 	return findPluginResource(pluginHandle, path);
 }
-void Plugify_FreePluginResource(const char* path) {
-	return freePluginResource(path);
+void Plugify_DeleteCStr(const char* str) {
+	return deleteCStr(str);
 }
 
 void* Plugify_AllocateString() {
@@ -205,6 +210,10 @@ void Plugify_SetGetPluginWebsite(void* func) {
 	getPluginWebsite = (GetPluginWebsiteFunc)func;
 }
 
+void Plugify_SetGetPluginBaseDir(void* func) {
+	getPluginBaseDir = (GetPluginBaseDirFunc)func;
+}
+
 void Plugify_SetGetPluginDependencies(void* func) {
 	getPluginDependencies = (GetPluginDependenciesFunc)func;
 }
@@ -217,8 +226,8 @@ void Plugify_SetFindPluginResource(void* func) {
 	findPluginResource = (FindPluginResourceFunc)func;
 }
 
-void Plugify_SetFreePluginResource(void* func) {
-	freePluginResource = (FreePluginResourceFunc)func;
+void Plugify_SetDeleteCStr(void* func) {
+	deleteCStr = (DeleteCStrFunc)func;
 }
 
 void Plugify_SetAllocateString(void* func) {

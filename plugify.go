@@ -18,6 +18,7 @@ type Plugify struct {
 	Version                string
 	Author                 string
 	Website                string
+	BaseDir                string
 	Dependencies           []string
 	fnPluginStartCallback  PluginStartCallback
 	fnPluginEndCallback    PluginEndCallback
@@ -31,6 +32,7 @@ var plugify Plugify = Plugify {
 	Version:               "",
 	Author:                "",
 	Website:               "",
+	BaseDir:               "",
 	Dependencies:          []string{},
 	fnPluginStartCallback: func() {},
 	fnPluginEndCallback:   func() {},
@@ -52,10 +54,11 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	C.Plugify_SetGetPluginVersion(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetPluginAuthor(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetPluginWebsite(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginBaseDir(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetPluginDependencies(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetPluginDependenciesSize(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetFindPluginResource(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetFreePluginResource(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDeleteCStr(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetAllocateString(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetCreateString(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetStringData(unsafe.Pointer(api[i])); i++
@@ -81,6 +84,11 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	plugify.Version = C.GoString(C.Plugify_GetPluginVersion())
 	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
 	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
+	
+	path := C.Plugify_GetPluginBaseDir()
+	plugify.BaseDir = C.GoString(path)
+	C.Plugify_DeleteCStr(path)
+	
 	dependencies := C.Plugify_GetPluginDependencies()
 	plugify.Dependencies = make([]string, C.Plugify_GetPluginDependenciesSize())
 	for i := range plugify.Dependencies {
@@ -113,7 +121,7 @@ func (p *Plugify) FindResource(path string) string {
 	C_path := C.CString(path)
     C_output := C.Plugify_FindPluginResource(C_path)
 	output := C.GoString(C_output)
-	C.Plugify_FreePluginResource(C_output)
+	C.Plugify_DeleteCStr(C_output)
 	C.free(C_path)
     return output
 }

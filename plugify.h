@@ -40,7 +40,7 @@ const char* Plugify_GetPluginWebsite();
 const char** Plugify_GetPluginDependencies();
 ptrdiff_t Plugify_GetPluginDependenciesSize();
 const char* Plugify_FindPluginResource(const char* path);
-void Plugify_FreePluginResource(const char* path);
+void Plugify_DeleteCStr(const char* path);
 
 void* Plugify_AllocateString();
 void* Plugify_CreateString(_GoString_ source);
@@ -72,7 +72,7 @@ void Plugify_SetGetPluginWebsite(void* func);
 void Plugify_SetGetPluginDependencies(void* func);
 void Plugify_SetGetPluginDependenciesSize(void* func);
 void Plugify_SetFindPluginResource(void* func);
-void Plugify_SetFreePluginResource(void* func);
+void Plugify_SetDeleteCStr(void* func);
 void Plugify_SetAllocateString(void* func);
 void Plugify_SetCreateString(void* func);
 void Plugify_SetGetStringData(void* func);
