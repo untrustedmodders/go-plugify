@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <limits.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,8 +28,8 @@ enum DataType {
 };
 
 void* Plugify_GetMethodPtr(const char* methodName);
-bool Plugify_IsModuleLoaded(const char* moduleName, int requiredVersion = INT_MAX, bool minimum = false);
-bool Plugify_IsPluginLoaded(const char* pluginName, int requiredVersion = INT_MAX, bool minimum = false);
+bool Plugify_IsModuleLoaded(const char* moduleName, int requiredVersion, bool minimum); // INT_MAX for latest version
+bool Plugify_IsPluginLoaded(const char* pluginName, int requiredVersion, bool minimum); // INT_MAX for latest version
 
 void Plugify_SetPluginHandle(void* handle);
 ptrdiff_t Plugify_GetPluginId();
