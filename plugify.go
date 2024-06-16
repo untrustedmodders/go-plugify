@@ -38,6 +38,8 @@ var plugify Plugify = Plugify {
 	fnPluginEndCallback:   func() {},
 }
 
+var BaseDir string = ""
+
 const kApiVersion = 1
 
 //export Plugify_Init
@@ -47,6 +49,7 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	}
 	i := 0
 	C.Plugify_SetGetMethodPtr(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetBaseDir(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetIsModuleLoaded(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetIsPluginLoaded(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetPluginId(unsafe.Pointer(api[i])); i++
@@ -79,6 +82,10 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	C.Plugify_SetDeleteVectorDataCStr(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetPluginHandle(unsafe.Pointer(handle))
 	
+	path := C.Plugify_GetBaseDir()
+	BaseDir = C.GoString(path)
+	C.Plugify_DeleteCStr(path)
+	
 	plugify.Id = int64(C.Plugify_GetPluginId())
 	plugify.Name = C.GoString(C.Plugify_GetPluginName())
 	plugify.FullName = C.GoString(C.Plugify_GetPluginFullName())
@@ -87,9 +94,9 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
 	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
 	
-	path := C.Plugify_GetPluginBaseDir()
-	plugify.BaseDir = C.GoString(path)
-	C.Plugify_DeleteCStr(path)
+	pluginPath := C.Plugify_GetPluginBaseDir()
+	plugify.BaseDir = C.GoString(pluginPath)
+	C.Plugify_DeleteCStr(pluginPath)
 	
 	dependencies := C.Plugify_GetPluginDependencies()
 	plugify.Dependencies = make([]string, C.Plugify_GetPluginDependenciesSize())
