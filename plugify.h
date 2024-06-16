@@ -29,6 +29,19 @@ enum DataType {
 
 void* Plugify_GetMethodPtr(const char* methodName);
 
+void Plugify_SetPluginHandle(void* handle);
+ptrdiff_t Plugify_GetPluginId();
+const char* Plugify_GetPluginName();
+const char* Plugify_GetPluginFullName();
+const char* Plugify_GetPluginDescription();
+const char* Plugify_GetPluginVersion();
+const char* Plugify_GetPluginAuthor();
+const char* Plugify_GetPluginWebsite();
+const char** Plugify_GetPluginDependencies();
+ptrdiff_t Plugify_GetPluginDependenciesSize();
+const char* Plugify_FindPluginResource(const char* path);
+void Plugify_FreePluginResource(const char* path);
+
 void* Plugify_AllocateString();
 void* Plugify_CreateString(_GoString_ source);
 const char* Plugify_GetStringData(void* ptr);
@@ -49,6 +62,17 @@ void Plugify_DeleteVectorDataBool(void* ptr);
 void Plugify_DeleteVectorDataCStr(void* ptr);
 
 void Plugify_SetGetMethodPtr(void* func);
+void Plugify_SetGetPluginId(void* func);
+void Plugify_SetGetPluginName(void* func);
+void Plugify_SetGetPluginFullName(void* func);
+void Plugify_SetGetPluginDescription(void* func);
+void Plugify_SetGetPluginVersion(void* func);
+void Plugify_SetGetPluginAuthor(void* func);
+void Plugify_SetGetPluginWebsite(void* func);
+void Plugify_SetGetPluginDependencies(void* func);
+void Plugify_SetGetPluginDependenciesSize(void* func);
+void Plugify_SetFindPluginResource(void* func);
+void Plugify_SetFreePluginResource(void* func);
 void Plugify_SetAllocateString(void* func);
 void Plugify_SetCreateString(void* func);
 void Plugify_SetGetStringData(void* func);

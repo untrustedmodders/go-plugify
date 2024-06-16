@@ -11,11 +11,27 @@ type PluginStartCallback func()
 type PluginEndCallback func()
 
 type Plugify struct {
-	fnPluginStartCallback PluginStartCallback
-	fnPluginEndCallback   PluginEndCallback
+	Id                     int64
+	Name                   string
+	FullName               string
+	Description            string
+	Version                string
+	Author                 string
+	Website                string
+	Dependencies           []string
+	fnPluginStartCallback  PluginStartCallback
+	fnPluginEndCallback    PluginEndCallback
 }
 
 var plugify Plugify = Plugify {
+	Id:                    -1,
+	Name:                  "",
+	FullName:              "",
+	Description:           "",
+	Version:               "",
+	Author:                "",
+	Website:               "",
+	Dependencies:          []string{},
 	fnPluginStartCallback: func() {},
 	fnPluginEndCallback:   func() {},
 }
@@ -23,27 +39,55 @@ var plugify Plugify = Plugify {
 const kApiVersion = 1
 
 //export Plugify_Init
-func Plugify_Init(api []uintptr, version int32) int32 {
+func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	if version < kApiVersion {
 		return kApiVersion
 	}
-	C.Plugify_SetGetMethodPtr(unsafe.Pointer(api[0]));
-	C.Plugify_SetAllocateString(unsafe.Pointer(api[1]));
-	C.Plugify_SetCreateString(unsafe.Pointer(api[2]));
-	C.Plugify_SetGetStringData(unsafe.Pointer(api[3]));
-	C.Plugify_SetGetStringLength(unsafe.Pointer(api[4]));
-	C.Plugify_SetAssignString(unsafe.Pointer(api[5]));
-	C.Plugify_SetFreeString(unsafe.Pointer(api[6]));
-	C.Plugify_SetDeleteString(unsafe.Pointer(api[7]));
-	C.Plugify_SetCreateVector(unsafe.Pointer(api[8]));
-	C.Plugify_SetAllocateVector(unsafe.Pointer(api[9]));
-	C.Plugify_SetGetVectorSize(unsafe.Pointer(api[10]));
-	C.Plugify_SetGetVectorData(unsafe.Pointer(api[11]));
-	C.Plugify_SetAssignVector(unsafe.Pointer(api[12]));
-	C.Plugify_SetDeleteVector(unsafe.Pointer(api[13]));
-	C.Plugify_SetFreeVector(unsafe.Pointer(api[14]));
-	C.Plugify_SetDeleteVectorDataBool(unsafe.Pointer(api[15]));
-	C.Plugify_SetDeleteVectorDataCStr(unsafe.Pointer(api[16]));
+	i := 0
+	C.Plugify_SetGetMethodPtr(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginId(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginName(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginFullName(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginDescription(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginVersion(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginAuthor(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginWebsite(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginDependencies(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetPluginDependenciesSize(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetFindPluginResource(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetFreePluginResource(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetAllocateString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetCreateString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetStringData(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetStringLength(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetAssignString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetFreeString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDeleteString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetCreateVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetAllocateVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetVectorSize(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetVectorData(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetAssignVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDeleteVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetFreeVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDeleteVectorDataBool(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDeleteVectorDataCStr(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetPluginHandle(unsafe.Pointer(handle))
+	
+	plugify.Id = C.Plugify_GetPluginId()
+	plugify.Name = C.GoString(C.Plugify_GetPluginName())
+	plugify.FullName = C.GoString(C.Plugify_GetPluginFullName())
+	plugify.Description = C.GoString(C.Plugify_GetPluginDescription())
+	plugify.Version = C.GoString(C.Plugify_GetPluginVersion())
+	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
+	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
+	dependencies := C.Plugify_GetPluginDependencies()
+	plugify.Dependencies = make([]string, C.Plugify_GetPluginDependenciesSize())
+	for i := range plugify.Dependencies {
+		plugify.Dependencies[i] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(i * C.sizeof_uintptr_t))))
+	}
+	C.Plugify_DeleteVectorDataCStr(dependencies)
+
 	return 0
 }
 
@@ -63,6 +107,15 @@ func Plugify_PluginEnd() {
 
 func OnPluginEnd(fn PluginEndCallback) {
 	plugify.fnPluginEndCallback = fn
+}
+
+func (p *Plugify) FindResource(path string) string {
+	C_path := C.CString(path)
+    C_output := C.Plugify_FindPluginResource(C_path)
+	output := C.GoString(C_output)
+	C.Plugify_FreePluginResource(C_output)
+	C.free(C_path)
+    return output
 }
 
 type Vector2 struct {

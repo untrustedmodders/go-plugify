@@ -4,27 +4,53 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 // Function typedefs
 typedef void* (*GetMethodPtrFunc)(const char*);
 
+typedef ptrdiff_t (*GetPluginIdFunc)(void*);
+typedef const char* (*GetPluginNameFunc)(void*);
+typedef const char* (*GetPluginFullNameFunc)(void*);
+typedef const char* (*GetPluginDescriptionFunc)(void*);
+typedef const char* (*GetPluginVersionFunc)(void*);
+typedef const char* (*GetPluginAuthorFunc)(void*);
+typedef const char* (*GetPluginWebsiteFunc)(void*);
+typedef const char** (*GetPluginDependenciesFunc)(void*);
+typedef ptrdiff_t (*GetPluginDependenciesSizeFunc)(void*);
+typedef const char* (*FindPluginResourceFunc)(void*, const char*);
+typedef void (*FreePluginResourceFunc)(const char*);
+
 typedef void* (*AllocateStringFunc)();
-typedef void* (*CreateStringFunc)(_GoString_ source);
-typedef const char* (*GetStringDataFunc)(void* ptr);
-typedef ptrdiff_t (*GetStringLengthFunc)(void* ptr);
-typedef void (*AssignStringFunc)(void* ptr, _GoString_ source);
-typedef void (*FreeStringFunc)(void* ptr);
-typedef void (*DeleteStringFunc)(void* ptr);
+typedef void* (*CreateStringFunc)(_GoString_);
+typedef const char* (*GetStringDataFunc)(void*);
+typedef ptrdiff_t (*GetStringLengthFunc)(void*);
+typedef void (*AssignStringFunc)(void*, _GoString_);
+typedef void (*FreeStringFunc)(void*);
+typedef void (*DeleteStringFunc)(void*);
 
-typedef void* (*CreateVectorFunc)(void* arr, ptrdiff_t len, enum DataType type);
-typedef void* (*AllocateVectorFunc)(enum DataType type);
-typedef ptrdiff_t (*GetVectorSizeFunc)(void* ptr, enum DataType type);
-typedef void* (*GetVectorDataFunc)(void* ptr, enum DataType type);
-typedef void (*AssignVectorFunc)(void* ptr, void* arr, ptrdiff_t len, enum DataType type);
-typedef void (*DeleteVectorFunc)(void* ptr, enum DataType type);
-typedef void (*FreeVectorFunc)(void* ptr, enum DataType type);
+typedef void* (*CreateVectorFunc)(void*, ptrdiff_t, enum DataType);
+typedef void* (*AllocateVectorFunc)(enum DataType);
+typedef ptrdiff_t (*GetVectorSizeFunc)(void*, enum DataType);
+typedef void* (*GetVectorDataFunc)(void*, enum DataType);
+typedef void (*AssignVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
+typedef void (*DeleteVectorFunc)(void*, enum DataType);
+typedef void (*FreeVectorFunc)(void*, enum DataType);
 
-typedef void (*DeleteVectorDataBoolFunc)(void* ptr);
-typedef void (*DeleteVectorDataCStrFunc)(void* ptr);
+typedef void (*DeleteVectorDataBoolFunc)(void*);
+typedef void (*DeleteVectorDataCStrFunc)(void*);
+
+void* pluginHandle = NULL;
 
 // Variable declarations
 GetMethodPtrFunc getMethodPtr = NULL;
+
+GetPluginIdFunc getPluginId = NULL;
+GetPluginNameFunc getPluginName = NULL;
+GetPluginFullNameFunc getPluginFullName = NULL;
+GetPluginDescriptionFunc getPluginDescription = NULL;
+GetPluginVersionFunc getPluginVersion = NULL;
+GetPluginAuthorFunc getPluginAuthor = NULL;
+GetPluginWebsiteFunc getPluginWebsite = NULL;
+GetPluginDependenciesFunc getPluginDependencies = NULL;
+GetPluginDependenciesSizeFunc getPluginDependenciesSize = NULL;
+FindPluginResourceFunc findPluginResource = NULL;
+FreePluginResourceFunc freePluginResource = NULL;
 
 AllocateStringFunc allocateString = NULL;
 CreateStringFunc createString = NULL;
@@ -45,10 +71,46 @@ FreeVectorFunc freeVector = NULL;
 DeleteVectorDataBoolFunc deleteVectorDataBool = NULL;
 DeleteVectorDataCStrFunc deleteVectorDataCStr = NULL;
 
-
 // Call methods
 void* Plugify_GetMethodPtr(const char* methodName) {
 	return getMethodPtr(methodName);
+}
+
+void Plugify_SetPluginHandle(void* handle) {
+	pluginHandle = handle;
+}
+ptrdiff_t Plugify_GetPluginId() {
+	return getPluginId(pluginHandle);
+}
+const char* Plugify_GetPluginName() {
+	return getPluginName(pluginHandle);
+}
+const char* Plugify_GetPluginFullName() {
+	return getPluginFullName(pluginHandle);
+}
+const char* Plugify_GetPluginDescription() {
+	return getPluginDescription(pluginHandle);
+}
+const char* Plugify_GetPluginVersion() {
+	return getPluginVersion(pluginHandle);
+}
+const char* Plugify_GetPluginAuthor() {
+	return getPluginAuthor(pluginHandle);
+}
+const char* Plugify_GetPluginWebsite() {
+	return getPluginWebsite(pluginHandle);
+}
+const char** Plugify_GetPluginDependencies() {
+	return getPluginDependencies(pluginHandle);
+}
+ptrdiff_t Plugify_GetPluginDependenciesSize() {
+	return getPluginDependenciesSize(pluginHandle);
+}
+const char* Plugify_FindPluginResource(const char* path) {
+	return findPluginResource(pluginHandle, path);
+}
+void Plugify_FreePluginResource(const char* path) {
+	return freePluginResource(path);
 }
 
 void* Plugify_AllocateString() {
@@ -113,6 +175,50 @@ void Plugify_DeleteVectorDataCStr(void* ptr) {
 // Setter methods
 void Plugify_SetGetMethodPtr(void* func) {
 	getMethodPtr = (GetMethodPtrFunc)func;
+}
+
+void Plugify_SetGetPluginId(void* func) {
+	getPluginId = (GetPluginIdFunc)func;
+}
+
+void Plugify_SetGetPluginName(void* func) {
+	getPluginName = (GetPluginNameFunc)func;
+}
+
+void Plugify_SetGetPluginFullName(void* func) {
+	getPluginFullName = (GetPluginFullNameFunc)func;
+}
+
+void Plugify_SetGetPluginDescription(void* func) {
+	getPluginDescription = (GetPluginDescriptionFunc)func;
+}
+
+void Plugify_SetGetPluginVersion(void* func) {
+	getPluginVersion = (GetPluginVersionFunc)func;
+}
+
+void Plugify_SetGetPluginAuthor(void* func) {
+	getPluginAuthor = (GetPluginAuthorFunc)func;
+}
+
+void Plugify_SetGetPluginWebsite(void* func) {
+	getPluginWebsite = (GetPluginWebsiteFunc)func;
+}
+
+void Plugify_SetGetPluginDependencies(void* func) {
+	getPluginDependencies = (GetPluginDependenciesFunc)func;
+}
+
+void Plugify_SetGetPluginDependenciesSize(void* func) {
+	getPluginDependenciesSize = (GetPluginDependenciesSizeFunc)func;
+}
+
+void Plugify_SetFindPluginResource(void* func) {
+	findPluginResource = (FindPluginResourceFunc)func;
+}
+
+void Plugify_SetFreePluginResource(void* func) {
+	freePluginResource = (FreePluginResourceFunc)func;
 }
 
 void Plugify_SetAllocateString(void* func) {
