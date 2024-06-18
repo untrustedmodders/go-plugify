@@ -6,6 +6,7 @@ package plugify
 */
 import "C"
 import "unsafe"
+import "fmt"
 
 type PluginStartCallback func()
 type PluginEndCallback func()
@@ -149,4 +150,62 @@ type Vector4 struct {
 	Y float32
 	Z float32
 	W float32
+}
+type Matrix4x4 struct {
+	M00 float32
+	M10 float32
+	M20 float32
+	M30 float32
+
+	M01 float32
+	M11 float32
+	M21 float32
+	M31 float32
+
+	M02 float32
+	M12 float32
+	M22 float32
+	M32 float32
+
+	M03 float32
+	M13 float32
+	M23 float32
+	M33 float32
+}
+
+func (v Vector2) String() string {
+	return fmt.Sprintf("Vector2(X: %.2f, Y: %.2f)", v.X, v.Y)
+}
+func (v Vector3) String() string {
+	return fmt.Sprintf("Vector3(X: %.2f, Y: %.2f, Z: %.2f)", v.X, v.Y, v.Z)
+}
+func (v Vector4) String() string {
+	return fmt.Sprintf("Vector4(X: %.2f, Y: %.2f, Z: %.2f, W: %.2f)", v.X, v.Y, v.Z, v.W)
+}
+func (m Matrix4x4) String() string {
+	return fmt.Sprintf(
+		"Matrix4x4:\n"+
+			"%.2f %.2f %.2f %.2f\n"+
+			"%.2f %.2f %.2f %.2f\n"+
+			"%.2f %.2f %.2f %.2f\n"+
+			"%.2f %.2f %.2f %.2f",
+		m.M00, m.M01, m.M02, m.M03,
+		m.M10, m.M11, m.M12, m.M13,
+		m.M20, m.M21, m.M22, m.M23,
+		m.M30, m.M31, m.M32, m.M33,
+	)
+}
+
+func NewMatrix4x4(
+	m00, m01, m02, m03,
+	m10, m11, m12, m13,
+	m20, m21, m22, m23,
+	m30, m31, m32, m33 float32,
+) Matrix4x4 {
+	return Matrix4x4{
+		M00: m00, M10: m10, M20: m20, M30: m30,
+		M01: m01, M11: m11, M21: m21, M31: m31,
+		M02: m02, M12: m12, M22: m22, M32: m32,
+		M03: m03, M13: m13, M23: m23, M33: m33,
+	}
 }
