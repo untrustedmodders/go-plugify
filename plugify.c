@@ -24,6 +24,7 @@ typedef void* (*AllocateStringFunc)();
 typedef void* (*CreateStringFunc)(_GoString_);
 typedef const char* (*GetStringDataFunc)(void*);
 typedef ptrdiff_t (*GetStringLengthFunc)(void*);
+typedef void (*ConstructStringFunc)(void*, _GoString_);
 typedef void (*AssignStringFunc)(void*, _GoString_);
 typedef void (*FreeStringFunc)(void*);
 typedef void (*DeleteStringFunc)(void*);
@@ -32,6 +33,7 @@ typedef void* (*CreateVectorFunc)(void*, ptrdiff_t, enum DataType);
 typedef void* (*AllocateVectorFunc)(enum DataType);
 typedef ptrdiff_t (*GetVectorSizeFunc)(void*, enum DataType);
 typedef void* (*GetVectorDataFunc)(void*, enum DataType);
+typedef void (*ConstrucVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
 typedef void (*AssignVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
 typedef void (*DeleteVectorFunc)(void*, enum DataType);
 typedef void (*FreeVectorFunc)(void*, enum DataType);
@@ -64,6 +66,7 @@ AllocateStringFunc allocateString = NULL;
 CreateStringFunc createString = NULL;
 GetStringDataFunc getStringData = NULL;
 GetStringLengthFunc getStringLength = NULL;
+ConstructStringFunc constructString = NULL;
 AssignStringFunc assignString = NULL;
 FreeStringFunc freeString = NULL;
 DeleteStringFunc deleteString = NULL;
@@ -72,6 +75,7 @@ CreateVectorFunc createVector = NULL;
 AllocateVectorFunc allocateVector = NULL;
 GetVectorSizeFunc getVectorSize = NULL;
 GetVectorDataFunc getVectorData = NULL;
+ConstructVectorFunc constructVector = NULL;
 AssignVectorFunc assignVector = NULL;
 DeleteVectorFunc deleteVector = NULL;
 FreeVectorFunc freeVector = NULL;
@@ -145,6 +149,9 @@ const char* Plugify_GetStringData(void* ptr) {
 ptrdiff_t Plugify_GetStringLength(void* ptr) {
 	return getStringLength(ptr);
 }
+void Plugify_ConstructString(void* ptr, _GoString_ source) {
+	constructString(ptr, source);
+}
 void Plugify_AssignString(void* ptr, _GoString_ source) {
 	assignString(ptr, source);
 }
@@ -160,27 +167,24 @@ void Plugify_DeleteString(void* ptr) {
 void* Plugify_CreateVector(void* arr, ptrdiff_t len, enum DataType type) {
 	return createVector(arr, len, type);
 }
-
 void* Plugify_AllocateVector(enum DataType type) {
 	return allocateVector(type);
 }
-
 ptrdiff_t Plugify_GetVectorSize(void* ptr, enum DataType type) {
 	return getVectorSize(ptr, type);
 }
-
 void* Plugify_GetVectorData(void* ptr, enum DataType type) {
 	return getVectorData(ptr, type);
 }
-
+void Plugify_ConstructVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type) {
+	constructVector(ptr, arr, len, type);
+}
 void Plugify_AssignVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type) {
 	assignVector(ptr, arr, len, type);
 }
-
 void Plugify_DeleteVector(void* ptr, enum DataType type) {
 	deleteVector(ptr, type);
 }
-
 void Plugify_FreeVector(void* ptr, enum DataType type) {
 	freeVector(ptr, type);
 }
@@ -270,6 +274,10 @@ void Plugify_SetGetStringLength(void* func) {
 	getStringLength = (GetStringLengthFunc)func;
 }
 
+void Plugify_SetConstructString(void* func) {
+	constructString = (ConstructStringFunc)func;
+}
+
 void Plugify_SetAssignString(void* func) {
 	assignString = (AssignStringFunc)func;
 }
@@ -296,6 +304,10 @@ void Plugify_SetGetVectorSize(void* func) {
 
 void Plugify_SetGetVectorData(void* func) {
 	getVectorData = (GetVectorDataFunc)func;
+}
+
+void Plugify_SetConstructVector(void* func) {
+	constructVector = (ConstructVectorFunc)func;
 }
 
 void Plugify_SetAssignVector(void* func) {
