@@ -33,7 +33,7 @@ typedef void* (*CreateVectorFunc)(void*, ptrdiff_t, enum DataType);
 typedef void* (*AllocateVectorFunc)(enum DataType);
 typedef ptrdiff_t (*GetVectorSizeFunc)(void*, enum DataType);
 typedef void* (*GetVectorDataFunc)(void*, enum DataType);
-typedef void (*ConstrucVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
+typedef void (*ConstructVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
 typedef void (*AssignVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
 typedef void (*DeleteVectorFunc)(void*, enum DataType);
 typedef void (*FreeVectorFunc)(void*, enum DataType);
