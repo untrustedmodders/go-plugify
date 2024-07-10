@@ -21,7 +21,7 @@ enum DataType {
 	UINT16,
 	UINT32,
 	UINT64,
-	UINTPTR,
+	POINTER,
 	FLOAT,
 	DOUBLE,
 	STRING
