@@ -50,6 +50,7 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	}
 	i := 0
 	C.Plugify_SetGetMethodPtr(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetMethodPtr2(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetBaseDir(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetIsModuleLoaded(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetIsPluginLoaded(unsafe.Pointer(api[i])); i++

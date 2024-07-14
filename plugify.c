@@ -3,6 +3,7 @@ typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 #include "plugify.h"
 // Function typedefs
 typedef void* (*GetMethodPtrFunc)(const char*);
+typedef void (*GetMethodPtr2Func)(const char*, void**);
 typedef const char* (*GetBaseDirFunc)();
 typedef bool (*IsModuleLoadedFunc)(const char*, int, bool);
 typedef bool (*IsPluginLoadedFunc)(const char*, int, bool);
@@ -45,6 +46,7 @@ void* pluginHandle = NULL;
 
 // Variable declarations
 GetMethodPtrFunc getMethodPtr = NULL;
+GetMethodPtr2Func getMethodPtr2 = NULL;
 GetBaseDirFunc getBaseDir = NULL;
 IsModuleLoadedFunc isModuleLoaded = NULL;
 IsPluginLoadedFunc isPluginLoaded = NULL;
@@ -86,6 +88,9 @@ DeleteVectorDataCStrFunc deleteVectorDataCStr = NULL;
 // Call methods
 void* Plugify_GetMethodPtr(const char* methodName) {
 	return getMethodPtr(methodName);
+}
+void Plugify_GetMethodPtr2(const char* methodName, void** addressDest) {
+	getMethodPtr2(methodName, addressDest);
 }
 const char* Plugify_GetBaseDir() {
 	return getBaseDir();
@@ -199,6 +204,9 @@ void Plugify_DeleteVectorDataCStr(void* ptr) {
 // Setter methods
 void Plugify_SetGetMethodPtr(void* func) {
 	getMethodPtr = (GetMethodPtrFunc)func;
+}
+void Plugify_SetGetMethodPtr2(void* func) {
+	getMethodPtr2 = (GetMethodPtr2Func)func;
 }
 void Plugify_SetGetBaseDir(void* func) {
 	getBaseDir = (GetBaseDirFunc)func;

@@ -28,6 +28,7 @@ enum DataType {
 };
 
 void* Plugify_GetMethodPtr(const char* methodName);
+void Plugify_GetMethodPtr2(const char* methodName, void** addressDest);
 const char* Plugify_GetBaseDir(); // Plugify_DeleteCStr
 bool Plugify_IsModuleLoaded(const char* moduleName, int requiredVersion, bool minimum); // INT_MAX for latest version
 bool Plugify_IsPluginLoaded(const char* pluginName, int requiredVersion, bool minimum); // INT_MAX for latest version
@@ -68,6 +69,7 @@ void Plugify_DeleteVectorDataBool(void* ptr);
 void Plugify_DeleteVectorDataCStr(void* ptr);
 
 void Plugify_SetGetMethodPtr(void* func);
+void Plugify_SetGetMethodPtr2(void* func);
 void Plugify_SetGetBaseDir(void* func);
 void Plugify_SetIsModuleLoaded(void* func);
 void Plugify_SetIsPluginLoaded(void* func);
