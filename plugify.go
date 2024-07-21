@@ -6,7 +6,6 @@ package plugify
 */
 import "C"
 import "unsafe"
-import "fmt"
 
 type PluginStartCallback func()
 type PluginEndCallback func()
