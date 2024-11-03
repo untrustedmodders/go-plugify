@@ -27,6 +27,9 @@ enum DataType {
 	STRING
 };
 
+typedef struct { char* data; size_t size; size_t cap; } String;
+typedef struct { size_t size; size_t cap; void* data; } Vector;
+
 void* Plugify_GetMethodPtr(const char* methodName);
 void Plugify_GetMethodPtr2(const char* methodName, void** addressDest);
 const char* Plugify_GetBaseDir(); // Plugify_DeleteCStr
@@ -45,28 +48,21 @@ const char* Plugify_GetPluginBaseDir(); // Plugify_DeleteCStr
 void* Plugify_GetPluginDependencies(); // Plugify_DeleteVectorDataCStr
 ptrdiff_t Plugify_GetPluginDependenciesSize();
 const char* Plugify_FindPluginResource(const char* path); // Plugify_DeleteCStr
-void Plugify_DeleteCStr(const char* path);
+void Plugify_DeleteCStr(const char* str);
 
-void* Plugify_AllocateString();
-void* Plugify_CreateString(_GoString_ source);
-const char* Plugify_GetStringData(void* ptr);
-ptrdiff_t Plugify_GetStringLength(void* ptr);
-void Plugify_ConstructString(void* ptr, _GoString_ source);
-void Plugify_AssignString(void* ptr, _GoString_ source);
-void Plugify_FreeString(void* ptr);
-void Plugify_DeleteString(void* ptr);
+String Plugify_ConstructString(_GoString_ source);
+void Plugify_DestroyString(String* string);
+const char* Plugify_GetStringData(String* string);
+ptrdiff_t Plugify_GetStringLength(String* string);
+void Plugify_AssignString(String* string, _GoString_ source);
 
-void* Plugify_CreateVector(void* arr, ptrdiff_t len, enum DataType type);
-void* Plugify_AllocateVector(enum DataType type);
-ptrdiff_t Plugify_GetVectorSize(void* ptr, enum DataType type);
-void* Plugify_GetVectorData(void* ptr, enum DataType type); // Plugify_DeleteVectorDataCStr for STRING / Plugify_DeleteVectorDataBool for BOOL
-void Plugify_ConstructVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type);
-void Plugify_AssignVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type);
-void Plugify_DeleteVector(void* ptr, enum DataType type);
-void Plugify_FreeVector(void* ptr, enum DataType type);
+Vector Plugify_ConstructVector(void* arr, ptrdiff_t len, enum DataType type);
+void Plugify_DeleteVector(Vector* vector, enum DataType type);
+void* Plugify_GetVectorData(Vector* vector, enum DataType type); // Plugify_DeleteVectorDataCStr for STRING
+ptrdiff_t Plugify_GetVectorSize(Vector* vector, enum DataType type);
+void Plugify_AssignVector(Vector* vector, void* arr, ptrdiff_t len, enum DataType type);
 
-void Plugify_DeleteVectorDataBool(void* ptr);
-void Plugify_DeleteVectorDataCStr(void* ptr);
+void Plugify_DeleteVectorDataCStr(void* arr);
 
 void Plugify_SetGetMethodPtr(void* func);
 void Plugify_SetGetMethodPtr2(void* func);
@@ -85,24 +81,16 @@ void Plugify_SetGetPluginDependencies(void* func);
 void Plugify_SetGetPluginDependenciesSize(void* func);
 void Plugify_SetFindPluginResource(void* func);
 void Plugify_SetDeleteCStr(void* func);
-void Plugify_SetAllocateString(void* func);
-void Plugify_SetCreateString(void* func);
+void Plugify_SetConstructString(void* func);
+void Plugify_SetDestroyString(void* func);
 void Plugify_SetGetStringData(void* func);
 void Plugify_SetGetStringLength(void* func);
-void Plugify_SetConstructString(void* func);
 void Plugify_SetAssignString(void* func);
-void Plugify_SetFreeString(void* func);
-void Plugify_SetDeleteString(void* func);
-void Plugify_SetCreateVector(void* func);
-void Plugify_SetAllocateVector(void* func);
-void Plugify_SetGetVectorSize(void* func);
-void Plugify_SetGetVectorData(void* func);
 void Plugify_SetConstructVector(void* func);
+void Plugify_SetDestroyVector(void* func);
+void Plugify_SetGetVectorData(void* func);
+void Plugify_SetGetVectorSize(void* func);
 void Plugify_SetAssignVector(void* func);
-void Plugify_SetDeleteVector(void* func);
-void Plugify_SetFreeVector(void* func);
-
-void Plugify_SetDeleteVectorDataBool(void* func);
 void Plugify_SetDeleteVectorDataCStr(void* func);
 #ifdef __cplusplus
 }

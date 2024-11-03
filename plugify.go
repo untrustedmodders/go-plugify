@@ -65,23 +65,16 @@ func Plugify_Init(api []uintptr, version int32, handle uintptr) int32 {
 	C.Plugify_SetGetPluginDependenciesSize(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetFindPluginResource(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetDeleteCStr(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetAllocateString(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetCreateString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetConstructString(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDestroyString(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetStringData(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetGetStringLength(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetConstructString(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetAssignString(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetFreeString(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetDeleteString(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetCreateVector(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetAllocateVector(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetGetVectorSize(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetGetVectorData(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetConstructVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetDestroyVector(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetVectorData(unsafe.Pointer(api[i])); i++
+	C.Plugify_SetGetVectorSize(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetAssignVector(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetDeleteVector(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetFreeVector(unsafe.Pointer(api[i])); i++
-	C.Plugify_SetDeleteVectorDataBool(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetDeleteVectorDataCStr(unsafe.Pointer(api[i])); i++
 	C.Plugify_SetPluginHandle(unsafe.Pointer(handle))
 	

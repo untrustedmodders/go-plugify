@@ -21,25 +21,18 @@ typedef ptrdiff_t (*GetPluginDependenciesSizeFunc)(void*);
 typedef const char* (*FindPluginResourceFunc)(void*, const char*);
 typedef void (*DeleteCStrFunc)(const char*);
 
-typedef void* (*AllocateStringFunc)();
-typedef void* (*CreateStringFunc)(_GoString_);
-typedef const char* (*GetStringDataFunc)(void*);
-typedef ptrdiff_t (*GetStringLengthFunc)(void*);
-typedef void (*ConstructStringFunc)(void*, _GoString_);
-typedef void (*AssignStringFunc)(void*, _GoString_);
-typedef void (*FreeStringFunc)(void*);
-typedef void (*DeleteStringFunc)(void*);
+typedef String (*ConstructStringFunc)(String*, _GoString_);
+typedef void (*DestroyStringFunc)(String*);
+typedef const char* (*GetStringDataFunc)(String*);
+typedef ptrdiff_t (*GetStringLengthFunc)(String*);
+typedef void (*AssignStringFunc)(String*, _GoString_);
 
-typedef void* (*CreateVectorFunc)(void*, ptrdiff_t, enum DataType);
-typedef void* (*AllocateVectorFunc)(enum DataType);
-typedef ptrdiff_t (*GetVectorSizeFunc)(void*, enum DataType);
-typedef void* (*GetVectorDataFunc)(void*, enum DataType);
-typedef void (*ConstructVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
-typedef void (*AssignVectorFunc)(void*, void*, ptrdiff_t, enum DataType);
-typedef void (*DeleteVectorFunc)(void*, enum DataType);
-typedef void (*FreeVectorFunc)(void*, enum DataType);
+typedef Vector (*ConstructVectorFunc)(void*, ptrdiff_t, enum DataType);
+typedef void (*DestroyVectorFunc)(Vector*, enum DataType);
+typedef void* (*GetVectorDataFunc)(Vector*, enum DataType);
+typedef ptrdiff_t (*GetVectorSizeFunc)(Vector*, enum DataType);
+typedef void (*AssignVectorFunc)(Vector*, void*, ptrdiff_t, enum DataType);
 
-typedef void (*DeleteVectorDataBoolFunc)(void*);
 typedef void (*DeleteVectorDataCStrFunc)(void*);
 
 void* pluginHandle = NULL;
@@ -64,25 +57,18 @@ GetPluginDependenciesSizeFunc getPluginDependenciesSize = NULL;
 FindPluginResourceFunc findPluginResource = NULL;
 DeleteCStrFunc deleteCStr = NULL;
 
-AllocateStringFunc allocateString = NULL;
-CreateStringFunc createString = NULL;
+ConstructStringFunc constructString = NULL;
+DestroyStringFunc destroyString = NULL;
 GetStringDataFunc getStringData = NULL;
 GetStringLengthFunc getStringLength = NULL;
-ConstructStringFunc constructString = NULL;
 AssignStringFunc assignString = NULL;
-FreeStringFunc freeString = NULL;
-DeleteStringFunc deleteString = NULL;
 
-CreateVectorFunc createVector = NULL;
-AllocateVectorFunc allocateVector = NULL;
-GetVectorSizeFunc getVectorSize = NULL;
-GetVectorDataFunc getVectorData = NULL;
 ConstructVectorFunc constructVector = NULL;
+DestroyVectorFunc destroyVector = NULL;
+GetVectorDataFunc getVectorData = NULL;
+GetVectorSizeFunc getVectorSize = NULL;
 AssignVectorFunc assignVector = NULL;
-DeleteVectorFunc deleteVector = NULL;
-FreeVectorFunc freeVector = NULL;
 
-DeleteVectorDataBoolFunc deleteVectorDataBool = NULL;
 DeleteVectorDataCStrFunc deleteVectorDataCStr = NULL;
 
 // Call methods
@@ -142,63 +128,41 @@ void Plugify_DeleteCStr(const char* str) {
 	return deleteCStr(str);
 }
 
-void* Plugify_AllocateString() {
-	return allocateString();
+String Plugify_ConstructString(_GoString_ source) {
+	return constructString(source);
 }
-void* Plugify_CreateString(_GoString_ source) {
-	return createString(source);
+void Plugify_DestroyString(String* string) {
+	destroyString(string);
 }
-const char* Plugify_GetStringData(void* ptr) {
-	return getStringData(ptr);
+const char* Plugify_GetStringData(String* string) {
+	return getStringData(string);
 }
-ptrdiff_t Plugify_GetStringLength(void* ptr) {
-	return getStringLength(ptr);
+ptrdiff_t Plugify_GetStringLength(String* string) {
+	return getStringLength(string);
 }
-void Plugify_ConstructString(void* ptr, _GoString_ source) {
-	constructString(ptr, source);
-}
-void Plugify_AssignString(void* ptr, _GoString_ source) {
-	assignString(ptr, source);
-}
-void Plugify_FreeString(void* ptr) {
-	freeString(ptr);
-}
-
-void Plugify_DeleteString(void* ptr) {
-	deleteString(ptr);
+void Plugify_AssignString(String* string, _GoString_ source) {
+	assignString(string, source);
 }
 
 
-void* Plugify_CreateVector(void* arr, ptrdiff_t len, enum DataType type) {
-	return createVector(arr, len, type);
+Vector Plugify_ConstructVector(void* arr, ptrdiff_t len, enum DataType type) {
+	return constructVector(arr, len, type);
 }
-void* Plugify_AllocateVector(enum DataType type) {
-	return allocateVector(type);
+void Plugify_DestroyVector(Vector* vector, enum DataType type) {
+	destroyVector(vector, type);
 }
-ptrdiff_t Plugify_GetVectorSize(void* ptr, enum DataType type) {
-	return getVectorSize(ptr, type);
+void* Plugify_GetVectorData(Vector* vector, enum DataType type) {
+	return getVectorData(vector, type);
 }
-void* Plugify_GetVectorData(void* ptr, enum DataType type) {
-	return getVectorData(ptr, type);
+ptrdiff_t Plugify_GetVectorSize(Vector* vector, enum DataType type) {
+	return getVectorSize(vector, type);
 }
-void Plugify_ConstructVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type) {
-	constructVector(ptr, arr, len, type);
-}
-void Plugify_AssignVector(void* ptr, void* arr, ptrdiff_t len, enum DataType type) {
-	assignVector(ptr, arr, len, type);
-}
-void Plugify_DeleteVector(void* ptr, enum DataType type) {
-	deleteVector(ptr, type);
-}
-void Plugify_FreeVector(void* ptr, enum DataType type) {
-	freeVector(ptr, type);
+void Plugify_AssignVector(Vector* vector, void* arr, ptrdiff_t len, enum DataType type) {
+	assignVector(vector, arr, len, type);
 }
 
-void Plugify_DeleteVectorDataBool(void* ptr) {
-	deleteVectorDataBool(ptr);
-}
-void Plugify_DeleteVectorDataCStr(void* ptr) {
-	deleteVectorDataCStr(ptr);
+void Plugify_DeleteVectorDataCStr(void* arr) {
+	deleteVectorDataCStr(arr);
 }
 
 // Setter methods
@@ -221,117 +185,70 @@ void Plugify_SetIsPluginLoaded(void* func) {
 void Plugify_SetGetPluginId(void* func) {
 	getPluginId = (GetPluginIdFunc)func;
 }
-
 void Plugify_SetGetPluginName(void* func) {
 	getPluginName = (GetPluginNameFunc)func;
 }
-
 void Plugify_SetGetPluginFullName(void* func) {
 	getPluginFullName = (GetPluginFullNameFunc)func;
 }
-
 void Plugify_SetGetPluginDescription(void* func) {
 	getPluginDescription = (GetPluginDescriptionFunc)func;
 }
-
 void Plugify_SetGetPluginVersion(void* func) {
 	getPluginVersion = (GetPluginVersionFunc)func;
 }
-
 void Plugify_SetGetPluginAuthor(void* func) {
 	getPluginAuthor = (GetPluginAuthorFunc)func;
 }
-
 void Plugify_SetGetPluginWebsite(void* func) {
 	getPluginWebsite = (GetPluginWebsiteFunc)func;
 }
-
 void Plugify_SetGetPluginBaseDir(void* func) {
 	getPluginBaseDir = (GetPluginBaseDirFunc)func;
 }
-
 void Plugify_SetGetPluginDependencies(void* func) {
 	getPluginDependencies = (GetPluginDependenciesFunc)func;
 }
-
 void Plugify_SetGetPluginDependenciesSize(void* func) {
 	getPluginDependenciesSize = (GetPluginDependenciesSizeFunc)func;
 }
-
 void Plugify_SetFindPluginResource(void* func) {
 	findPluginResource = (FindPluginResourceFunc)func;
 }
-
 void Plugify_SetDeleteCStr(void* func) {
 	deleteCStr = (DeleteCStrFunc)func;
-}
-
-void Plugify_SetAllocateString(void* func) {
-	allocateString = (AllocateStringFunc)func;
-}
-
-void Plugify_SetCreateString(void* func) {
-	createString = (CreateStringFunc)func;
-}
-
-void Plugify_SetGetStringData(void* func) {
-	getStringData = (GetStringDataFunc)func;
-}
-
-void Plugify_SetGetStringLength(void* func) {
-	getStringLength = (GetStringLengthFunc)func;
 }
 
 void Plugify_SetConstructString(void* func) {
 	constructString = (ConstructStringFunc)func;
 }
-
+void Plugify_SetDestroyString(void* func) {
+	destroyString = (DestroyStringFunc)func;
+}
+void Plugify_SetGetStringData(void* func) {
+	getStringData = (GetStringDataFunc)func;
+}
+void Plugify_SetGetStringLength(void* func) {
+	getStringLength = (GetStringLengthFunc)func;
+}
 void Plugify_SetAssignString(void* func) {
 	assignString = (AssignStringFunc)func;
-}
-
-void Plugify_SetFreeString(void* func) {
-	freeString = (FreeStringFunc)func;
-}
-
-void Plugify_SetDeleteString(void* func) {
-	deleteString = (DeleteStringFunc)func;
-}
-
-void Plugify_SetCreateVector(void* func) {
-	createVector = (CreateVectorFunc)func;
-}
-
-void Plugify_SetAllocateVector(void* func) {
-	allocateVector = (AllocateVectorFunc)func;
-}
-
-void Plugify_SetGetVectorSize(void* func) {
-	getVectorSize = (GetVectorSizeFunc)func;
-}
-
-void Plugify_SetGetVectorData(void* func) {
-	getVectorData = (GetVectorDataFunc)func;
 }
 
 void Plugify_SetConstructVector(void* func) {
 	constructVector = (ConstructVectorFunc)func;
 }
-
+void Plugify_SetDestroyVector(void* func) {
+	destroyVector = (DestroyVectorFunc)func;
+}
+void Plugify_SetGetVectorData(void* func) {
+	getVectorData = (GetVectorDataFunc)func;
+}
+void Plugify_SetGetVectorSize(void* func) {
+	getVectorSize = (GetVectorSizeFunc)func;
+}
 void Plugify_SetAssignVector(void* func) {
 	assignVector = (AssignVectorFunc)func;
-}
-
-void Plugify_SetDeleteVector(void* func) {
-	deleteVector = (DeleteVectorFunc)func;
-}
-
-void Plugify_SetFreeVector(void* func) {
-	freeVector = (FreeVectorFunc)func;
-}
-
-void Plugify_SetDeleteVectorDataBool(void* func) {
-	deleteVectorDataBool = (DeleteVectorDataBoolFunc)func;
 }
 
 void Plugify_SetDeleteVectorDataCStr(void* func) {
