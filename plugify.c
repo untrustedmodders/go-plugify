@@ -21,7 +21,7 @@ typedef ptrdiff_t (*GetPluginDependenciesSizeFunc)(void*);
 typedef const char* (*FindPluginResourceFunc)(void*, const char*);
 typedef void (*DeleteCStrFunc)(const char*);
 
-typedef String (*ConstructStringFunc)(String*, _GoString_);
+typedef String (*ConstructStringFunc)(_GoString_);
 typedef void (*DestroyStringFunc)(String*);
 typedef const char* (*GetStringDataFunc)(String*);
 typedef ptrdiff_t (*GetStringLengthFunc)(String*);
