@@ -28,7 +28,7 @@ enum DataType {
 };
 
 typedef struct { char* data; size_t size; size_t cap; } String;
-typedef struct { size_t size; size_t cap; void* data; } Vector;
+typedef struct { void* begin; void* end; void* capacity; } Vector;
 
 void* Plugify_GetMethodPtr(const char* methodName);
 void Plugify_GetMethodPtr2(const char* methodName, void** addressDest);
