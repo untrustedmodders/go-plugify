@@ -15,49 +15,72 @@ const kApiVersion = 1
 type PluginStartCallback func()
 type PluginUpdateCallback func(dt float32)
 type PluginEndCallback func()
+type PluginPanicCallback func() []byte
 
 type Plugify struct {
-	Id                     int64
-	Name                   string
-	FullName               string
-	Description            string
-	Version                string
-	Author                 string
-	Website                string
-	BaseDir                string
-	Dependencies           []string
-	fnPluginStartCallback  PluginStartCallback
-	fnPluginUpdateCallback PluginUpdateCallback
-	fnPluginEndCallback    PluginEndCallback
+	Id           int64
+	Name         string
+	FullName     string
+	Description  string
+	Version      string
+	Author       string
+	Website      string
+	BaseDir      string
+	Dependencies []string
+
+	fnPluginStartCallback   PluginStartCallback
+	fnPluginUpdateCallback  PluginUpdateCallback
+	fnPluginEndCallback     PluginEndCallback
+	fnPluginPanicCallback   PluginPanicCallback
+	hasPluginStartCallback  bool
+	hasPluginUpdateCallback bool
+	hasPluginEndCallback    bool
+	hasPluginPanicCallback  bool
 }
 
-var plugify Plugify = Plugify{
-	Id:                     -1,
-	Name:                   "",
-	FullName:               "",
-	Description:            "",
-	Version:                "",
-	Author:                 "",
-	Website:                "",
-	BaseDir:                "",
-	Dependencies:           []string{},
-	fnPluginStartCallback:  func() {},
-	fnPluginUpdateCallback: func(dt float32) {},
-	fnPluginEndCallback:    func() {},
+var plugify = Plugify{
+	Id:           -1,
+	Name:         "",
+	FullName:     "",
+	Description:  "",
+	Version:      "",
+	Author:       "",
+	Website:      "",
+	BaseDir:      "",
+	Dependencies: []string{},
+
+	fnPluginStartCallback:   func() {},
+	fnPluginUpdateCallback:  func(dt float32) {},
+	fnPluginEndCallback:     func() {},
+	fnPluginPanicCallback:   func() []byte { return []byte{} },
+	hasPluginStartCallback:  false,
+	hasPluginUpdateCallback: false,
+	hasPluginEndCallback:    false,
+	hasPluginPanicCallback:  false,
 }
+
+var context C.PluginContext
 
 var BaseDir string = ""
 
 func OnPluginStart(fn PluginStartCallback) {
 	plugify.fnPluginStartCallback = fn
+	plugify.hasPluginStartCallback = true
 }
 
 func OnPluginUpdate(fn PluginUpdateCallback) {
 	plugify.fnPluginUpdateCallback = fn
+	plugify.hasPluginUpdateCallback = true
 }
 
 func OnPluginEnd(fn PluginEndCallback) {
 	plugify.fnPluginEndCallback = fn
+	plugify.hasPluginEndCallback = true
+}
+
+func OnPluginPanic(fn PluginPanicCallback) {
+	plugify.fnPluginPanicCallback = fn
+	plugify.hasPluginPanicCallback = true
 }
 
 func (p *Plugify) FindResource(path string) string {
@@ -380,10 +403,17 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 	dependencies := C.Plugify_GetPluginDependencies()
 	plugify.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
-	for i := range plugify.Dependencies {
-		plugify.Dependencies[i] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(i)*C.sizeof_uintptr_t)))
+	for j := range plugify.Dependencies {
+		plugify.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
 	}
 	C.Plugify_DeleteCStrArr(dependencies)
+
+	context = C.PluginContext{
+		hasUpdate: C.bool(plugify.hasPluginUpdateCallback),
+		hasStart:  C.bool(plugify.hasPluginStartCallback),
+		hasEnd:    C.bool(plugify.hasPluginEndCallback),
+		hasPanic:  C.bool(plugify.hasPluginPanicCallback),
+	}
 
 	return 0
 }
@@ -415,8 +445,17 @@ func Plugify_PluginEnd() {
 	clear(callbacks)
 }
 
+//export Plugify_PluginContext
+func Plugify_PluginContext() *C.PluginContext {
+	return &context
+}
+
 func panicker(v any) {
 	msg := fmt.Sprintf("%v", v)
+	stack := plugify.fnPluginPanicCallback()
+	if len(stack) > 0 {
+		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
+	}
 	C.Plugify_PrintException(msg)
 	panic(v)
 }
