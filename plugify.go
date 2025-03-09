@@ -32,17 +32,18 @@ type Plugify struct {
 }
 
 var plugify Plugify = Plugify{
-	Id:                    -1,
-	Name:                  "",
-	FullName:              "",
-	Description:           "",
-	Version:               "",
-	Author:                "",
-	Website:               "",
-	BaseDir:               "",
-	Dependencies:          []string{},
-	fnPluginStartCallback: func() {},
-	fnPluginEndCallback:   func() {},
+	Id:                     -1,
+	Name:                   "",
+	FullName:               "",
+	Description:            "",
+	Version:                "",
+	Author:                 "",
+	Website:                "",
+	BaseDir:                "",
+	Dependencies:           []string{},
+	fnPluginStartCallback:  func() {},
+	fnPluginUpdateCallback: func(dt float32) {},
+	fnPluginEndCallback:    func() {},
 }
 
 var BaseDir string = ""
