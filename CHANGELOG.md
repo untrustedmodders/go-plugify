@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/untrustedmodders/go-plugify/compare/v1.0.2...v1.0.3) (2025-03-09)
+
+
+### Bug Fixes
+
+* add missing includes to Linux ([caca727](https://github.com/untrustedmodders/go-plugify/commit/caca7278f5a7e84554c75382c660af01a41c89ca))
+
 ## [1.0.2](https://github.com/untrustedmodders/go-plugify/compare/v1.0.1...v1.0.2) (2025-03-09)
 
 
