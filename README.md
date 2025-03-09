@@ -29,6 +29,10 @@ func init() {
 		fmt.Println("OnPluginStart")
 	})
 
+	plugify.OnPluginUpdate(func(dt float32) {
+		fmt.Println("OnPluginUpdate")
+	})
+
 	plugify.OnPluginEnd(func() {
 		fmt.Println("OnPluginEnd")
 	})
