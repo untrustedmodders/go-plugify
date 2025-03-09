@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.5](https://github.com/untrustedmodders/go-plugify/compare/v1.0.4...v1.0.5) (2025-03-09)
+
+
+### Bug Fixes
+
+* add plugin context ([21d8963](https://github.com/untrustedmodders/go-plugify/commit/21d8963ae1b1382d42c1185ad1ee838269475924))
+
 ## [1.0.4](https://github.com/untrustedmodders/go-plugify/compare/v1.0.3...v1.0.4) (2025-03-09)
 
 
