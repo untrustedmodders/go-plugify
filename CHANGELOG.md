@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.4](https://github.com/untrustedmodders/go-plugify/compare/v1.0.3...v1.0.4) (2025-03-09)
+
+
+### Bug Fixes
+
+* add missing callback ([e603e61](https://github.com/untrustedmodders/go-plugify/commit/e603e6121957e223086937b5555b7a27362d6bc7))
+
 ## [1.0.3](https://github.com/untrustedmodders/go-plugify/compare/v1.0.2...v1.0.3) (2025-03-09)
 
 
