@@ -1,6 +1,5 @@
 #include <stddef.h>
 #include <assert.h>
-#include <string.h>
 typedef struct { const char *p; ptrdiff_t n; } _GoString_;
 #include "plugify.h"
 
