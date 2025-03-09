@@ -22,6 +22,7 @@ package main
 import (
 	"fmt"
 	"github.com/untrustedmodders/go-plugify"
+	"runtime/debug"
 )
 
 func init() {
@@ -35,6 +36,10 @@ func init() {
 
 	plugify.OnPluginEnd(func() {
 		fmt.Println("OnPluginEnd")
+	})
+
+	plugify.OnPluginPanic(func() []byte {
+		return debug.Stack() // workaround for could not import runtime/debug inside plugify package
 	})
 }
 
