@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/untrustedmodders/go-plugify/compare/v1.0.5...v1.1.0) (2025-03-17)
+
+
+### Features
+
+* add path getters ([c2a36ad](https://github.com/untrustedmodders/go-plugify/commit/c2a36ad23768a6b14c2d7e865a1155c4c40af2e0))
+
 ## [1.0.5](https://github.com/untrustedmodders/go-plugify/compare/v1.0.4...v1.0.5) (2025-03-09)
 
 
