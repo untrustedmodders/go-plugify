@@ -26,6 +26,9 @@ type Plugify struct {
 	Author       string
 	Website      string
 	BaseDir      string
+	ConfigsDir   string
+	DataDir      string
+	LogsDir      string
 	Dependencies []string
 
 	fnPluginStartCallback   PluginStartCallback
@@ -47,6 +50,9 @@ var plugify = Plugify{
 	Author:       "",
 	Website:      "",
 	BaseDir:      "",
+	ConfigsDir:   "",
+	DataDir:      "",
+	LogsDir:      "",
 	Dependencies: []string{},
 
 	fnPluginStartCallback:   func() {},
@@ -60,8 +66,6 @@ var plugify = Plugify{
 }
 
 var context C.PluginContext
-
-var BaseDir string = ""
 
 func OnPluginStart(fn PluginStartCallback) {
 	plugify.fnPluginStartCallback = fn
@@ -124,6 +128,12 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	C.Plugify_SetGetPluginWebsite(api[i])
 	i++
 	C.Plugify_SetGetPluginBaseDir(api[i])
+	i++
+	C.Plugify_SetGetPluginConfigsDir(api[i])
+	i++
+	C.Plugify_SetGetPluginDataDir(api[i])
+	i++
+	C.Plugify_SetGetPluginLogsDir(api[i])
 	i++
 	C.Plugify_SetGetPluginDependencies(api[i])
 	i++
@@ -385,10 +395,6 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 	C.pluginHandle = handle
 
-	path := C.Plugify_GetBaseDir()
-	BaseDir = C.GoString(path)
-	C.Plugify_DeleteCStr(path)
-
 	plugify.Id = int64(C.Plugify_GetPluginId())
 	plugify.Name = C.GoString(C.Plugify_GetPluginName())
 	plugify.FullName = C.GoString(C.Plugify_GetPluginFullName())
@@ -397,9 +403,21 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
 	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
 
-	pluginPath := C.Plugify_GetPluginBaseDir()
-	plugify.BaseDir = C.GoString(pluginPath)
-	C.Plugify_DeleteCStr(pluginPath)
+	baseDir := C.Plugify_GetPluginBaseDir()
+	plugify.BaseDir = C.GoString(baseDir)
+	C.Plugify_DeleteCStr(baseDir)
+
+	configsDir := C.Plugify_GetPluginConfigsDir()
+	plugify.ConfigsDir = C.GoString(configsDir)
+	C.Plugify_DeleteCStr(configsDir)
+
+	dataDir := C.Plugify_GetPluginDataDir()
+	plugify.DataDir = C.GoString(dataDir)
+	C.Plugify_DeleteCStr(dataDir)
+
+	logsDir := C.Plugify_GetPluginLogsDir()
+	plugify.LogsDir = C.GoString(logsDir)
+	C.Plugify_DeleteCStr(logsDir)
 
 	dependencies := C.Plugify_GetPluginDependencies()
 	plugify.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))

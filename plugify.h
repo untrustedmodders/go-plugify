@@ -69,8 +69,6 @@ extern PluginHandle pluginHandle;
 // Extern declarations for Plugify_ functions
 extern void* Plugify_GetMethodPtr(const char* methodName);
 extern void Plugify_GetMethodPtr2(const char* methodName, void** addressDest);
-
-extern const char* Plugify_GetBaseDir();
 extern bool Plugify_IsModuleLoaded(_GoString_ moduleName, int version, bool minimum);
 extern bool Plugify_IsPluginLoaded(_GoString_ pluginName, int version, bool minimum);
 extern void Plugify_PrintException(_GoString_ message);
@@ -83,6 +81,9 @@ extern const char* Plugify_GetPluginVersion();
 extern const char* Plugify_GetPluginAuthor();
 extern const char* Plugify_GetPluginWebsite();
 extern const char* Plugify_GetPluginBaseDir();
+extern const char* Plugify_GetPluginConfigsDir();
+extern const char* Plugify_GetPluginDataDir();
+extern const char* Plugify_GetPluginLogsDir();
 extern void* Plugify_GetPluginDependencies();
 extern ptrdiff_t Plugify_GetPluginDependenciesSize();
 extern const char* Plugify_FindPluginResource(_GoString_ path);
@@ -229,7 +230,6 @@ extern EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index);
 
 extern void Plugify_SetGetMethodPtr(void* ptr);
 extern void Plugify_SetGetMethodPtr2(void* ptr);
-extern void Plugify_SetGetBaseDir(void* ptr);
 extern void Plugify_SetIsModuleLoaded(void* ptr);
 extern void Plugify_SetIsPluginLoaded(void* ptr);
 extern void Plugify_SetPrintException(void* ptr);
@@ -241,6 +241,9 @@ extern void Plugify_SetGetPluginVersion(void* ptr);
 extern void Plugify_SetGetPluginAuthor(void* ptr);
 extern void Plugify_SetGetPluginWebsite(void* ptr);
 extern void Plugify_SetGetPluginBaseDir(void* ptr);
+extern void Plugify_SetGetPluginConfigsDir(void* ptr);
+extern void Plugify_SetGetPluginDataDir(void* ptr);
+extern void Plugify_SetGetPluginLogsDir(void* ptr);
 extern void Plugify_SetGetPluginDependencies(void* ptr);
 extern void Plugify_SetGetPluginDependenciesSize(void* ptr);
 extern void Plugify_SetFindPluginResource(void* ptr);

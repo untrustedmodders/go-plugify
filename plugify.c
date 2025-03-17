@@ -21,7 +21,6 @@ PluginHandle pluginHandle = NULL;
 // Function pointers
 void* (*GetMethodPtr)(const char*) = NULL;
 void (*GetMethodPtr2)(const char*, void**) = NULL;
-const char* (*GetBaseDir)() = NULL;
 bool (*IsModuleLoaded)(_GoString_, int, bool) = NULL;
 bool (*IsPluginLoaded)(_GoString_, int, bool) = NULL;
 void (*PrintException)(_GoString_) = NULL;
@@ -35,6 +34,9 @@ const char* (*GetPluginVersion)(PluginHandle) = NULL;
 const char* (*GetPluginAuthor)(PluginHandle) = NULL;
 const char* (*GetPluginWebsite)(PluginHandle) = NULL;
 const char* (*GetPluginBaseDir)(PluginHandle) = NULL;
+const char* (*GetPluginConfigsDir)(PluginHandle) = NULL;
+const char* (*GetPluginDataDir)(PluginHandle) = NULL;
+const char* (*GetPluginLogsDir)(PluginHandle) = NULL;
 void* (*GetPluginDependencies)(PluginHandle) = NULL;
 ptrdiff_t (*GetPluginDependenciesSize)(PluginHandle) = NULL;
 const char* (*FindPluginResource)(PluginHandle, _GoString_) = NULL;
@@ -185,8 +187,6 @@ EnumHandle (*GetMethodEnum)(MethodHandle, ptrdiff_t) = NULL;
 void* Plugify_GetMethodPtr(const char* methodName) { return GetMethodPtr(methodName); }
 // Function to call GetMethodPtr2
 void Plugify_GetMethodPtr2(const char* methodName, void** addressDest) { GetMethodPtr2(methodName, addressDest); }
-// Function to call GetBaseDir
-const char* Plugify_GetBaseDir() { return GetBaseDir(); }
 // Function to call IsModuleLoaded
 bool Plugify_IsModuleLoaded(_GoString_ moduleName, int version, bool minimum) { return IsModuleLoaded(moduleName, version, minimum); }
 // Function to call IsPluginLoaded
@@ -209,6 +209,12 @@ const char* Plugify_GetPluginAuthor() { return GetPluginAuthor(pluginHandle); }
 const char* Plugify_GetPluginWebsite() { return GetPluginWebsite(pluginHandle); }
 // Function to call GetPluginBaseDir
 const char* Plugify_GetPluginBaseDir() { return GetPluginBaseDir(pluginHandle); }
+// Function to call GetPluginConfigsDir
+const char* Plugify_GetPluginConfigsDir() { return GetPluginConfigsDir(pluginHandle); }
+// Function to call GetPluginDataDir
+const char* Plugify_GetPluginDataDir() { return GetPluginDataDir(pluginHandle); }
+// Function to call GetPluginLogsDir
+const char* Plugify_GetPluginLogsDir() { return GetPluginLogsDir(pluginHandle); }
 // Function to call GetPluginDependencies
 void* Plugify_GetPluginDependencies() { return GetPluginDependencies(pluginHandle); }
 // Function to call GetPluginDependenciesSize
@@ -358,7 +364,6 @@ EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index) { return 
 
 void Plugify_SetGetMethodPtr(void* ptr) { GetMethodPtr = (void* (*)(const char*)) ptr; }
 void Plugify_SetGetMethodPtr2(void* ptr) { GetMethodPtr2 = (void (*)(const char*, void**)) ptr; }
-void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (const char* (*)()) ptr; }
 void Plugify_SetIsModuleLoaded(void* ptr) { IsModuleLoaded = (bool (*)(_GoString_, int, bool)) ptr; }
 void Plugify_SetIsPluginLoaded(void* ptr) { IsPluginLoaded = (bool (*)(_GoString_, int, bool)) ptr; }
 void Plugify_SetPrintException(void* ptr) { PrintException = (void (*)(_GoString_)) ptr; }
@@ -370,6 +375,9 @@ void Plugify_SetGetPluginVersion(void* ptr) { GetPluginVersion = (const char* (*
 void Plugify_SetGetPluginAuthor(void* ptr) { GetPluginAuthor = (const char* (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginWebsite(void* ptr) { GetPluginWebsite = (const char* (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginBaseDir(void* ptr) { GetPluginBaseDir = (const char* (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginConfigsDir(void* ptr) { GetPluginConfigsDir = (const char* (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginDataDir(void* ptr) { GetPluginDataDir = (const char* (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginLogsDir(void* ptr) { GetPluginLogsDir = (const char* (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginDependencies(void* ptr) { GetPluginDependencies = (void* (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginDependenciesSize(void* ptr) { GetPluginDependenciesSize = (ptrdiff_t (*)(PluginHandle)) ptr; }
 void Plugify_SetFindPluginResource(void* ptr) { FindPluginResource = (const char* (*)(PluginHandle, _GoString_)) ptr; }
