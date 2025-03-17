@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/untrustedmodders/go-plugify/compare/v1.1.1...v1.1.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* update native flags for new funcs ([5854d61](https://github.com/untrustedmodders/go-plugify/commit/5854d6141a64628c0a8a11d1e19f083d73e57f10))
+
 ## [1.1.1](https://github.com/untrustedmodders/go-plugify/compare/v1.1.0...v1.1.1) (2025-03-17)
 
 
