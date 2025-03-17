@@ -4,7 +4,6 @@ package plugify
 #include "plugify.h"
 //#cgo noescape Plugify_GetMethodPtr
 //#cgo noescape Plugify_GetMethodPtr2
-#cgo noescape Plugify_GetBaseDir
 //#cgo noescape Plugify_IsModuleLoaded
 //#cgo noescape Plugify_IsPluginLoaded
 #cgo noescape Plugify_PrintException
@@ -16,6 +15,9 @@ package plugify
 #cgo noescape Plugify_GetPluginAuthor
 #cgo noescape Plugify_GetPluginWebsite
 #cgo noescape Plugify_GetPluginBaseDir
+#cgo noescape Plugify_GetPluginConfigsDir
+#cgo noescape Plugify_GetPluginDataDir
+#cgo noescape Plugify_GetPluginLogsDir
 #cgo noescape Plugify_GetPluginDependencies
 #cgo noescape Plugify_GetPluginDependenciesSize
 #cgo noescape Plugify_FindPluginResource
@@ -141,7 +143,6 @@ package plugify
 #cgo noescape Plugify_GetMethodPrototype
 #cgo noescape Plugify_SetGetMethodPtr
 #cgo noescape Plugify_SetGetMethodPtr2
-#cgo noescape Plugify_SetGetBaseDir
 #cgo noescape Plugify_SetIsModuleLoaded
 #cgo noescape Plugify_SetIsPluginLoaded
 #cgo noescape Plugify_SetPrintException
@@ -153,6 +154,9 @@ package plugify
 #cgo noescape Plugify_SetGetPluginAuthor
 #cgo noescape Plugify_SetGetPluginWebsite
 #cgo noescape Plugify_SetGetPluginBaseDir
+#cgo noescape Plugify_SetGetPluginConfigsDir
+#cgo noescape Plugify_SetGetPluginDataDir
+#cgo noescape Plugify_SetGetPluginLogsDir
 #cgo noescape Plugify_SetGetPluginDependencies
 #cgo noescape Plugify_SetGetPluginDependenciesSize
 #cgo noescape Plugify_SetFindPluginResource
@@ -279,7 +283,6 @@ package plugify
 
 //#cgo nocallback Plugify_GetMethodPtr
 //#cgo nocallback Plugify_GetMethodPtr2
-#cgo nocallback Plugify_GetBaseDir
 //#cgo nocallback Plugify_IsModuleLoaded
 //#cgo nocallback Plugify_IsPluginLoaded
 #cgo nocallback Plugify_PrintException
@@ -291,6 +294,9 @@ package plugify
 #cgo nocallback Plugify_GetPluginAuthor
 #cgo nocallback Plugify_GetPluginWebsite
 #cgo nocallback Plugify_GetPluginBaseDir
+#cgo nocallback Plugify_GetPluginConfigsDir
+#cgo nocallback Plugify_GetPluginDataDir
+#cgo nocallback Plugify_GetPluginLogsDir
 #cgo nocallback Plugify_GetPluginDependencies
 #cgo nocallback Plugify_GetPluginDependenciesSize
 #cgo nocallback Plugify_FindPluginResource
@@ -416,7 +422,6 @@ package plugify
 #cgo nocallback Plugify_GetMethodPrototype
 #cgo nocallback Plugify_SetGetMethodPtr
 #cgo nocallback Plugify_SetGetMethodPtr2
-#cgo nocallback Plugify_SetGetBaseDir
 #cgo nocallback Plugify_SetIsModuleLoaded
 #cgo nocallback Plugify_SetIsPluginLoaded
 #cgo nocallback Plugify_SetPrintException
@@ -428,6 +433,9 @@ package plugify
 #cgo nocallback Plugify_SetGetPluginAuthor
 #cgo nocallback Plugify_SetGetPluginWebsite
 #cgo nocallback Plugify_SetGetPluginBaseDir
+#cgo nocallback Plugify_SetGetPluginConfigsDir
+#cgo nocallback Plugify_SetGetPluginDataDir
+#cgo nocallback Plugify_SetGetPluginLogsDir
 #cgo nocallback Plugify_SetGetPluginDependencies
 #cgo nocallback Plugify_SetGetPluginDependenciesSize
 #cgo nocallback Plugify_SetFindPluginResource
