@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/untrustedmodders/go-plugify/compare/v1.1.0...v1.1.1) (2025-03-17)
+
+
+### Bug Fixes
+
+* remove GetBaseDir setter ([45c925f](https://github.com/untrustedmodders/go-plugify/commit/45c925f36fad17505de7239fe074be4ac42afaab))
+
 ## [1.1.0](https://github.com/untrustedmodders/go-plugify/compare/v1.0.5...v1.1.0) (2025-03-17)
 
 
