@@ -104,8 +104,6 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetMethodPtr2(api[i])
 	i++
-	C.Plugify_SetGetBaseDir(api[i])
-	i++
 	C.Plugify_SetIsModuleLoaded(api[i])
 	i++
 	C.Plugify_SetIsPluginLoaded(api[i])
