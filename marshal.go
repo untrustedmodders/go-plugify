@@ -14,11 +14,14 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"unsafe"
 )
 
-var callbacks []C.JitCallback
-var calls []C.JitCall
+var (
+	callbacks []C.JitCallback
+	calls     []C.JitCall
+)
 
 type ValueType byte
 
@@ -340,7 +343,10 @@ type function struct {
 	addr unsafe.Pointer
 }
 
-var functionMap = make(map[unsafe.Pointer]function)
+var (
+	mu          sync.Mutex
+	functionMap = make(map[unsafe.Pointer]function)
+)
 
 func cast[T any](val T) unsafe.Pointer {
 	return *(*unsafe.Pointer)(unsafe.Pointer(&val))
@@ -407,6 +413,9 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 	if fnPtr == nil {
 		return nil
 	}
+
+	mu.Lock()
+	defer mu.Unlock()
 
 	el, ok := functionMap[fnPtr]
 	if ok {
@@ -1455,6 +1464,13 @@ func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 }
 
 func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
+	if fn == nil {
+		return nil
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
 	fnType := reflect.ValueOf(fn)
 	if fnType.Kind() != reflect.Func {
 		panicker("expected a function")
