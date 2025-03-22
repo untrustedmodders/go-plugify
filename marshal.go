@@ -1460,14 +1460,14 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 		panicker("expected a function")
 	}
 
+	valueType := fnType.Type()
+	fnPtr := unsafe.Pointer(fnType.Pointer())
+
 	for _, v := range functionMap {
-		if v.fn == fn {
+		if unsafe.Pointer(reflect.ValueOf(v.fn).Pointer()) == fnPtr {
 			return v.addr
 		}
 	}
-
-	valueType := fnType.Type()
-	fnPtr := unsafe.Pointer(fnType.Pointer())
 
 	pkgPath := valueType.PkgPath()
 	if pkgPath == "main" {
