@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.3](https://github.com/untrustedmodders/go-plugify/compare/v1.1.2...v1.1.3) (2025-03-22)
+
+
+### Bug Fixes
+
+* add mutexes to function marshalling ([e6474d1](https://github.com/untrustedmodders/go-plugify/commit/e6474d160be90bd3f6b54de7a7f4e05aa803780f))
+* function comparison ([413d668](https://github.com/untrustedmodders/go-plugify/commit/413d668bab8cc76a7e6f7d6daeb0f44c503b874e))
+
 ## [1.1.2](https://github.com/untrustedmodders/go-plugify/compare/v1.1.1...v1.1.2) (2025-03-17)
 
 
