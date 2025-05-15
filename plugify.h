@@ -212,7 +212,7 @@ extern void Plugify_DeleteCall(JitCall call);
 extern void* Plugify_GetCallFunction(JitCall call);
 extern const char* Plugify_GetCallError(JitCall call);
 
-extern void* Plugify_CallFunction(JitCall call, void** params, __int128* ret);
+extern void Plugify_CallFunction(JitCall call, void** params, __int128* ret);
 
 typedef void* JitCallback;
 

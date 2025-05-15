@@ -348,7 +348,7 @@ void Plugify_DeleteCall(JitCall call) { DeleteCall(call); }
 void* Plugify_GetCallFunction(JitCall call) { return GetCallFunction(call); }
 const char* Plugify_GetCallError(JitCall call) { return GetCallError(call); }
 
-void* Plugify_CallFunction(JitCall call, void** params, __int128* ret) {
+void Plugify_CallFunction(JitCall call, void** params, __int128* ret) {
     ((void(*)(void**, __int128*))GetCallFunction(call))(params, ret);
 }
 
