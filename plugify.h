@@ -5,7 +5,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
-#include <uchar.h>
+
+#ifndef __CHAR16_TYPE__
+typedef unsigned short char16_t;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
