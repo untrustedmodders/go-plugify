@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/untrustedmodders/go-plugify/compare/v1.1.4...v1.1.5) (2025-05-15)
+
+
+### Bug Fixes
+
+* remove char16 macro ([539173b](https://github.com/untrustedmodders/go-plugify/commit/539173b086d86aa6d3b1db2b9e1bed4a8ffccb6f))
+
 ## [1.1.4](https://github.com/untrustedmodders/go-plugify/compare/v1.1.3...v1.1.4) (2025-05-15)
 
 
