@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.6](https://github.com/untrustedmodders/go-plugify/compare/v1.1.5...v1.1.6) (2025-05-15)
+
+
+### Bug Fixes
+
+* no return function ([55d14a3](https://github.com/untrustedmodders/go-plugify/commit/55d14a373531c3840a35c4a6f159e728cc192d7d))
+* update generaotr ([dbcdef8](https://github.com/untrustedmodders/go-plugify/commit/dbcdef88cb33738c71e6d7041d34922dfef61da0))
+
 ## [1.1.5](https://github.com/untrustedmodders/go-plugify/compare/v1.1.4...v1.1.5) (2025-05-15)
 
 
