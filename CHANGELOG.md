@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/untrustedmodders/go-plugify/compare/v1.1.3...v1.1.4) (2025-05-15)
+
+
+### Bug Fixes
+
+* apple clang missed uchar.h ([e0552e2](https://github.com/untrustedmodders/go-plugify/commit/e0552e2e6da440c700d38b82329d9bc40419f482))
+
 ## [1.1.3](https://github.com/untrustedmodders/go-plugify/compare/v1.1.2...v1.1.3) (2025-03-22)
 
 
