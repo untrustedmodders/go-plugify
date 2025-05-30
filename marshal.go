@@ -379,7 +379,7 @@ func hasReturnType(returnType ManagedType) bool {
 	hasRet := returnType.valueType >= _ObjectStart && returnType.valueType <= _ObjectEnd // params which pass by refs by default
 	if !hasRet {
 		var firstHidden ValueType
-		if runtime.GOOS == "windows" {
+		if runtime.GOOS == "windows" && runtime.GOARCH != "arm64" || runtime.GOARCH == "386" {
 			firstHidden = Vector3Type
 		} else {
 			firstHidden = Matrix4x4Type
