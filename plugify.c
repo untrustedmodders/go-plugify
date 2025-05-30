@@ -7,8 +7,8 @@ _Static_assert(sizeof(Vector2) == 8, "Unsupported Vector2 size");
 _Static_assert(sizeof(Vector3) == 12, "Unsupported Vector3 size");
 _Static_assert(sizeof(Vector4) == 16, "Unsupported Vector4 size");
 _Static_assert(sizeof(Matrix4x4) == 64, "Unsupported Matrix4x4 size");
-_Static_assert(sizeof(String) == 24, "Unsupported String size");
-_Static_assert(sizeof(Vector) == 24, "Unsupported Vector size");
+_Static_assert(sizeof(String) == sizeof(void*) * 3, "Unsupported String size");
+_Static_assert(sizeof(Vector) == sizeof(void*) * 3, "Unsupported Vector size");
 _Static_assert(sizeof(Variant) == 32, "Unsupported Variant size");
 _Static_assert(offsetof(struct Variant, current) == 24, "Unsupported Variant layout");
 

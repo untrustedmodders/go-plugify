@@ -23,6 +23,8 @@ var (
 	calls     []C.JitCall
 )
 
+const alignment int = 16
+
 type ValueType byte
 
 const (
@@ -102,13 +104,12 @@ const (
 )
 
 type memoryPool struct {
-	pool      unsafe.Pointer // Start of the aligned memory block
-	size      int            // Total size of the pool
-	nextFree  int            // Next free byte offset
-	alignment int            // Alignment requirement (16 bytes)
+	pool     unsafe.Pointer // Start of the aligned memory block
+	size     int            // Total size of the pool
+	nextFree int            // Next free byte offset
 }
 
-func newMemoryPool(size int, alignment int) *memoryPool {
+func newMemoryPool(size int) *memoryPool {
 	// Allocate a block of memory with alignment
 	pool := C.aligned_malloc(C.size_t(size), C.size_t(alignment))
 	if pool == nil {
@@ -116,16 +117,19 @@ func newMemoryPool(size int, alignment int) *memoryPool {
 	}
 
 	return &memoryPool{
-		pool:      pool,
-		size:      size,
-		nextFree:  0,
-		alignment: alignment,
+		pool:     pool,
+		size:     size,
+		nextFree: 0,
 	}
+}
+
+func roundUp(size int) int {
+	return (size + (alignment - 1)) &^ (alignment - 1)
 }
 
 func (p *memoryPool) alloc(size int) unsafe.Pointer {
 	// Calculate the next aligned address
-	alignedNextFree := (p.nextFree + p.alignment - 1) &^ (p.alignment - 1)
+	alignedNextFree := roundUp(p.nextFree)
 
 	// Check if there is enough space in the pool
 	if alignedNextFree+size > p.size {
@@ -153,37 +157,35 @@ func sizeOfValueType(vt ValueType) int {
 	case Void:
 		return 0
 	case Bool, Char8, Int8, UInt8:
-		return 1
+		return C.sizeof_bool
 	case Char16, Int16, UInt16:
-		return 2
+		return C.sizeof_char16_t
 	case Int32, UInt32, Float:
-		return 4
-	case Int64, UInt64, Double, Function, Pointer:
-		return 8
+		return C.sizeof_float
+	case Int64, UInt64, Double:
+		return C.sizeof_double
+	case Function, Pointer:
+		return C.sizeof_ptrdiff_t
 	case String:
-		return 24
+		return C.sizeof_String
 	case Any:
-		return 32
+		return C.sizeof_Variant
 	case ArrayBool, ArrayChar8, ArrayChar16, ArrayInt8, ArrayInt16, ArrayInt32,
 		ArrayInt64, ArrayUInt8, ArrayUInt16, ArrayUInt32, ArrayUInt64, ArrayPointer,
 		ArrayFloat, ArrayDouble, ArrayString, ArrayAny, ArrayVector2, ArrayVector3,
 		ArrayVector4, ArrayMatrix4x4:
-		return 24
+		return C.sizeof_Vector
 	case Vector2Type:
-		return 8 // 2 floats
+		return C.sizeof_Vector2 // 2 floats
 	case Vector3Type:
-		return 12 // 3 floats
+		return C.sizeof_Vector3 // 3 floats
 	case Vector4Type:
-		return 16 // 4 floats
+		return C.sizeof_Vector4 // 4 floats
 	case Matrix4x4Type:
-		return 64 // 16 floats
+		return C.sizeof_Matrix4x4 // 16 floats
 	default:
 		return 0
 	}
-}
-
-func roundUp(size int) int {
-	return (size + 15) &^ 15
 }
 
 func getValueTypeSize(vt ValueType) int {
@@ -446,7 +448,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 	}
 
 	wrapper := reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
-		pool := newMemoryPool(poolSize, 16)
+		pool := newMemoryPool(poolSize)
 		defer pool.free()
 
 		params := unsafe.Slice((*unsafe.Pointer)(pool.alloc(paramSize)), paramCount)
@@ -457,77 +459,54 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 
 		retType := returnType.valueType
 		if hasRet {
-			var ptr unsafe.Pointer
+			size := getValueTypeSize(retType)
+			ptr := pool.alloc(size)
 			switch retType {
-			case Vector2Type, Vector3Type, Vector4Type:
-				ptr = pool.alloc(16)
-			case Matrix4x4Type:
-				ptr = pool.alloc(64)
+			case Vector2Type, Vector3Type, Vector4Type, Matrix4x4Type:
+				break
 			case String:
-				ptr = pool.alloc(32)
 				defer DestroyString((*PlgString)(ptr))
 			case Any:
-				ptr = pool.alloc(32)
 				defer DestroyVariant((*PlgVariant)(ptr))
 			case ArrayBool:
-				ptr = pool.alloc(32)
 				defer DestroyVectorBool((*PlgVector)(ptr))
 			case ArrayChar8:
-				ptr = pool.alloc(32)
 				defer DestroyVectorChar8((*PlgVector)(ptr))
 			case ArrayChar16:
-				ptr = pool.alloc(32)
 				defer DestroyVectorChar16((*PlgVector)(ptr))
 			case ArrayInt8:
-				ptr = pool.alloc(32)
 				defer DestroyVectorInt8((*PlgVector)(ptr))
 			case ArrayInt16:
-				ptr = pool.alloc(32)
 				defer DestroyVectorInt16((*PlgVector)(ptr))
 			case ArrayInt32:
-				ptr = pool.alloc(32)
 				defer DestroyVectorInt32((*PlgVector)(ptr))
 			case ArrayInt64:
-				ptr = pool.alloc(32)
 				defer DestroyVectorInt64((*PlgVector)(ptr))
 			case ArrayUInt8:
-				ptr = pool.alloc(32)
 				defer DestroyVectorUInt8((*PlgVector)(ptr))
 			case ArrayUInt16:
-				ptr = pool.alloc(32)
 				defer DestroyVectorUInt16((*PlgVector)(ptr))
 			case ArrayUInt32:
-				ptr = pool.alloc(32)
 				defer DestroyVectorUInt32((*PlgVector)(ptr))
 			case ArrayUInt64:
-				ptr = pool.alloc(32)
 				defer DestroyVectorUInt64((*PlgVector)(ptr))
 			case ArrayPointer:
-				ptr = pool.alloc(32)
 				defer DestroyVectorPointer((*PlgVector)(ptr))
 			case ArrayFloat:
-				ptr = pool.alloc(32)
 				defer DestroyVectorFloat((*PlgVector)(ptr))
 			case ArrayDouble:
-				ptr = pool.alloc(32)
 				defer DestroyVectorDouble((*PlgVector)(ptr))
 			case ArrayString:
-				ptr = pool.alloc(32)
 				defer DestroyVectorString((*PlgVector)(ptr))
 			case ArrayAny:
-				ptr = pool.alloc(32)
 				defer DestroyVectorVariant((*PlgVector)(ptr))
 			case ArrayVector2:
-				ptr = pool.alloc(32)
 				defer DestroyVectorVector2((*PlgVector)(ptr))
 			case ArrayVector3:
-				ptr = pool.alloc(32)
 				defer DestroyVectorVector3((*PlgVector)(ptr))
 			case ArrayVector4:
-				ptr = pool.alloc(32)
 				defer DestroyVectorVector4((*PlgVector)(ptr))
 			case ArrayMatrix4x4:
-				ptr = pool.alloc(32)
 				defer DestroyVectorMatrix4x4((*PlgVector)(ptr))
 			default:
 				panicker(fmt.Sprintf("GetDelegateForFunctionPointer return type not supported %v", retType))
@@ -539,113 +518,114 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 		for i, arg := range args {
 			paramType := parameterTypes[i]
 			valueType := paramType.valueType
+			size := getValueTypeSize(valueType)
 			var ptr unsafe.Pointer
 			if paramType.ref {
 				switch valueType {
 				case Bool:
 					val := arg.Interface().(*bool)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*bool)(ptr)
 					}()
 				case Char8:
 					val := arg.Interface().(*int8)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*int8)(ptr)
 					}()
 				case Char16:
 					val := arg.Interface().(*uint16)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uint16)(ptr)
 					}()
 				case Int8:
 					val := arg.Interface().(*int8)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*int8)(ptr)
 					}()
 				case Int16:
 					val := arg.Interface().(*int16)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*int16)(ptr)
 					}()
 				case Int32:
 					val := arg.Interface().(*int32)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*int32)(ptr)
 					}()
 				case Int64:
 					val := arg.Interface().(*int64)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*int64)(ptr)
 					}()
 				case UInt8:
 					val := arg.Interface().(*uint8)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uint8)(ptr)
 					}()
 				case UInt16:
 					val := arg.Interface().(*uint16)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uint16)(ptr)
 					}()
 				case UInt32:
 					val := arg.Interface().(*uint32)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uint32)(ptr)
 					}()
 				case UInt64:
 					val := arg.Interface().(*uint64)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uint64)(ptr)
 					}()
 				case Pointer:
 					val := arg.Interface().(*uintptr)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*uintptr)(ptr)
 					}()
 				case Float:
 					val := arg.Interface().(*float32)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*float32)(ptr)
 					}()
 				case Double:
 					val := arg.Interface().(*float64)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*float64)(ptr)
 					}()
 				case Vector2Type:
-					ptr = pin(*(arg.Interface().(*Vector2)), pool, 16)
+					ptr = pin(*(arg.Interface().(*Vector2)), pool, size)
 					defer func() {
 						*(arg.Interface().(*Vector2)) = *(*Vector2)(ptr)
 					}()
 				case Vector3Type:
 					val := arg.Interface().(*Vector3)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*Vector3)(ptr)
 					}()
 				case Vector4Type:
 					val := arg.Interface().(*Vector4)
-					ptr = pin(*val, pool, 16)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*Vector4)(ptr)
 					}()
 				case Matrix4x4Type:
 					val := arg.Interface().(*Matrix4x4)
-					ptr = pin(*val, pool, 64)
+					ptr = pin(*val, pool, size)
 					defer func() {
 						*val = *(*Matrix4x4)(ptr)
 					}()
@@ -653,154 +633,154 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 					ptr = GetFunctionPointerForDelegate(arg)
 				case String:
 					val := arg.Interface().(*string)
-					ptr = pin(ConstructString(*val), pool, 32)
+					ptr = pin(ConstructString(*val), pool, size)
 					defer func() {
 						*val = GetStringData((*PlgString)(ptr))
 						DestroyString((*PlgString)(ptr))
 					}()
 				case Any:
 					val := arg.Interface().(*any)
-					ptr = pin(ConstructVariant(*val), pool, 32)
+					ptr = pin(ConstructVariant(*val), pool, size)
 					defer func() {
 						*val = GetVariantData((*PlgVariant)(ptr))
 						DestroyVariant((*PlgVariant)(ptr))
 					}()
 				case ArrayBool:
 					val := arg.Interface().(*[]bool)
-					ptr = pin(ConstructVectorBool(*val), pool, 32)
+					ptr = pin(ConstructVectorBool(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataBool((*PlgVector)(ptr))
 						DestroyVectorBool((*PlgVector)(ptr))
 					}()
 				case ArrayChar8:
 					val := arg.Interface().(*[]int8)
-					ptr = pin(ConstructVectorChar8(*val), pool, 32)
+					ptr = pin(ConstructVectorChar8(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataChar8((*PlgVector)(ptr))
 						DestroyVectorChar8((*PlgVector)(ptr))
 					}()
 				case ArrayChar16:
 					val := arg.Interface().(*[]uint16)
-					ptr = pin(ConstructVectorChar16(*val), pool, 32)
+					ptr = pin(ConstructVectorChar16(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataChar16((*PlgVector)(ptr))
 						DestroyVectorChar16((*PlgVector)(ptr))
 					}()
 				case ArrayInt8:
 					val := arg.Interface().(*[]int8)
-					ptr = pin(ConstructVectorInt8(*val), pool, 32)
+					ptr = pin(ConstructVectorInt8(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataInt8((*PlgVector)(ptr))
 						DestroyVectorInt8((*PlgVector)(ptr))
 					}()
 				case ArrayInt16:
 					val := arg.Interface().(*[]int16)
-					ptr = pin(ConstructVectorInt16(*val), pool, 32)
+					ptr = pin(ConstructVectorInt16(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataInt16((*PlgVector)(ptr))
 						DestroyVectorInt16((*PlgVector)(ptr))
 					}()
 				case ArrayInt32:
 					val := arg.Interface().(*[]int32)
-					ptr = pin(ConstructVectorInt32(*val), pool, 32)
+					ptr = pin(ConstructVectorInt32(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataInt32((*PlgVector)(ptr))
 						DestroyVectorInt32((*PlgVector)(ptr))
 					}()
 				case ArrayInt64:
 					val := arg.Interface().(*[]int64)
-					ptr = pin(ConstructVectorInt64(*val), pool, 32)
+					ptr = pin(ConstructVectorInt64(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataInt64((*PlgVector)(ptr))
 						DestroyVectorInt64((*PlgVector)(ptr))
 					}()
 				case ArrayUInt8:
 					val := arg.Interface().(*[]uint8)
-					ptr = pin(ConstructVectorUInt8(*val), pool, 32)
+					ptr = pin(ConstructVectorUInt8(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataUInt8((*PlgVector)(ptr))
 						DestroyVectorUInt8((*PlgVector)(ptr))
 					}()
 				case ArrayUInt16:
 					val := arg.Interface().(*[]uint16)
-					ptr = pin(ConstructVectorUInt16(*val), pool, 32)
+					ptr = pin(ConstructVectorUInt16(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataUInt16((*PlgVector)(ptr))
 						DestroyVectorUInt16((*PlgVector)(ptr))
 					}()
 				case ArrayUInt32:
 					val := arg.Interface().(*[]uint32)
-					ptr = pin(ConstructVectorUInt32(*val), pool, 32)
+					ptr = pin(ConstructVectorUInt32(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataUInt32((*PlgVector)(ptr))
 						DestroyVectorUInt32((*PlgVector)(ptr))
 					}()
 				case ArrayUInt64:
 					val := arg.Interface().(*[]uint64)
-					ptr = pin(ConstructVectorUInt64(*val), pool, 32)
+					ptr = pin(ConstructVectorUInt64(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataUInt64((*PlgVector)(ptr))
 						DestroyVectorUInt64((*PlgVector)(ptr))
 					}()
 				case ArrayPointer:
 					val := arg.Interface().(*[]uintptr)
-					ptr = pin(ConstructVectorPointer(*val), pool, 32)
+					ptr = pin(ConstructVectorPointer(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataPointer((*PlgVector)(ptr))
 						DestroyVectorPointer((*PlgVector)(ptr))
 					}()
 				case ArrayFloat:
 					val := arg.Interface().(*[]float32)
-					ptr = pin(ConstructVectorFloat(*val), pool, 32)
+					ptr = pin(ConstructVectorFloat(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataFloat((*PlgVector)(ptr))
 						DestroyVectorFloat((*PlgVector)(ptr))
 					}()
 				case ArrayDouble:
 					val := arg.Interface().(*[]float64)
-					ptr = pin(ConstructVectorDouble(*val), pool, 32)
+					ptr = pin(ConstructVectorDouble(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataDouble((*PlgVector)(ptr))
 						DestroyVectorDouble((*PlgVector)(ptr))
 					}()
 				case ArrayString:
 					val := arg.Interface().(*[]string)
-					ptr = pin(ConstructVectorString(*val), pool, 32)
+					ptr = pin(ConstructVectorString(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataString((*PlgVector)(ptr))
 						DestroyVectorString((*PlgVector)(ptr))
 					}()
 				case ArrayAny:
 					val := arg.Interface().(*[]any)
-					ptr = pin(ConstructVectorVariant(*val), pool, 32)
+					ptr = pin(ConstructVectorVariant(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataVariant((*PlgVector)(ptr))
 						DestroyVectorVariant((*PlgVector)(ptr))
 					}()
 				case ArrayVector2:
 					val := arg.Interface().(*[]Vector2)
-					ptr = pin(ConstructVectorVector2(*val), pool, 32)
+					ptr = pin(ConstructVectorVector2(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataVector2((*PlgVector)(ptr))
 						DestroyVectorVector2((*PlgVector)(ptr))
 					}()
 				case ArrayVector3:
 					val := arg.Interface().(*[]Vector3)
-					ptr = pin(ConstructVectorVector3(*val), pool, 32)
+					ptr = pin(ConstructVectorVector3(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataVector3((*PlgVector)(ptr))
 						DestroyVectorVector3((*PlgVector)(ptr))
 					}()
 				case ArrayVector4:
 					val := arg.Interface().(*[]Vector4)
-					ptr = pin(ConstructVectorVector4(*val), pool, 32)
+					ptr = pin(ConstructVectorVector4(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataVector4((*PlgVector)(ptr))
 						DestroyVectorVector4((*PlgVector)(ptr))
 					}()
 				case ArrayMatrix4x4:
 					val := arg.Interface().(*[]Matrix4x4)
-					ptr = pin(ConstructVectorMatrix4x4(*val), pool, 32)
+					ptr = pin(ConstructVectorMatrix4x4(*val), pool, size)
 					defer func() {
 						*val = GetVectorDataMatrix4x4((*PlgVector)(ptr))
 						DestroyVectorMatrix4x4((*PlgVector)(ptr))
@@ -839,80 +819,80 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 				case Double:
 					ptr = cast(arg.Interface().(float64))
 				case Vector2Type:
-					ptr = pin(arg.Interface().(Vector2), pool, 16)
+					ptr = pin(arg.Interface().(Vector2), pool, size)
 				case Vector3Type:
-					ptr = pin(arg.Interface().(Vector3), pool, 16)
+					ptr = pin(arg.Interface().(Vector3), pool, size)
 				case Vector4Type:
-					ptr = pin(arg.Interface().(Vector4), pool, 16)
+					ptr = pin(arg.Interface().(Vector4), pool, size)
 				case Matrix4x4Type:
-					ptr = pin(arg.Interface().(Matrix4x4), pool, 64)
+					ptr = pin(arg.Interface().(Matrix4x4), pool, size)
 				case Function:
 					ptr = GetFunctionPointerForDelegate(arg)
 				case String:
-					ptr = pin(ConstructString(arg.Interface().(string)), pool, 32)
+					ptr = pin(ConstructString(arg.Interface().(string)), pool, size)
 					defer DestroyString((*PlgString)(ptr))
 				case Any:
-					ptr = pin(ConstructVariant(arg.Interface().(any)), pool, 32)
+					ptr = pin(ConstructVariant(arg.Interface().(any)), pool, size)
 					defer DestroyVariant((*PlgVariant)(ptr))
 				case ArrayBool:
-					ptr = pin(ConstructVectorBool(arg.Interface().([]bool)), pool, 32)
+					ptr = pin(ConstructVectorBool(arg.Interface().([]bool)), pool, size)
 					defer DestroyVectorBool((*PlgVector)(ptr))
 				case ArrayChar8:
-					ptr = pin(ConstructVectorChar8(arg.Interface().([]int8)), pool, 32)
+					ptr = pin(ConstructVectorChar8(arg.Interface().([]int8)), pool, size)
 					defer DestroyVectorChar8((*PlgVector)(ptr))
 				case ArrayChar16:
-					ptr = pin(ConstructVectorChar16(arg.Interface().([]uint16)), pool, 32)
+					ptr = pin(ConstructVectorChar16(arg.Interface().([]uint16)), pool, size)
 					defer DestroyVectorChar16((*PlgVector)(ptr))
 				case ArrayInt8:
-					ptr = pin(ConstructVectorInt8(arg.Interface().([]int8)), pool, 32)
+					ptr = pin(ConstructVectorInt8(arg.Interface().([]int8)), pool, size)
 					defer DestroyVectorInt8((*PlgVector)(ptr))
 				case ArrayInt16:
-					ptr = pin(ConstructVectorInt16(arg.Interface().([]int16)), pool, 32)
+					ptr = pin(ConstructVectorInt16(arg.Interface().([]int16)), pool, size)
 					defer DestroyVectorInt16((*PlgVector)(ptr))
 				case ArrayInt32:
-					ptr = pin(ConstructVectorInt32(arg.Interface().([]int32)), pool, 32)
+					ptr = pin(ConstructVectorInt32(arg.Interface().([]int32)), pool, size)
 					defer DestroyVectorInt32((*PlgVector)(ptr))
 				case ArrayInt64:
-					ptr = pin(ConstructVectorInt64(arg.Interface().([]int64)), pool, 32)
+					ptr = pin(ConstructVectorInt64(arg.Interface().([]int64)), pool, size)
 					defer DestroyVectorInt64((*PlgVector)(ptr))
 				case ArrayUInt8:
-					ptr = pin(ConstructVectorUInt8(arg.Interface().([]uint8)), pool, 32)
+					ptr = pin(ConstructVectorUInt8(arg.Interface().([]uint8)), pool, size)
 					defer DestroyVectorUInt8((*PlgVector)(ptr))
 				case ArrayUInt16:
-					ptr = pin(ConstructVectorUInt16(arg.Interface().([]uint16)), pool, 32)
+					ptr = pin(ConstructVectorUInt16(arg.Interface().([]uint16)), pool, size)
 					defer DestroyVectorUInt16((*PlgVector)(ptr))
 				case ArrayUInt32:
-					ptr = pin(ConstructVectorUInt32(arg.Interface().([]uint32)), pool, 32)
+					ptr = pin(ConstructVectorUInt32(arg.Interface().([]uint32)), pool, size)
 					defer DestroyVectorUInt32((*PlgVector)(ptr))
 				case ArrayUInt64:
-					ptr = pin(ConstructVectorUInt64(arg.Interface().([]uint64)), pool, 32)
+					ptr = pin(ConstructVectorUInt64(arg.Interface().([]uint64)), pool, size)
 					defer DestroyVectorUInt64((*PlgVector)(ptr))
 				case ArrayPointer:
-					ptr = pin(ConstructVectorPointer(arg.Interface().([]uintptr)), pool, 32)
+					ptr = pin(ConstructVectorPointer(arg.Interface().([]uintptr)), pool, size)
 					defer DestroyVectorPointer((*PlgVector)(ptr))
 				case ArrayFloat:
-					ptr = pin(ConstructVectorFloat(arg.Interface().([]float32)), pool, 32)
+					ptr = pin(ConstructVectorFloat(arg.Interface().([]float32)), pool, size)
 					defer DestroyVectorFloat((*PlgVector)(ptr))
 				case ArrayDouble:
-					ptr = pin(ConstructVectorDouble(arg.Interface().([]float64)), pool, 32)
+					ptr = pin(ConstructVectorDouble(arg.Interface().([]float64)), pool, size)
 					defer DestroyVectorDouble((*PlgVector)(ptr))
 				case ArrayString:
-					ptr = pin(ConstructVectorString(arg.Interface().([]string)), pool, 32)
+					ptr = pin(ConstructVectorString(arg.Interface().([]string)), pool, size)
 					defer DestroyVectorString((*PlgVector)(ptr))
 				case ArrayAny:
-					ptr = pin(ConstructVectorVariant(arg.Interface().([]any)), pool, 32)
+					ptr = pin(ConstructVectorVariant(arg.Interface().([]any)), pool, size)
 					defer DestroyVectorVariant((*PlgVector)(ptr))
 				case ArrayVector2:
-					ptr = pin(ConstructVectorVector2(arg.Interface().([]Vector2)), pool, 32)
+					ptr = pin(ConstructVectorVector2(arg.Interface().([]Vector2)), pool, size)
 					defer DestroyVectorVector2((*PlgVector)(ptr))
 				case ArrayVector3:
-					ptr = pin(ConstructVectorVector3(arg.Interface().([]Vector3)), pool, 32)
+					ptr = pin(ConstructVectorVector3(arg.Interface().([]Vector3)), pool, size)
 					defer DestroyVectorVector3((*PlgVector)(ptr))
 				case ArrayVector4:
-					ptr = pin(ConstructVectorVector4(arg.Interface().([]Vector4)), pool, 32)
+					ptr = pin(ConstructVectorVector4(arg.Interface().([]Vector4)), pool, size)
 					defer DestroyVectorVector4((*PlgVector)(ptr))
 				case ArrayMatrix4x4:
-					ptr = pin(ConstructVectorMatrix4x4(arg.Interface().([]Matrix4x4)), pool, 32)
+					ptr = pin(ConstructVectorMatrix4x4(arg.Interface().([]Matrix4x4)), pool, size)
 					defer DestroyVectorMatrix4x4((*PlgVector)(ptr))
 				default:
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", valueType))
