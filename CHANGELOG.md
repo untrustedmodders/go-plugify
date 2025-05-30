@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.7](https://github.com/untrustedmodders/go-plugify/compare/v1.1.6...v1.1.7) (2025-05-30)
+
+
+### Bug Fixes
+
+* add combability with 32 bit ([3ae92b0](https://github.com/untrustedmodders/go-plugify/commit/3ae92b0ecd2170e892e9a1d6a0378bc3fd72954b))
+* hidden return on win arm and x86 ([08cd10d](https://github.com/untrustedmodders/go-plugify/commit/08cd10df93c2cb1f4182c64834f4384195dccead))
+
 ## [1.1.6](https://github.com/untrustedmodders/go-plugify/compare/v1.1.5...v1.1.6) (2025-05-15)
 
 
