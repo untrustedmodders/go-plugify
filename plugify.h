@@ -7,6 +7,10 @@
 #include <string.h>
 
 typedef unsigned short char16_t;
+typedef struct int128_t {
+	uint64_t low;
+	uint64_t high;
+} int128_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -20,51 +24,51 @@ typedef struct Vector3 { float x, y, z; } Vector3;
 typedef struct Vector4 { float x, y, z, w; } Vector4;
 typedef struct Matrix4x4 { float m[4][4]; } Matrix4x4;
 typedef struct Variant {
-    union {
-        bool boolean;
-        char char8;
-        char16_t char16;
-        int8_t int8;
-        int16_t int16;
-        int32_t int32;
-        int64_t int64;
-        uint8_t uint8;
-        uint16_t uint16;
-        uint32_t uint32;
-        uint64_t uint64;
-        void* ptr;
-        float flt;
-        double dbl;
-        String str;
-        Vector vec;
-        Vector2 vec2;
-        Vector3 vec3;
-        Vector4 vec4;
-    };
+	union {
+		bool boolean;
+		char char8;
+		char16_t char16;
+		int8_t int8;
+		int16_t int16;
+		int32_t int32;
+		int64_t int64;
+		uint8_t uint8;
+		uint16_t uint16;
+		uint32_t uint32;
+		uint64_t uint64;
+		void* ptr;
+		float flt;
+		double dbl;
+		String str;
+		Vector vec;
+		Vector2 vec2;
+		Vector3 vec3;
+		Vector4 vec4;
+	};
 #if INTPTR_MAX == INT32_MAX
-	char pad[8];
+	volatile char pad[8];
 #endif
-    uint8_t current;
+	uint8_t current;
 } Variant;
 
 typedef struct ManagedType {
-    uint8_t valueType;
-    bool ref;
+	uint8_t valueType;
+	bool ref;
 } ManagedType;
 
 typedef struct Parameters {
-    uint64_t arguments;
+	uint64_t arguments;
 } Parameters;
 
 typedef struct Return {
-    __int128 ret;
+	uint64_t ret[2];
 } Return;
 
 typedef struct PluginContext {
-    bool hasUpdate;
-    bool hasStart;
-    bool hasEnd;
-    bool hasPanic;
+	bool hasUpdate;
+	bool hasStart;
+	bool hasEnd;
+	bool hasPanic;
 } PluginContext;
 
 typedef void* PluginHandle;
@@ -215,7 +219,7 @@ extern void Plugify_DeleteCall(JitCall call);
 extern void* Plugify_GetCallFunction(JitCall call);
 extern const char* Plugify_GetCallError(JitCall call);
 
-extern void Plugify_CallFunction(JitCall call, void** params, __int128* ret);
+extern void Plugify_CallFunction(JitCall call, void** params, int128_t* ret);
 
 typedef void* JitCallback;
 

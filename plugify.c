@@ -348,8 +348,8 @@ void Plugify_DeleteCall(JitCall call) { DeleteCall(call); }
 void* Plugify_GetCallFunction(JitCall call) { return GetCallFunction(call); }
 const char* Plugify_GetCallError(JitCall call) { return GetCallError(call); }
 
-void Plugify_CallFunction(JitCall call, void** params, __int128* ret) {
-    ((void(*)(void**, __int128*))GetCallFunction(call))(params, ret);
+void Plugify_CallFunction(JitCall call, void** params, int128_t* ret) {
+	((void(*)(void**, int128_t*))GetCallFunction(call))(params, ret);
 }
 
 JitCallback Plugify_NewCallback(_GoString_ name, void* handle) { return NewCallback(pluginHandle, name, handle); }
@@ -505,22 +505,22 @@ void Plugify_SetGetMethodEnum(void* ptr) { GetMethodEnum = (EnumHandle (*)(Metho
 #ifdef _WIN32
 #include <malloc.h>
 void* aligned_malloc(size_t size, size_t alignment) {
-    void* ptr = _aligned_malloc(size, alignment);
-    memset(ptr, 0, size);
-    return ptr;
+	void* ptr = _aligned_malloc(size, alignment);
+	memset(ptr, 0, size);
+	return ptr;
 }
 
 void aligned_free(void* ptr) {
-    _aligned_free(ptr);
+	_aligned_free(ptr);
 }
 #else
 void* aligned_malloc(size_t size, size_t alignment) {
-    void* ptr = aligned_alloc(alignment, size);
-    memset(ptr, 0, size);
-    return ptr;
+	void* ptr = aligned_alloc(alignment, size);
+	memset(ptr, 0, size);
+	return ptr;
 }
 
 void aligned_free(void* ptr) {
-    free(ptr);
+	free(ptr);
 }
 #endif

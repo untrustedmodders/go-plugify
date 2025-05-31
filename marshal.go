@@ -25,6 +25,9 @@ var (
 
 const alignment int = 16
 
+const isWindows bool = runtime.GOOS == "windows" && runtime.GOARCH != "arm64"
+const is32bit bool = runtime.GOARCH == "386" || runtime.GOARCH == "arm"
+
 type ValueType byte
 
 const (
@@ -123,8 +126,8 @@ func newMemoryPool(size int) *memoryPool {
 	}
 }
 
-func roundUp(size int) int {
-	return (size + (alignment - 1)) &^ (alignment - 1)
+func roundUp(val int) int {
+	return (val + (alignment - 1)) &^ (alignment - 1)
 }
 
 func (p *memoryPool) alloc(size int) unsafe.Pointer {
@@ -379,7 +382,7 @@ func hasReturnType(returnType ManagedType) bool {
 	hasRet := returnType.valueType >= _ObjectStart && returnType.valueType <= _ObjectEnd // params which pass by refs by default
 	if !hasRet {
 		var firstHidden ValueType
-		if runtime.GOOS == "windows" && runtime.GOARCH != "arm64" || runtime.GOARCH == "386" {
+		if isWindows || is32bit {
 			firstHidden = Vector3Type
 		} else {
 			firstHidden = Matrix4x4Type
@@ -394,7 +397,9 @@ func calculatePoolSize(parameterTypes []ManagedType, hasRet bool, returnType Man
 	if hasRet {
 		paramCount += 1
 	}
-
+	if is32bit {
+		paramCount *= 2
+	}
 	paramSize := roundUp(paramCount * sizeOfValueType(Pointer))
 	poolSize := paramSize
 
@@ -512,7 +517,11 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 				panicker(fmt.Sprintf("GetDelegateForFunctionPointer return type not supported %v", retType))
 			}
 			params[index] = ptr
-			index++
+			if is32bit {
+				index += 2
+			} else {
+				index += 1
+			}
 		}
 
 		for i, arg := range args {
@@ -899,10 +908,14 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 				}
 			}
 			params[index] = ptr
-			index++
+			if is32bit {
+				index += 2
+			} else {
+				index += 1
+			}
 		}
 
-		var retStore C.__int128
+		var retStore C.int128_t
 		C.Plugify_CallFunction(call, unsafe.SliceData(params), &retStore)
 		ret := unsafe.Pointer(&retStore)
 
