@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.8](https://github.com/untrustedmodders/go-plugify/compare/v1.1.7...v1.1.8) (2025-05-31)
+
+
+### Bug Fixes
+
+* add x86 support ([fdcf54d](https://github.com/untrustedmodders/go-plugify/commit/fdcf54d7f3af5dc51e29ec688b485dfbeaa0c6ee))
+* make param array 64 bit for JitCall ([13b5df2](https://github.com/untrustedmodders/go-plugify/commit/13b5df221a490343a66b2a7a3e000aa95fd7eaf5))
+
 ## [1.1.7](https://github.com/untrustedmodders/go-plugify/compare/v1.1.6...v1.1.7) (2025-05-30)
 
 
