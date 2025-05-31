@@ -7,10 +7,10 @@
 #include <string.h>
 
 typedef unsigned short char16_t;
-typedef struct int128_t {
+typedef struct uint128_t {
 	uint64_t low;
 	uint64_t high;
-} int128_t;
+} uint128_t;
 
 #ifdef __cplusplus
 extern "C" {
@@ -219,7 +219,7 @@ extern void Plugify_DeleteCall(JitCall call);
 extern void* Plugify_GetCallFunction(JitCall call);
 extern const char* Plugify_GetCallError(JitCall call);
 
-extern void Plugify_CallFunction(JitCall call, void** params, int128_t* ret);
+extern void Plugify_CallFunction(JitCall call, uint64_t* params, uint128_t* ret);
 
 typedef void* JitCallback;
 

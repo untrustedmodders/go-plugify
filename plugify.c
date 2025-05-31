@@ -348,8 +348,8 @@ void Plugify_DeleteCall(JitCall call) { DeleteCall(call); }
 void* Plugify_GetCallFunction(JitCall call) { return GetCallFunction(call); }
 const char* Plugify_GetCallError(JitCall call) { return GetCallError(call); }
 
-void Plugify_CallFunction(JitCall call, void** params, int128_t* ret) {
-	((void(*)(void**, int128_t*))GetCallFunction(call))(params, ret);
+void Plugify_CallFunction(JitCall call, uint64_t* params, uint128_t* ret) {
+	((void(*)(uint64_t*, uint128_t*))GetCallFunction(call))(params, ret);
 }
 
 JitCallback Plugify_NewCallback(_GoString_ name, void* handle) { return NewCallback(pluginHandle, name, handle); }
