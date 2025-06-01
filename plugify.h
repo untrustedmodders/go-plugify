@@ -77,8 +77,8 @@ extern PluginHandle pluginHandle;
 // Extern declarations for Plugify_ functions
 extern void* Plugify_GetMethodPtr(const char* methodName);
 extern void Plugify_GetMethodPtr2(const char* methodName, void** addressDest);
-extern bool Plugify_IsModuleLoaded(_GoString_ moduleName, int version, bool minimum);
-extern bool Plugify_IsPluginLoaded(_GoString_ pluginName, int version, bool minimum);
+extern bool Plugify_IsModuleLoaded(_GoString_ moduleName, _GoString_ versionName, bool minimum);
+extern bool Plugify_IsPluginLoaded(_GoString_ pluginName, _GoString_ versionName, bool minimum);
 extern void Plugify_PrintException(_GoString_ message);
 
 extern ptrdiff_t Plugify_GetPluginId();

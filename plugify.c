@@ -21,8 +21,8 @@ PluginHandle pluginHandle = NULL;
 // Function pointers
 void* (*GetMethodPtr)(const char*) = NULL;
 void (*GetMethodPtr2)(const char*, void**) = NULL;
-bool (*IsModuleLoaded)(_GoString_, int, bool) = NULL;
-bool (*IsPluginLoaded)(_GoString_, int, bool) = NULL;
+bool (*IsModuleLoaded)(_GoString_, _GoString_, bool) = NULL;
+bool (*IsPluginLoaded)(_GoString_, _GoString_, bool) = NULL;
 void (*PrintException)(_GoString_) = NULL;
 
 // Function pointers for PluginHandle functions
@@ -188,9 +188,9 @@ void* Plugify_GetMethodPtr(const char* methodName) { return GetMethodPtr(methodN
 // Function to call GetMethodPtr2
 void Plugify_GetMethodPtr2(const char* methodName, void** addressDest) { GetMethodPtr2(methodName, addressDest); }
 // Function to call IsModuleLoaded
-bool Plugify_IsModuleLoaded(_GoString_ moduleName, int version, bool minimum) { return IsModuleLoaded(moduleName, version, minimum); }
+bool Plugify_IsModuleLoaded(_GoString_ moduleName, _GoString_ versionName, bool minimum) { return IsModuleLoaded(moduleName, versionName, minimum); }
 // Function to call IsPluginLoaded
-bool Plugify_IsPluginLoaded(_GoString_ pluginName, int version, bool minimum) { return IsPluginLoaded(pluginName, version, minimum); }
+bool Plugify_IsPluginLoaded(_GoString_ pluginName, _GoString_ versionName, bool minimum) { return IsPluginLoaded(pluginName, versionName, minimum); }
 // Function to call PrintException
 void Plugify_PrintException(_GoString_ message) { PrintException(message); }
 // Function to call GetPluginId
@@ -364,8 +364,8 @@ EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index) { return 
 
 void Plugify_SetGetMethodPtr(void* ptr) { GetMethodPtr = (void* (*)(const char*)) ptr; }
 void Plugify_SetGetMethodPtr2(void* ptr) { GetMethodPtr2 = (void (*)(const char*, void**)) ptr; }
-void Plugify_SetIsModuleLoaded(void* ptr) { IsModuleLoaded = (bool (*)(_GoString_, int, bool)) ptr; }
-void Plugify_SetIsPluginLoaded(void* ptr) { IsPluginLoaded = (bool (*)(_GoString_, int, bool)) ptr; }
+void Plugify_SetIsModuleLoaded(void* ptr) { IsModuleLoaded = (bool (*)(_GoString_, _GoString_, bool)) ptr; }
+void Plugify_SetIsPluginLoaded(void* ptr) { IsPluginLoaded = (bool (*)(_GoString_, _GoString_, bool)) ptr; }
 void Plugify_SetPrintException(void* ptr) { PrintException = (void (*)(_GoString_)) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (const char* (*)(PluginHandle)) ptr; }
