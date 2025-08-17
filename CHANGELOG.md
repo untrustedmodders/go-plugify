@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.9](https://github.com/untrustedmodders/go-plugify/compare/v1.1.8...v1.1.9) (2025-08-17)
+
+
+### Bug Fixes
+
+* make plugin public ([bd0cb50](https://github.com/untrustedmodders/go-plugify/commit/bd0cb503fbe86118c5986008a9295d5d116fd54d))
+* update IsPluginLoaded and IsModuleLoaded ([86bba60](https://github.com/untrustedmodders/go-plugify/commit/86bba60d25adcd7d6422feb3eb192f1c5266a72f))
+* update readme and add missing permission ([1f544e9](https://github.com/untrustedmodders/go-plugify/commit/1f544e93ce0fdeffc5b06332c7072b216fef1c46))
+
 ## [1.1.8](https://github.com/untrustedmodders/go-plugify/compare/v1.1.7...v1.1.8) (2025-05-31)
 
 
