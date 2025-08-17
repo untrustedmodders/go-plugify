@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// Plugin represents the structure of the .pplugin file
-type Plugin struct {
+// Manifest represents the structure of the .pplugin file
+type Manifest struct {
 	Methods []Method `json:"exportedMethods"`
 }
 
@@ -104,13 +104,13 @@ import (
 			}
 
 			// Parse the JSON content
-			var plugin Plugin
-			if err := json.Unmarshal(fileContent, &plugin); err != nil {
+			var manifest Manifest
+			if err := json.Unmarshal(fileContent, &manifest); err != nil {
 				return fmt.Errorf("error parsing JSON in file %s: %v", path, err)
 			}
 
 			// Generate export function wrappers
-			for _, method := range plugin.Methods {
+			for _, method := range manifest.Methods {
 				code = append(code, generateWrapper(method))
 			}
 		}

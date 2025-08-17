@@ -41,7 +41,7 @@ type Plugify struct {
 	hasPluginPanicCallback  bool
 }
 
-var plugify = Plugify{
+var Plugin = Plugify{
 	Id:           -1,
 	Name:         "",
 	FullName:     "",
@@ -68,23 +68,23 @@ var plugify = Plugify{
 var context C.PluginContext
 
 func OnPluginStart(fn PluginStartCallback) {
-	plugify.fnPluginStartCallback = fn
-	plugify.hasPluginStartCallback = true
+	Plugin.fnPluginStartCallback = fn
+	Plugin.hasPluginStartCallback = true
 }
 
 func OnPluginUpdate(fn PluginUpdateCallback) {
-	plugify.fnPluginUpdateCallback = fn
-	plugify.hasPluginUpdateCallback = true
+	Plugin.fnPluginUpdateCallback = fn
+	Plugin.hasPluginUpdateCallback = true
 }
 
 func OnPluginEnd(fn PluginEndCallback) {
-	plugify.fnPluginEndCallback = fn
-	plugify.hasPluginEndCallback = true
+	Plugin.fnPluginEndCallback = fn
+	Plugin.hasPluginEndCallback = true
 }
 
 func OnPluginPanic(fn PluginPanicCallback) {
-	plugify.fnPluginPanicCallback = fn
-	plugify.hasPluginPanicCallback = true
+	Plugin.fnPluginPanicCallback = fn
+	Plugin.hasPluginPanicCallback = true
 }
 
 func (p *Plugify) FindResource(path string) string {
@@ -393,42 +393,42 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 	C.pluginHandle = handle
 
-	plugify.Id = int64(C.Plugify_GetPluginId())
-	plugify.Name = C.GoString(C.Plugify_GetPluginName())
-	plugify.FullName = C.GoString(C.Plugify_GetPluginFullName())
-	plugify.Description = C.GoString(C.Plugify_GetPluginDescription())
-	plugify.Version = C.GoString(C.Plugify_GetPluginVersion())
-	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
-	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
+	Plugin.Id = int64(C.Plugify_GetPluginId())
+	Plugin.Name = C.GoString(C.Plugify_GetPluginName())
+	Plugin.FullName = C.GoString(C.Plugify_GetPluginFullName())
+	Plugin.Description = C.GoString(C.Plugify_GetPluginDescription())
+	Plugin.Version = C.GoString(C.Plugify_GetPluginVersion())
+	Plugin.Author = C.GoString(C.Plugify_GetPluginAuthor())
+	Plugin.Website = C.GoString(C.Plugify_GetPluginWebsite())
 
 	baseDir := C.Plugify_GetPluginBaseDir()
-	plugify.BaseDir = C.GoString(baseDir)
+	Plugin.BaseDir = C.GoString(baseDir)
 	C.Plugify_DeleteCStr(baseDir)
 
 	configsDir := C.Plugify_GetPluginConfigsDir()
-	plugify.ConfigsDir = C.GoString(configsDir)
+	Plugin.ConfigsDir = C.GoString(configsDir)
 	C.Plugify_DeleteCStr(configsDir)
 
 	dataDir := C.Plugify_GetPluginDataDir()
-	plugify.DataDir = C.GoString(dataDir)
+	Plugin.DataDir = C.GoString(dataDir)
 	C.Plugify_DeleteCStr(dataDir)
 
 	logsDir := C.Plugify_GetPluginLogsDir()
-	plugify.LogsDir = C.GoString(logsDir)
+	Plugin.LogsDir = C.GoString(logsDir)
 	C.Plugify_DeleteCStr(logsDir)
 
 	dependencies := C.Plugify_GetPluginDependencies()
-	plugify.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
-	for j := range plugify.Dependencies {
-		plugify.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
+	Plugin.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
+	for j := range Plugin.Dependencies {
+		Plugin.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
 	}
 	C.Plugify_DeleteCStrArr(dependencies)
 
 	context = C.PluginContext{
-		hasUpdate: C.bool(plugify.hasPluginUpdateCallback),
-		hasStart:  C.bool(plugify.hasPluginStartCallback),
-		hasEnd:    C.bool(plugify.hasPluginEndCallback),
-		hasPanic:  C.bool(plugify.hasPluginPanicCallback),
+		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),
+		hasStart:  C.bool(Plugin.hasPluginStartCallback),
+		hasEnd:    C.bool(Plugin.hasPluginEndCallback),
+		hasPanic:  C.bool(Plugin.hasPluginPanicCallback),
 	}
 
 	return 0
@@ -436,17 +436,17 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 //export Plugify_PluginStart
 func Plugify_PluginStart() {
-	plugify.fnPluginStartCallback()
+	Plugin.fnPluginStartCallback()
 }
 
 //export Plugify_PluginUpdate
 func Plugify_PluginUpdate(dt float32) {
-	plugify.fnPluginUpdateCallback(dt)
+	Plugin.fnPluginUpdateCallback(dt)
 }
 
 //export Plugify_PluginEnd
 func Plugify_PluginEnd() {
-	plugify.fnPluginEndCallback()
+	Plugin.fnPluginEndCallback()
 
 	clear(functionMap)
 
@@ -468,7 +468,7 @@ func Plugify_PluginContext() *C.PluginContext {
 
 func panicker(v any) {
 	msg := fmt.Sprintf("%v", v)
-	stack := plugify.fnPluginPanicCallback()
+	stack := Plugin.fnPluginPanicCallback()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
