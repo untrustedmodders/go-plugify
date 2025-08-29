@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.10](https://github.com/untrustedmodders/go-plugify/compare/v1.1.9...v1.1.10) (2025-08-29)
+
+
+### Bug Fixes
+
+* remove cgo nocallback ([e7100d8](https://github.com/untrustedmodders/go-plugify/commit/e7100d83fa713a6099ac9760850e2e1c1b95d097))
+
 ## [1.1.9](https://github.com/untrustedmodders/go-plugify/compare/v1.1.8...v1.1.9) (2025-08-17)
 
 
