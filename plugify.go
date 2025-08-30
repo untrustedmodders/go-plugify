@@ -18,24 +18,26 @@ type PluginEndCallback func()
 type PluginPanicCallback func() []byte
 
 type Plugify struct {
-	Id           int64
-	Name         string
-	FullName     string
-	Description  string
-	Version      string
-	Author       string
-	Website      string
-	BaseDir      string
-	ConfigsDir   string
-	DataDir      string
-	LogsDir      string
+	Id          int64
 	Dependencies []string
 
-	fnPluginStartCallback   PluginStartCallback
-	fnPluginUpdateCallback  PluginUpdateCallback
-	fnPluginEndCallback     PluginEndCallback
-	fnPluginPanicCallback   PluginPanicCallback
-	hasPluginStartCallback  bool
+	Name        string
+	FullName    string
+	Description string
+	Version     string
+	Author      string
+	Website     string
+	BaseDir     string
+	ConfigsDir  string
+	DataDir     string
+	LogsDir     string
+
+	fnPluginStartCallback  PluginStartCallback
+	fnPluginUpdateCallback PluginUpdateCallback
+	fnPluginEndCallback    PluginEndCallback
+	fnPluginPanicCallback  PluginPanicCallback
+
+	hasPluginStartCallback bool
 	hasPluginUpdateCallback bool
 	hasPluginEndCallback    bool
 	hasPluginPanicCallback  bool
