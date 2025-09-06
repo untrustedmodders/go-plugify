@@ -240,8 +240,13 @@ extern EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index);
 
 extern void Plugify_SetGetMethodPtr(void* ptr);
 extern void Plugify_SetGetMethodPtr2(void* ptr);
-extern void Plugify_SetIsModuleLoaded(void* ptr);
-extern void Plugify_SetIsPluginLoaded(void* ptr);
+extern void Plugify_SetGetBaseDir(void* ptr);
+extern void Plugify_SetGetExtensionsDir(void* ptr);
+extern void Plugify_SetGetConfigsDir(void* ptr);
+extern void Plugify_SetGetDataDir(void* ptr);
+extern void Plugify_SetGetLogsDir(void* ptr);
+extern void Plugify_SetGetCacheDir(void* ptr);
+extern void Plugify_SetIsExtensionLoaded(void* ptr);
 extern void Plugify_SetPrintException(void* ptr);
 extern void Plugify_SetGetPluginId(void* ptr);
 extern void Plugify_SetGetPluginName(void* ptr);

@@ -2,11 +2,6 @@ package plugify
 
 /*
 #include "plugify.h"
-#cgo noescape aligned_malloc
-#cgo noescape aligned_free
-
-//#cgo nocallback aligned_malloc
-//#cgo nocallback aligned_free
 */
 import "C"
 import (
