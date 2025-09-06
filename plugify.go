@@ -6,7 +6,6 @@ package plugify
 */
 import "C"
 import (
-	"fmt"
 	"unsafe"
 )
 
@@ -20,15 +19,12 @@ type PluginPanicCallback func() []byte
 type Plugify struct {
 	Id           int64
 	Name         string
-	FullName     string
 	Description  string
 	Version      string
 	Author       string
 	Website      string
-	BaseDir      string
-	ConfigsDir   string
-	DataDir      string
-	LogsDir      string
+	License      string
+	Location     string
 	Dependencies []string
 
 	fnPluginStartCallback   PluginStartCallback
@@ -41,18 +37,14 @@ type Plugify struct {
 	hasPluginPanicCallback  bool
 }
 
-var Plugin = Plugify{
+var plugify = Plugify{
 	Id:           -1,
 	Name:         "",
-	FullName:     "",
 	Description:  "",
 	Version:      "",
 	Author:       "",
 	Website:      "",
-	BaseDir:      "",
-	ConfigsDir:   "",
-	DataDir:      "",
-	LogsDir:      "",
+	License:      "",
 	Dependencies: []string{},
 
 	fnPluginStartCallback:   func() {},
@@ -68,30 +60,34 @@ var Plugin = Plugify{
 var context C.PluginContext
 
 func OnPluginStart(fn PluginStartCallback) {
-	Plugin.fnPluginStartCallback = fn
-	Plugin.hasPluginStartCallback = true
+	plugify.fnPluginStartCallback = fn
+	plugify.hasPluginStartCallback = true
 }
 
 func OnPluginUpdate(fn PluginUpdateCallback) {
-	Plugin.fnPluginUpdateCallback = fn
-	Plugin.hasPluginUpdateCallback = true
+	plugify.fnPluginUpdateCallback = fn
+	plugify.hasPluginUpdateCallback = true
 }
 
 func OnPluginEnd(fn PluginEndCallback) {
-	Plugin.fnPluginEndCallback = fn
-	Plugin.hasPluginEndCallback = true
+	plugify.fnPluginEndCallback = fn
+	plugify.hasPluginEndCallback = true
 }
 
 func OnPluginPanic(fn PluginPanicCallback) {
-	Plugin.fnPluginPanicCallback = fn
-	Plugin.hasPluginPanicCallback = true
+	plugify.fnPluginPanicCallback = fn
+	plugify.hasPluginPanicCallback = true
 }
 
-func (p *Plugify) FindResource(path string) string {
-	C_output := C.Plugify_FindPluginResource(path)
-	output := C.GoString(C_output)
-	C.Plugify_DeleteCStr(C_output)
-	return output
+var BaseDir = ""
+var ExtensionsDir = ""
+var ConfigsDir = ""
+var DataDir = ""
+var LogsDir = ""
+var CacheDir = ""
+
+func IsExtensionLoaded(name string, constraint string) bool {
+	return C.Plugify_IsExtensionLoaded(name, constraint)
 }
 
 //export Plugify_Init
@@ -104,9 +100,19 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetMethodPtr2(api[i])
 	i++
-	C.Plugify_SetIsModuleLoaded(api[i])
+	C.Plugify_SetGetBaseDir(api[i])
 	i++
-	C.Plugify_SetIsPluginLoaded(api[i])
+	C.Plugify_SetGetExtensionsDir(api[i])
+	i++
+	C.Plugify_SetGetConfigsDir(api[i])
+	i++
+	C.Plugify_SetGetDataDir(api[i])
+	i++
+	C.Plugify_SetGetLogsDir(api[i])
+	i++
+	C.Plugify_SetGetCacheDir(api[i])
+	i++
+	C.Plugify_SetIsExtensionLoaded(api[i])
 	i++
 	C.Plugify_SetPrintException(api[i])
 	i++
@@ -114,8 +120,6 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	C.Plugify_SetGetPluginId(api[i])
 	i++
 	C.Plugify_SetGetPluginName(api[i])
-	i++
-	C.Plugify_SetGetPluginFullName(api[i])
 	i++
 	C.Plugify_SetGetPluginDescription(api[i])
 	i++
@@ -125,13 +129,7 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetPluginWebsite(api[i])
 	i++
-	C.Plugify_SetGetPluginBaseDir(api[i])
-	i++
-	C.Plugify_SetGetPluginConfigsDir(api[i])
-	i++
-	C.Plugify_SetGetPluginDataDir(api[i])
-	i++
-	C.Plugify_SetGetPluginLogsDir(api[i])
+	C.Plugify_SetGetPluginLicense(api[i])
 	i++
 	C.Plugify_SetGetPluginDependencies(api[i])
 	i++
@@ -391,44 +389,56 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	C.Plugify_SetGetMethodEnum(api[i])
 	i++
 
-	C.pluginHandle = handle
-
-	Plugin.Id = int64(C.Plugify_GetPluginId())
-	Plugin.Name = C.GoString(C.Plugify_GetPluginName())
-	Plugin.FullName = C.GoString(C.Plugify_GetPluginFullName())
-	Plugin.Description = C.GoString(C.Plugify_GetPluginDescription())
-	Plugin.Version = C.GoString(C.Plugify_GetPluginVersion())
-	Plugin.Author = C.GoString(C.Plugify_GetPluginAuthor())
-	Plugin.Website = C.GoString(C.Plugify_GetPluginWebsite())
-
-	baseDir := C.Plugify_GetPluginBaseDir()
-	Plugin.BaseDir = C.GoString(baseDir)
+	baseDir := C.Plugify_GetBaseDir()
+	BaseDir = C.GoString(baseDir)
 	C.Plugify_DeleteCStr(baseDir)
 
-	configsDir := C.Plugify_GetPluginConfigsDir()
-	Plugin.ConfigsDir = C.GoString(configsDir)
+	extensionsDir := C.Plugify_GetExtensionsDir()
+	ExtensionsDir = C.GoString(extensionsDir)
+	C.Plugify_DeleteCStr(extensionsDir)
+
+	configsDir := C.Plugify_GetConfigsDir()
+	ConfigsDir = C.GoString(configsDir)
 	C.Plugify_DeleteCStr(configsDir)
 
-	dataDir := C.Plugify_GetPluginDataDir()
-	Plugin.DataDir = C.GoString(dataDir)
+	dataDir := C.Plugify_GetDataDir()
+	DataDir = C.GoString(dataDir)
 	C.Plugify_DeleteCStr(dataDir)
 
-	logsDir := C.Plugify_GetPluginLogsDir()
-	Plugin.LogsDir = C.GoString(logsDir)
+	logsDir := C.Plugify_GetLogsDir()
+	LogsDir = C.GoString(logsDir)
 	C.Plugify_DeleteCStr(logsDir)
 
+	cacheDir := C.Plugify_GetCacheDir()
+	CacheDir = C.GoString(cacheDir)
+	C.Plugify_DeleteCStr(cacheDir)
+
+	C.pluginHandle = handle
+
+	plugify.Id = int64(C.Plugify_GetPluginId())
+	plugify.Name = C.GoString(C.Plugify_GetPluginName())
+	plugify.Description = C.GoString(C.Plugify_GetPluginDescription())
+	plugify.Version = C.GoString(C.Plugify_GetPluginVersion())
+	plugify.Author = C.GoString(C.Plugify_GetPluginAuthor())
+	plugify.Website = C.GoString(C.Plugify_GetPluginWebsite())
+	plugify.License = C.GoString(C.Plugify_GetPluginLicense())
+
+	location := C.Plugify_GetPluginLocation()
+	plugify.Location = C.GoString(location)
+	C.Plugify_DeleteCStr(location)
+
 	dependencies := C.Plugify_GetPluginDependencies()
-	Plugin.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
-	for j := range Plugin.Dependencies {
-		Plugin.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
+	plugify.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
+	for j := range plugify.Dependencies {
+		plugify.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
 	}
 	C.Plugify_DeleteCStrArr(dependencies)
 
 	context = C.PluginContext{
-		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),
-		hasStart:  C.bool(Plugin.hasPluginStartCallback),
-		hasEnd:    C.bool(Plugin.hasPluginEndCallback),
-		hasPanic:  C.bool(Plugin.hasPluginPanicCallback),
+		hasUpdate: C.bool(plugify.hasPluginUpdateCallback),
+		hasStart:  C.bool(plugify.hasPluginStartCallback),
+		hasEnd:    C.bool(plugify.hasPluginEndCallback),
+		hasPanic:  C.bool(plugify.hasPluginPanicCallback),
 	}
 
 	return 0
@@ -436,17 +446,17 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 //export Plugify_PluginStart
 func Plugify_PluginStart() {
-	Plugin.fnPluginStartCallback()
+	plugify.fnPluginStartCallback()
 }
 
 //export Plugify_PluginUpdate
 func Plugify_PluginUpdate(dt float32) {
-	Plugin.fnPluginUpdateCallback(dt)
+	plugify.fnPluginUpdateCallback(dt)
 }
 
 //export Plugify_PluginEnd
 func Plugify_PluginEnd() {
-	Plugin.fnPluginEndCallback()
+	plugify.fnPluginEndCallback()
 
 	clear(functionMap)
 
@@ -464,14 +474,4 @@ func Plugify_PluginEnd() {
 //export Plugify_PluginContext
 func Plugify_PluginContext() *C.PluginContext {
 	return &context
-}
-
-func panicker(v any) {
-	msg := fmt.Sprintf("%v", v)
-	stack := Plugin.fnPluginPanicCallback()
-	if len(stack) > 0 {
-		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
-	}
-	C.Plugify_PrintException(msg)
-	panic(v)
 }
