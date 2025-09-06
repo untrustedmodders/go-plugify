@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/untrustedmodders/go-plugify/compare/v1.1.11...v2.0.0) (2025-09-06)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove noescape
+
+### Features
+
+* remove noescape ([f9e7393](https://github.com/untrustedmodders/go-plugify/commit/f9e739315755d0a36e134782a558831bbd97fb48))
+
 ## [1.1.11](https://github.com/untrustedmodders/go-plugify/compare/v1.1.10...v1.1.11) (2025-09-06)
 
 
