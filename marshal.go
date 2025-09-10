@@ -1464,7 +1464,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 
 	pkgPath := valueType.PkgPath()
 	if pkgPath == "main" {
-		pkgPath = Plugin.Name
+		pkgPath = plugify.Name
 	} else {
 		lastSlashIndex := strings.LastIndex(pkgPath, "/")
 		if lastSlashIndex != -1 {

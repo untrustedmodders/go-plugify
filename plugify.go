@@ -6,6 +6,7 @@ package plugify
 */
 import "C"
 import (
+	"fmt"
 	"unsafe"
 )
 
@@ -87,7 +88,7 @@ var LogsDir = ""
 var CacheDir = ""
 
 func IsExtensionLoaded(name string, constraint string) bool {
-	return C.Plugify_IsExtensionLoaded(name, constraint)
+	return bool(C.Plugify_IsExtensionLoaded(name, constraint))
 }
 
 //export Plugify_Init
@@ -474,4 +475,14 @@ func Plugify_PluginEnd() {
 //export Plugify_PluginContext
 func Plugify_PluginContext() *C.PluginContext {
 	return &context
+}
+
+func panicker(v any) {
+	msg := fmt.Sprintf("%v", v)
+	stack := plugify.fnPluginPanicCallback()
+	if len(stack) > 0 {
+		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
+	}
+	C.Plugify_PrintException(msg)
+	panic(v)
 }
