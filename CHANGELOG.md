@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.1](https://github.com/untrustedmodders/go-plugify/compare/v2.0.0...v2.0.1) (2025-09-10)
+
+
+### Bug Fixes
+
+* compilation issues ([14113f7](https://github.com/untrustedmodders/go-plugify/commit/14113f79b66b3e7f8c068ab6fd10e4823922fe97))
+
 ## [2.0.0](https://github.com/untrustedmodders/go-plugify/compare/v1.1.11...v2.0.0) (2025-09-06)
 
 
