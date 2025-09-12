@@ -14,17 +14,18 @@ import (
 
 // Plugin represents the structure of the .pplugin file
 type Plugin struct {
+	//Name    string   `json:"name"`
 	Methods []Method `json:"methods"`
 }
 
 // Method represents a single exported method
 type Method struct {
-	Name        string         `json:"name"`
-	FuncName    string         `json:"funcName"`
-	ParamTypes  []PropertyType `json:"paramTypes"`
-	RetType     PropertyType   `json:"retType"`
-	Group       string         `json:"group,omitempty"`
-	Description string         `json:"description,omitempty"`
+	Name        string     `json:"name"`
+	FuncName    string     `json:"funcName"`
+	ParamTypes  []Property `json:"paramTypes"`
+	RetType     Property   `json:"retType"`
+	Group       string     `json:"group,omitempty"`
+	Description string     `json:"description,omitempty"`
 }
 
 // EnumValue represents a single enumeration value
@@ -34,21 +35,21 @@ type EnumValue struct {
 	Value       int64  `json:"value"`
 }
 
-// Enum represents an enumeration
-type Enum struct {
+// EnumObject represents an enumeration
+type EnumObject struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description,omitempty"`
 	Values      []EnumValue `json:"values"`
 }
 
-// PropertyType represents a parameter type
-type PropertyType struct {
-	Type        string  `json:"type"`
-	Name        string  `json:"name"`
-	Description string  `json:"description,omitempty"`
-	Ref         bool    `json:"ref,omitempty"`
-	Prototype   *Method `json:"prototype,omitempty"`
-	Enumerator  *Enum   `json:"enum,omitempty"`
+// Property represents a parameter type
+type Property struct {
+	Type        string      `json:"type"`
+	Name        string      `json:"name"`
+	Description string      `json:"description,omitempty"`
+	Ref         bool        `json:"ref,omitempty"`
+	Prototype   *Method     `json:"prototype,omitempty"`
+	Enumerator  *EnumObject `json:"enum,omitempty"`
 }
 
 // invalidNames contains Go's reserved keywords and predeclared identifiers

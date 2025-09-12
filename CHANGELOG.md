@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.11](https://github.com/untrustedmodders/go-plugify/compare/v1.1.10...v1.1.11) (2025-09-06)
+
+
+### Bug Fixes
+
+* update for a new plugify ([14b4221](https://github.com/untrustedmodders/go-plugify/commit/14b42212c218629e787e89575fef829be9173240))
+
 ## [1.1.10](https://github.com/untrustedmodders/go-plugify/compare/v1.1.9...v1.1.10) (2025-08-29)
 
 

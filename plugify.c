@@ -21,12 +21,12 @@ PluginHandle pluginHandle = NULL;
 // Function pointers
 void* (*GetMethodPtr)(const char*) = NULL;
 void (*GetMethodPtr2)(const char*, void**) = NULL;
-const char* (*GetPluginBaseDir)(PluginHandle) = NULL;
-const char* (*GetPluginExtensionsDir)(PluginHandle) = NULL;
-const char* (*GetPluginConfigsDir)(PluginHandle) = NULL;
-const char* (*GetPluginDataDir)(PluginHandle) = NULL;
-const char* (*GetPluginLogsDir)(PluginHandle) = NULL;
-const char* (*GetPluginCacheDir)(PluginHandle) = NULL;
+const char* (*GetBaseDir)() = NULL;
+const char* (*GetExtensionsDir)() = NULL;
+const char* (*GetConfigsDir)() = NULL;
+const char* (*GetDataDir)() = NULL;
+const char* (*GetLogsDir)() = NULL;
+const char* (*GetCacheDir)() = NULL;
 bool (*IsExtensionLoaded)(_GoString_, _GoString_) = NULL;
 void (*PrintException)(_GoString_) = NULL;
 
@@ -367,12 +367,12 @@ EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index) { return 
 
 void Plugify_SetGetMethodPtr(void* ptr) { GetMethodPtr = (void* (*)(const char*)) ptr; }
 void Plugify_SetGetMethodPtr2(void* ptr) { GetMethodPtr2 = (void (*)(const char*, void**)) ptr; }
-void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetExtensionsDir(void* ptr) { GetExtensionsDir = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (const char* (*)(PluginHandle)) ptr; }
+void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (const char* (*)()) ptr; }
+void Plugify_SetGetExtensionsDir(void* ptr) { GetExtensionsDir = (const char* (*)()) ptr; }
+void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (const char* (*)()) ptr; }
+void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (const char* (*)()) ptr; }
+void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (const char* (*)()) ptr; }
+void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (const char* (*)()) ptr; }
 void Plugify_SetIsExtensionLoaded(void* ptr) { IsExtensionLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
 void Plugify_SetPrintException(void* ptr) { PrintException = (void (*)(_GoString_)) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }

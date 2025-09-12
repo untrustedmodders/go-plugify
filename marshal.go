@@ -2,11 +2,6 @@ package plugify
 
 /*
 #include "plugify.h"
-#cgo noescape aligned_malloc
-#cgo noescape aligned_free
-
-//#cgo nocallback aligned_malloc
-//#cgo nocallback aligned_free
 */
 import "C"
 import (
@@ -1469,7 +1464,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 
 	pkgPath := valueType.PkgPath()
 	if pkgPath == "main" {
-		pkgPath = Plugin.Name
+		pkgPath = plugify.Name
 	} else {
 		lastSlashIndex := strings.LastIndex(pkgPath, "/")
 		if lastSlashIndex != -1 {

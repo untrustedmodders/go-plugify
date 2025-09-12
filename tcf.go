@@ -1,7 +1,6 @@
 package plugify
 
 import "C"
-import "fmt"
 
 type Block struct {
 	Try     func()
@@ -27,14 +26,4 @@ func (tcf Block) Do() {
 		}()
 	}
 	tcf.Try()
-}
-
-func panicker(v any) {
-	msg := fmt.Sprintf("%v", v)
-	stack := plugify.fnPluginPanicCallback()
-	if len(stack) > 0 {
-		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
-	}
-	C.Plugify_PrintException(msg)
-	panic(v)
 }
