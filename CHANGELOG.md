@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.2](https://github.com/untrustedmodders/go-plugify/compare/v2.0.1...v2.0.2) (2025-09-12)
+
+
+### Bug Fixes
+
+* correct module path for v2 ([1eee64f](https://github.com/untrustedmodders/go-plugify/commit/1eee64fa0d1ce36c4418c73266d68ee414d2ef2f))
+
 ## [2.0.1](https://github.com/untrustedmodders/go-plugify/compare/v2.0.0...v2.0.1) (2025-09-10)
 
 
