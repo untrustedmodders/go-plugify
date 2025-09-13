@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/untrustedmodders/go-plugify/compare/v1.2.1...v1.2.2) (2025-09-13)
+
+
+### Bug Fixes
+
+* make plugin public ([def1a02](https://github.com/untrustedmodders/go-plugify/commit/def1a0280b5d1db9e07d756f6c8b03c76b4bd335))
+
 ## [1.2.1](https://github.com/untrustedmodders/go-plugify/compare/v1.2.0...v1.2.1) (2025-09-13)
 
 
