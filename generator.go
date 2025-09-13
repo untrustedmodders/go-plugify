@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-// Plugin represents the structure of the .pplugin file
-type Plugin struct {
+// Metadata represents the structure of the .pplugin file
+type Metadata struct {
 	//Name    string   `json:"name"`
 	Methods []Method `json:"methods"`
 }
@@ -105,13 +105,13 @@ import (
 			}
 
 			// Parse the JSON content
-			var plugin Plugin
-			if err := json.Unmarshal(fileContent, &plugin); err != nil {
+			var metadata Metadata
+			if err := json.Unmarshal(fileContent, &metadata); err != nil {
 				return fmt.Errorf("error parsing JSON in file %s: %v", path, err)
 			}
 
 			// Generate export function wrappers
-			for _, method := range plugin.Methods {
+			for _, method := range metadata.Methods {
 				code = append(code, generateWrapper(method))
 			}
 		}
