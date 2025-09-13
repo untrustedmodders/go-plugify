@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/untrustedmodders/go-plugify/compare/v1.2.0...v1.2.1) (2025-09-13)
+
+
+### Bug Fixes
+
+* remove missing methods ([76af23d](https://github.com/untrustedmodders/go-plugify/commit/76af23dc044f8a0fef8e53bc649ed08bb3f0c5c6))
+
 ## [1.2.0](https://github.com/untrustedmodders/go-plugify/compare/v1.1.10...v1.2.0) (2025-09-12)
 
 
