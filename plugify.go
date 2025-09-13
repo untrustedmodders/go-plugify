@@ -132,11 +132,11 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetPluginLicense(api[i])
 	i++
+	C.Plugify_SetGetPluginLocation(api[i])
+	i++
 	C.Plugify_SetGetPluginDependencies(api[i])
 	i++
 	C.Plugify_SetGetPluginDependenciesSize(api[i])
-	i++
-	C.Plugify_SetFindPluginResource(api[i])
 	i++
 
 	C.Plugify_SetDeleteCStr(api[i])
