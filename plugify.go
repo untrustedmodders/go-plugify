@@ -91,6 +91,10 @@ func IsExtensionLoaded(name string, constraint string) bool {
 	return bool(C.Plugify_IsExtensionLoaded(name, constraint))
 }
 
+func PrintException(msg string) {
+	C.Plugify_PrintException(msg)
+}
+
 //export Plugify_Init
 func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
 	if version < kApiVersion {
@@ -483,6 +487,6 @@ func panicker(v any) {
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
-	C.Plugify_PrintException(msg)
+	PrintException(msg)
 	panic(v)
 }

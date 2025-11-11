@@ -1435,7 +1435,7 @@ func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 		},
 		Catch: func(e Exception) {
 			msg := fmt.Sprintf("%v", e)
-			C.Plugify_PrintException(msg)
+			PrintException(msg)
 		},
 	}.Do()
 }
