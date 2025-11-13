@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.3](https://github.com/untrustedmodders/go-plugify/compare/v1.2.2...v1.2.3) (2025-11-13)
+
+
+### Bug Fixes
+
+* add loaded flag and force gb on unload ([685247f](https://github.com/untrustedmodders/go-plugify/commit/685247f9c4c562c2ed98e56aafcbe012f9ebe5d3))
+* expose PrintException ([35b5724](https://github.com/untrustedmodders/go-plugify/commit/35b57240243d5590242889e55fdb54f49c597354))
+
 ## [1.2.2](https://github.com/untrustedmodders/go-plugify/compare/v1.2.1...v1.2.2) (2025-09-13)
 
 
