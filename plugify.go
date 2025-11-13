@@ -7,6 +7,7 @@ package plugify
 import "C"
 import (
 	"fmt"
+	"runtime"
 	"unsafe"
 )
 
@@ -36,6 +37,8 @@ type Plugify struct {
 	hasPluginUpdateCallback bool
 	hasPluginEndCallback    bool
 	hasPluginPanicCallback  bool
+
+	Loaded bool
 }
 
 var Plugin = Plugify{
@@ -56,6 +59,8 @@ var Plugin = Plugify{
 	hasPluginUpdateCallback: false,
 	hasPluginEndCallback:    false,
 	hasPluginPanicCallback:  false,
+
+	Loaded: false,
 }
 
 var context C.PluginContext
@@ -451,6 +456,8 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 
 //export Plugify_PluginStart
 func Plugify_PluginStart() {
+	Plugin.Loaded = true
+
 	Plugin.fnPluginStartCallback()
 }
 
@@ -474,6 +481,11 @@ func Plugify_PluginEnd() {
 		C.Plugify_DeleteCallback(v)
 	}
 	clear(callbacks)
+
+	runtime.GC()
+	runtime.Gosched()
+
+	Plugin.Loaded = false
 }
 
 //export Plugify_PluginContext
