@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/untrustedmodders/go-plugify/compare/v1.2.4...v1.3.0) (2025-11-17)
+
+
+### Features
+
+* add new generator parser tool ([bc018e8](https://github.com/untrustedmodders/go-plugify/commit/bc018e8b626e3a56395bf7eaff264b540163219b))
+
 ## [1.2.4](https://github.com/untrustedmodders/go-plugify/compare/v1.2.3...v1.2.4) (2025-11-17)
 
 
