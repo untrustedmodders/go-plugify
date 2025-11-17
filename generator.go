@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"go/ast"
 	"go/types"
-	"golang.org/x/tools/go/packages"
-	"os"
 	"strings"
+	"os"
+	"golang.org/x/tools/go/packages"
 )
 
 type ExportedFunction struct {
@@ -61,10 +61,9 @@ func generateName(name string) string {
 	}
 	return name
 }
-
 func Generate(
-	pkgPath string,
-	outputFile string,
+	patterns string,
+	output string,
 	name string,
 	version string,
 	description string,
@@ -72,30 +71,15 @@ func Generate(
 	website string,
 	license string,
 	entry string,
-) {
+	target string,
+) error {
 	// Load package with type information
-	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax |
-			packages.NeedTypes | packages.NeedTypesInfo | packages.NeedImports,
-	}
-
-	pkgs, err := packages.Load(cfg, pkgPath)
+	pkg, err := loadPackage(patterns, target)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading package: %v\n", err)
-		os.Exit(1)
+		return err
 	}
 
-	if len(pkgs) == 0 {
-		fmt.Fprintf(os.Stderr, "No packages found\n")
-		os.Exit(1)
-	}
-
-	pkg := pkgs[0]
-	if packages.PrintErrors(pkgs) > 0 {
-		os.Exit(1)
-	}
-
-	// Extract exported functions
+	// Extract exported functions]
 	exportedFuncs := extractExportedFunctions(pkg)
 
 	if len(exportedFuncs) == 0 {
@@ -113,9 +97,9 @@ func Generate(
 		pluginEntry = pluginName
 	}
 
-	outputFileName := outputFile
-	if outputFileName == "" {
-		outputFileName = pluginName + ".pplugin"
+	outputFile := output
+	if outputFile == "" {
+		outputFile = pluginName + ".pplugin"
 	}
 
 	manifest := Manifest{
@@ -134,22 +118,60 @@ func Generate(
 	// Write JSON
 	data, err := json.MarshalIndent(manifest, "", "  ")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error marshaling JSON: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error marshaling JSON: %w", err)
 	}
 
-	err = os.WriteFile(outputFileName, data, 0644)
+	err = os.WriteFile(outputFile, data, 0644)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing manifest file: %v\n", err)
-		os.Exit(1)
+		return fmt.Errorf("error writing manifest file %s: %w", outputFile, err)
 	}
 
-	fmt.Printf("Generated manifest: %s (%d methods)\n", outputFileName, len(exportedFuncs))
+	fmt.Printf("Generated manifest: %s (%d methods)\n", outputFile, len(exportedFuncs))
 
-	generateAutoExports(exportedFuncs, pkgPath)
-	generateAutoExportsHeader()
+	if err := generateAutoExports(exportedFuncs, target); err != nil {
+		return fmt.Errorf("error generating autoexports: %w", err)
+	}
+
+	if err := generateAutoExportsHeader(); err != nil {
+		return fmt.Errorf("error generating autoexports header: %w", err)
+	}
 
 	fmt.Println("Generated autoexports.go and autoexports.h")
+
+	return nil
+}
+
+func loadPackage(patterns string, target string) (*packages.Package, error) {
+	cfg := &packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedSyntax |
+			packages.NeedTypes | packages.NeedTypesInfo,
+		Tests:      false,
+		Env:        append(os.Environ(), "CGO_ENABLED=1"),
+		BuildFlags: []string{"-tags", "cgo"},
+	}
+
+	pkgs, err := packages.Load(cfg, patterns)
+
+	if err != nil {
+		return nil, fmt.Errorf("error loading package: %w", err)
+	}
+
+	if len(pkgs) == 0 {
+		return nil, fmt.Errorf("no packages found in patterns: %s", patterns)
+	}
+
+	var targetPkg *packages.Package
+	for _, pkg := range pkgs {
+		if pkg.Name == target {
+			targetPkg = pkg
+		}
+	}
+
+	if targetPkg == nil {
+		return nil, fmt.Errorf("no target package found in patterns: %s", patterns)
+	}
+
+	return targetPkg, nil
 }
 
 func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
@@ -212,7 +234,7 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 
 			exports = append(exports, ExportedFunction{
 				ExportName: exportName,
-				FuncName:   funcDecl.Name.Name,
+				FuncName:   "__" + funcDecl.Name.Name,
 				Params:     params,
 				ReturnType: retType,
 			})
@@ -418,29 +440,25 @@ func convertReturnType(t TypeInfo) Property {
 }
 
 // Generate autoexports.go
-func generateAutoExports(funcs []ExportedFunction, pkgPath string) {
+func generateAutoExports(funcs []ExportedFunction, target string) error {
 	code := []string{fmt.Sprintf(`package %s
 
 // #include "autoexports.h"
 import "C"
 import (
-	"github.com/untrustedmodders/go-plugify"
-	"reflect"
-	"unsafe"
+	_ "github.com/untrustedmodders/go-plugify"
+	_ "reflect"
+	_ "unsafe"
 )
 
 // Exported methods
-`, pkgPath)}
+`, target)}
 
 	for _, fn := range funcs {
 		code = append(code, generateWrapper(fn))
 	}
 
-	err := os.WriteFile("autoexports.go", []byte(strings.Join(code, "")), 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing autoexports.go: %v\n", err)
-		os.Exit(1)
-	}
+	return os.WriteFile("autoexports.go", []byte(strings.Join(code, "")), 0644)
 }
 
 func generateWrapper(fn ExportedFunction) string {
@@ -466,7 +484,7 @@ func generateWrapper(fn ExportedFunction) string {
 
 		castName := name
 		if strings.HasPrefix(cType, "*C.") {
-			castName = fmt.Sprintf("(*Plg%s)(unsafe.Pointer(%s))", cType[3:], name)
+			castName = fmt.Sprintf("(*plugify.Plg%s)(unsafe.Pointer(%s))", cType[3:], name)
 		}
 
 		// Handle ref parameters with temporary variables
@@ -476,16 +494,16 @@ func generateWrapper(fn ExportedFunction) string {
 			// Create temporary Go variable and convert from C
 			switch param.Type.TypeString {
 			case "string", "any":
-				tempVars = append(tempVars, fmt.Sprintf("\t%s := Get%sData(%s)\n", tempVar, varType, castName))
-				assignBack = append(assignBack, fmt.Sprintf("\tAssign%s(%s, %s)\n", varType, castName, tempVar))
+				tempVars = append(tempVars, fmt.Sprintf("\t%s := plugify.Get%sData(%s)\n", tempVar, varType, castName))
+				assignBack = append(assignBack, fmt.Sprintf("\tplugify.Assign%s(%s, %s)\n", varType, castName, tempVar))
 			default:
 				if param.Type.IsArray {
 					typeName := ""
 					if param.Type.ElemType != nil && param.Type.ElemType.IsEnum {
 						typeName = fmt.Sprintf("T[%s]", param.Type.ElemType.EnumTypeName)
 					}
-					tempVars = append(tempVars, fmt.Sprintf("\t%s := GetVectorData%s%s(%s)\n", tempVar, varType, typeName, castName))
-					assignBack = append(assignBack, fmt.Sprintf("\tAssignVector%s(%s, %s)\n", varType, castName, tempVar))
+					tempVars = append(tempVars, fmt.Sprintf("\t%s := plugify.GetVectorData%s%s(%s)\n", tempVar, varType, typeName, castName))
+					assignBack = append(assignBack, fmt.Sprintf("\tplugify.AssignVector%s(%s, %s)\n", varType, castName, tempVar))
 				}
 			}
 
@@ -496,9 +514,9 @@ func generateWrapper(fn ExportedFunction) string {
 			switch {
 			case param.Type.IsFunc:
 				funcName := generateName(param.Type.FuncSig.Name)
-				callParams = append(callParams, fmt.Sprintf("GetDelegateForFunctionPointer(%s, reflect.TypeOf(%s(nil))).(%s)", name, funcName, funcName))
+				callParams = append(callParams, fmt.Sprintf("plugify.GetDelegateForFunctionPointer(%s, reflect.TypeOf(%s(nil))).(%s)", name, funcName, funcName))
 			case param.Type.TypeString == "string" || param.Type.TypeString == "any":
-				callParams = append(callParams, fmt.Sprintf("Get%sData(%s)", varType, castName))
+				callParams = append(callParams, fmt.Sprintf("plugify.Get%sData(%s)", varType, castName))
 			case param.Type.TypeString == "vec2" || param.Type.TypeString == "vec3" || param.Type.TypeString == "vec4" || param.Type.TypeString == "mat4x4":
 				deref := "*"
 				if isRef {
@@ -510,7 +528,7 @@ func generateWrapper(fn ExportedFunction) string {
 				if param.Type.ElemType != nil && param.Type.ElemType.IsEnum {
 					typeName = fmt.Sprintf("T[%s]", param.Type.ElemType.EnumTypeName)
 				}
-				callParams = append(callParams, fmt.Sprintf("GetVectorData%s%s(%s)", varType, typeName, castName))
+				callParams = append(callParams, fmt.Sprintf("plugify.GetVectorData%s%s(%s)", varType, typeName, castName))
 			case param.Type.IsEnum:
 				if isRef {
 					callParams = append(callParams, fmt.Sprintf("(*%s)(%s)", param.Type.EnumTypeName, name))
@@ -557,10 +575,10 @@ func %s(%s)%s {
 
 		switch {
 		case fn.ReturnType.IsFunc:
-			wrapper = append(wrapper, "\treturn GetFunctionPointerForDelegate(__result)\n")
+			wrapper = append(wrapper, "\treturn plugify.GetFunctionPointerForDelegate(__result)\n")
 		case fn.ReturnType.TypeString == "string" || fn.ReturnType.TypeString == "any":
 			wrapper = append(wrapper,
-				fmt.Sprintf("\t__return := Construct%s(__result)\n", varType),
+				fmt.Sprintf("\t__return := plugify.Construct%s(__result)\n", varType),
 				fmt.Sprintf("\treturn *(*%s)(unsafe.Pointer(&__return))\n", cType))
 		case fn.ReturnType.TypeString == "vec2" || fn.ReturnType.TypeString == "vec3" || fn.ReturnType.TypeString == "vec4" || fn.ReturnType.TypeString == "mat4x4":
 			wrapper = append(wrapper, fmt.Sprintf("\treturn *(*%s)(unsafe.Pointer(&__result))\n", cType))
@@ -570,7 +588,7 @@ func %s(%s)%s {
 				typeName = fmt.Sprintf("[%s]", fn.ReturnType.ElemType.EnumTypeName)
 			}
 			wrapper = append(wrapper,
-				fmt.Sprintf("\t__return := ConstructVector%s%s(__result)\n", varType, typeName),
+				fmt.Sprintf("\t__return := plugify.ConstructVector%s%s(__result)\n", varType, typeName),
 				fmt.Sprintf("\treturn *(*%s)(unsafe.Pointer(&__return))\n", cType))
 		case fn.ReturnType.IsEnum:
 			wrapper = append(wrapper, fmt.Sprintf("\treturn %s(__result)\n", fn.ReturnType.EnumTypeName))
@@ -810,7 +828,7 @@ func mapToGoType(jsonType string) string {
 }
 
 // Generate autoexports.h
-func generateAutoExportsHeader() {
+func generateAutoExportsHeader() error {
 	header := `#pragma once
 // autoexports.h - Auto-generated by Plugify Go Generator
 
@@ -862,9 +880,5 @@ typedef struct Variant {
 }
 #endif
 `
-	err := os.WriteFile("autoexports.h", []byte(header), 0644)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error writing autoexports.h: %v\n", err)
-		os.Exit(1)
-	}
+	return os.WriteFile("autoexports.h", []byte(header), 0644)
 }
