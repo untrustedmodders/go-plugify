@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/untrustedmodders/go-plugify/compare/v1.3.0...v1.3.1) (2025-11-17)
+
+
+### Bug Fixes
+
+* **claude:** fix issues with generator.go ([387517c](https://github.com/untrustedmodders/go-plugify/commit/387517cb5ac615838d6690d67584a5d947fce738))
+* some gen improvements ([f5b0a2c](https://github.com/untrustedmodders/go-plugify/commit/f5b0a2c7c27f4af20caf13d502c28624dd565651))
+
 ## [1.3.0](https://github.com/untrustedmodders/go-plugify/compare/v1.2.4...v1.3.0) (2025-11-17)
 
 
