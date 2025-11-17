@@ -41,7 +41,7 @@ type EnumObject struct {
 // Property represents a parameter type
 type Property struct {
 	Type        string      `json:"type"`
-	Name        string      `json:"name"`
+	Name        string      `json:"name,omitempty"`
 	Description string      `json:"description,omitempty"`
 	Ref         bool        `json:"ref,omitempty"`
 	Prototype   *Method     `json:"prototype,omitempty"`

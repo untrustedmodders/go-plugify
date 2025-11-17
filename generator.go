@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/ast"
+	"go/constant"
 	"go/types"
-	"strings"
 	"os"
+	"sort"
+	"strings"
+
 	"golang.org/x/tools/go/packages"
 )
 
@@ -24,13 +27,15 @@ type ParamInfo struct {
 
 type TypeInfo struct {
 	TypeString   string
+	IsRef        bool
 	IsFunc       bool
-	FuncSig      *FuncSignature
 	IsEnum       bool
+	IsArray      bool
+
 	EnumTypeName string
 	EnumValues   []EnumValue
-	IsArray      bool
 	ElemType     *TypeInfo
+	FuncSig      *FuncSignature
 }
 
 type FuncSignature struct {
@@ -61,6 +66,7 @@ func generateName(name string) string {
 	}
 	return name
 }
+
 func Generate(
 	patterns string,
 	output string,
@@ -273,19 +279,163 @@ func extractReturnType(results *types.Tuple, info *types.Info) TypeInfo {
 }
 
 func mapTypeInfo(t types.Type, info *types.Info) TypeInfo {
-	// Handle pointers (treat as references)
+	return mapTypeInfoWithRef(t, info, false)
+}
+
+func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
+	// Handle pointer types - set isRef and unwrap
 	if ptr, ok := t.(*types.Pointer); ok {
-		// For now, just get the underlying type
-		t = ptr.Elem()
+		return mapTypeInfoWithRef(ptr.Elem(), info, true)
+	}
+
+	// Handle type aliases (Go 1.22+)
+	if alias, ok := t.(*types.Alias); ok {
+		aliasName := alias.Obj().Name()
+		rhs := alias.Rhs()
+
+		// Special case: 'any' is a built-in alias for interface{}, unwrap it
+		if aliasName == "any" {
+			return mapTypeInfoWithRef(rhs, info, isRef)
+		}
+
+		// Check if alias is to a function type
+		if sig, ok := rhs.(*types.Signature); ok {
+			params := extractParams(sig.Params(), info)
+			retType := extractReturnType(sig.Results(), info)
+
+			return TypeInfo{
+				TypeString: "function",
+				IsRef:      isRef,
+				IsFunc:     true,
+				FuncSig: &FuncSignature{
+					Name:   aliasName, // Use the alias name
+					Params: params,
+					Return: retType,
+				},
+			}
+		}
+
+		// For other aliases (potential enums), check if underlying type is basic
+		if basic, ok := rhs.(*types.Basic); ok {
+			underlyingType := mapBasicType(basic)
+			// This is a type alias to a basic type (likely an enum)
+			// Try to extract enum values
+			enumValues := findEnumValues(alias.Obj(), info)
+			return TypeInfo{
+				TypeString:   underlyingType,
+				IsRef:        isRef,
+				IsEnum:       true,
+				EnumTypeName: aliasName,
+				EnumValues:   enumValues,
+			}
+		}
+
+		// For other aliases, unwrap them
+		return mapTypeInfoWithRef(rhs, info, isRef)
+	}
+
+	// Handle interface{} (any) - check this before slices since []any needs to detect any
+	if iface, ok := t.(*types.Interface); ok {
+		// Check if it's the empty interface (any)
+		if iface.NumMethods() == 0 {
+			return TypeInfo{
+				TypeString: "any",
+				IsRef:      isRef,
+			}
+		}
+		// Non-empty interfaces are treated as pointers
+		return TypeInfo{
+			TypeString: "ptr64",
+			IsRef:      isRef,
+		}
 	}
 
 	// Handle slices/arrays
 	if slice, ok := t.(*types.Slice); ok {
-		elemType := mapTypeInfo(slice.Elem(), info)
+		elemType := mapTypeInfoWithRef(slice.Elem(), info, false)
 		return TypeInfo{
 			TypeString: elemType.TypeString + "[]",
+			IsRef:      isRef,
 			IsArray:    true,
 			ElemType:   &elemType,
+		}
+	}
+
+	// Handle named types (check for plugify structs and enums)
+	if named, ok := t.(*types.Named); ok {
+		obj := named.Obj()
+		typeName := obj.Name()
+		pkgPath := ""
+		if obj.Pkg() != nil {
+			pkgPath = obj.Pkg().Path()
+		}
+
+		// Check for plugify struct types (Vector2, Vector3, Vector4, Matrix4x4)
+		if pkgPath == "github.com/untrustedmodders/go-plugify" {
+			switch typeName {
+			case "Vector2":
+				return TypeInfo{TypeString: "vec2", IsRef: isRef}
+			case "Vector3":
+				return TypeInfo{TypeString: "vec3", IsRef: isRef}
+			case "Vector4":
+				return TypeInfo{TypeString: "vec4", IsRef: isRef}
+			case "Matrix4x4":
+				return TypeInfo{TypeString: "mat4x4", IsRef: isRef}
+			}
+		}
+
+		// Check underlying type for enums, functions, and type aliases
+		underlying := named.Underlying()
+
+		// Handle named function types (e.g., type Func1 func())
+		if sig, ok := underlying.(*types.Signature); ok {
+			params := extractParams(sig.Params(), info)
+			retType := extractReturnType(sig.Results(), info)
+
+			return TypeInfo{
+				TypeString: "function",
+				IsRef:      isRef,
+				IsFunc:     true,
+				FuncSig: &FuncSignature{
+					Name:   typeName, // Use the name from the named type
+					Params: params,
+					Return: retType,
+				},
+			}
+		}
+
+		// Handle type aliases to basic types (enums)
+		if basic, ok := underlying.(*types.Basic); ok {
+			underlyingType := mapBasicType(basic)
+
+			// Check if this is a type alias in the same package (likely an enum)
+			// Type aliases have the same underlying type but different name
+			if typeName != "" && typeName != underlyingType {
+				// Try to extract enum values
+				enumValues := findEnumValues(obj, info)
+				return TypeInfo{
+					TypeString:   underlyingType,
+					IsRef:        isRef,
+					IsEnum:       true,
+					EnumTypeName: typeName,
+					EnumValues:   enumValues,
+				}
+			}
+
+			return TypeInfo{
+				TypeString: underlyingType,
+				IsRef:      isRef,
+			}
+		}
+
+		// Handle type aliases to structs
+		if structType, ok := underlying.(*types.Struct); ok {
+			_ = structType // Use the variable to avoid unused warning
+			// For now, treat unknown structs as unsafe.Pointer
+			return TypeInfo{
+				TypeString: "ptr64",
+				IsRef:      isRef,
+			}
 		}
 	}
 
@@ -294,44 +444,33 @@ func mapTypeInfo(t types.Type, info *types.Info) TypeInfo {
 		params := extractParams(sig.Params(), info)
 		retType := extractReturnType(sig.Results(), info)
 
+		funcName := "callback"
+		// Try to get function type name from context if available
 		return TypeInfo{
 			TypeString: "function",
+			IsRef:      isRef,
 			IsFunc:     true,
 			FuncSig: &FuncSignature{
-				Name:   "callback",
+				Name:   funcName,
 				Params: params,
 				Return: retType,
 			},
 		}
 	}
 
-	// Handle named types (check for enums - const groups)
-	if named, ok := t.(*types.Named); ok {
-		typeName := named.Obj().Name()
-
-		// Check if it's an enum-like type (underlying basic type with const values)
-		if basic, ok := named.Underlying().(*types.Basic); ok {
-			// Try to find enum values (this is heuristic)
-			enumValues := findEnumValues(named, info)
-			if len(enumValues) > 0 {
-				underlyingType := mapBasicType(basic)
-				return TypeInfo{
-					TypeString:   underlyingType,
-					IsEnum:       true,
-					EnumTypeName: typeName,
-					EnumValues:   enumValues,
-				}
-			}
+	// Handle basic types
+	if basic, ok := t.(*types.Basic); ok {
+		return TypeInfo{
+			TypeString: mapBasicType(basic),
+			IsRef:      isRef,
 		}
 	}
 
-	// Handle basic types
-	if basic, ok := t.(*types.Basic); ok {
-		return TypeInfo{TypeString: mapBasicType(basic)}
+	// Default - unknown type
+	return TypeInfo{
+		TypeString: "ptr64",
+		IsRef:      isRef,
 	}
-
-	// Default
-	return TypeInfo{TypeString: t.String()}
 }
 
 func mapBasicType(basic *types.Basic) string {
@@ -367,12 +506,68 @@ func mapBasicType(basic *types.Basic) string {
 	}
 }
 
-func findEnumValues(named *types.Named, info *types.Info) []EnumValue {
-	// This is a heuristic approach
-	// In Go, enums are typically const groups with the same type
-	// We'd need to scan the package scope for const declarations
-	// For now, return empty - you could extend this
-	return nil
+func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
+	// Get the package where this type is defined
+	pkg := typeObj.Pkg()
+	if pkg == nil {
+		return nil
+	}
+
+	// Get the type we're looking for
+	enumType := typeObj.Type()
+
+	var enumValues []EnumValue
+
+	// Iterate through all objects in the package scope
+	scope := pkg.Scope()
+	for _, name := range scope.Names() {
+		obj := scope.Lookup(name)
+
+		// Check if it's a constant
+		constObj, ok := obj.(*types.Const)
+		if !ok {
+			continue
+		}
+
+		// Check if the constant's type matches our enum type
+		if !types.Identical(constObj.Type(), enumType) {
+			continue
+		}
+
+		// Extract the constant value
+		val := constObj.Val()
+		if val == nil {
+			continue
+		}
+
+		// Convert to int64
+		var intValue int64
+		switch val.Kind() {
+		case constant.Int:
+			// Get the int64 value
+			if i, ok := constant.Int64Val(val); ok {
+				intValue = i
+			} else {
+				// Value too large for int64, skip
+				continue
+			}
+		default:
+			// Not an integer constant, skip
+			continue
+		}
+
+		enumValues = append(enumValues, EnumValue{
+			Name:  constObj.Name(),
+			Value: intValue,
+		})
+	}
+
+	// Sort by value to ensure consistent ordering
+	sort.Slice(enumValues, func(i, j int) bool {
+		return enumValues[i].Value < enumValues[j].Value
+	})
+
+	return enumValues
 }
 
 func convertToManifestMethods(funcs []ExportedFunction) []Method {
@@ -396,10 +591,22 @@ func convertParams(params []ParamInfo) []Property {
 			result[i] = Property{
 				Type: "function",
 				Name: p.Name,
+				Ref: p.Type.IsRef,
 				Prototype: &Method{
 					Name:       p.Type.FuncSig.Name,
 					ParamTypes: convertParams(p.Type.FuncSig.Params),
 					RetType:    convertReturnType(p.Type.FuncSig.Return),
+				},
+			}
+		} else if p.Type.IsArray && p.Type.ElemType != nil && p.Type.ElemType.IsEnum {
+			// Array of enum parameter
+			result[i] = Property{
+				Type: p.Type.TypeString,
+				Name: p.Name,
+				Ref:  p.Type.IsRef,
+				Enumerator: &EnumObject{
+					Name:   p.Type.ElemType.EnumTypeName,
+					Values: p.Type.ElemType.EnumValues,
 				},
 			}
 		} else if p.Type.IsEnum {
@@ -407,6 +614,7 @@ func convertParams(params []ParamInfo) []Property {
 			result[i] = Property{
 				Type: p.Type.TypeString,
 				Name: p.Name,
+				Ref:  p.Type.IsRef,
 				Enumerator: &EnumObject{
 					Name:   p.Type.EnumTypeName,
 					Values: p.Type.EnumValues,
@@ -416,6 +624,7 @@ func convertParams(params []ParamInfo) []Property {
 			// Regular parameter
 			result[i] = Property{
 				Type: p.Type.TypeString,
+				Ref:  p.Type.IsRef,
 				Name: p.Name,
 			}
 		}
@@ -424,6 +633,29 @@ func convertParams(params []ParamInfo) []Property {
 }
 
 func convertReturnType(t TypeInfo) Property {
+	if t.IsFunc {
+		// Function return type with prototype
+		return Property{
+			Type: "function",
+			Prototype: &Method{
+				Name:       t.FuncSig.Name,
+				ParamTypes: convertParams(t.FuncSig.Params),
+				RetType:    convertReturnType(t.FuncSig.Return),
+			},
+		}
+	}
+
+	if t.IsArray && t.ElemType != nil && t.ElemType.IsEnum {
+		// Array of enum return type
+		return Property{
+			Type: t.TypeString,
+			Enumerator: &EnumObject{
+				Name:   t.ElemType.EnumTypeName,
+				Values: t.ElemType.EnumValues,
+			},
+		}
+	}
+
 	if t.IsEnum {
 		return Property{
 			Type: t.TypeString,
@@ -468,16 +700,14 @@ func generateWrapper(fn ExportedFunction) string {
 	var assignBack []string
 
 	for _, param := range fn.Params {
-		cType := mapToCType(param.Type.TypeString)
-		goType := mapToGoType(param.Type.TypeString)
-		varType := mapToFunc(param.Type.TypeString)
+		cType := mapToCType(param.Type)
+		goType := mapToGoType(param.Type)
+		varType := mapToFunc(param.Type)
 		name := generateName(param.Name)
 
 		// Determine if this is a ref parameter (passed by pointer)
-		isRef := false
-		if strings.HasPrefix(cType, "C.") {
+		if param.Type.IsRef || strings.HasPrefix(cType, "C.") {
 			cType = "*" + cType
-			isRef = true
 		}
 
 		params = append(params, fmt.Sprintf("%s %s", name, cType))
@@ -488,7 +718,7 @@ func generateWrapper(fn ExportedFunction) string {
 		}
 
 		// Handle ref parameters with temporary variables
-		if isRef && (cType == "*C.String" || cType == "*C.Vector" || cType == "*C.Variant") {
+		if param.Type.IsRef && (cType == "*C.String" || cType == "*C.Vector" || cType == "*C.Variant") {
 			tempVar := fmt.Sprintf("_%s", name)
 
 			// Create temporary Go variable and convert from C
@@ -519,7 +749,7 @@ func generateWrapper(fn ExportedFunction) string {
 				callParams = append(callParams, fmt.Sprintf("plugify.Get%sData(%s)", varType, castName))
 			case param.Type.TypeString == "vec2" || param.Type.TypeString == "vec3" || param.Type.TypeString == "vec4" || param.Type.TypeString == "mat4x4":
 				deref := "*"
-				if isRef {
+				if param.Type.IsRef {
 					deref = ""
 				}
 				callParams = append(callParams, fmt.Sprintf("%s(*%s)(unsafe.Pointer(%s))", deref, goType, name))
@@ -530,7 +760,7 @@ func generateWrapper(fn ExportedFunction) string {
 				}
 				callParams = append(callParams, fmt.Sprintf("plugify.GetVectorData%s%s(%s)", varType, typeName, castName))
 			case param.Type.IsEnum:
-				if isRef {
+				if param.Type.IsRef {
 					callParams = append(callParams, fmt.Sprintf("(*%s)(%s)", param.Type.EnumTypeName, name))
 				} else {
 					callParams = append(callParams, fmt.Sprintf("%s(%s)", param.Type.EnumTypeName, name))
@@ -546,7 +776,7 @@ func generateWrapper(fn ExportedFunction) string {
 
 	// Generate return type
 	resultDest := ""
-	returnType := mapToCType(fn.ReturnType.TypeString)
+	returnType := mapToCType(fn.ReturnType)
 	if returnType != "" {
 		returnType = " " + returnType
 		resultDest = "__result := "
@@ -570,8 +800,8 @@ func %s(%s)%s {
 
 	// Handle return conversion
 	if resultDest != "" {
-		cType := mapToCType(fn.ReturnType.TypeString)
-		varType := mapToFunc(fn.ReturnType.TypeString)
+		cType := mapToCType(fn.ReturnType)
+		varType := mapToFunc(fn.ReturnType)
 
 		switch {
 		case fn.ReturnType.IsFunc:
@@ -601,9 +831,19 @@ func %s(%s)%s {
 	return strings.Join(wrapper, "")
 }
 
-// Helper functions for type mapping (from original autoexports.go)
-func mapToFunc(jsonType string) string {
-	switch jsonType {
+// Helper functions for type mapping (refactored to use TypeInfo)
+func mapToFunc(typeInfo TypeInfo) string {
+	// Handle array types - return the element type's function name
+	if typeInfo.IsArray && typeInfo.ElemType != nil {
+		return mapToFuncBasic(typeInfo.ElemType.TypeString)
+	}
+
+	// Handle basic types
+	return mapToFuncBasic(typeInfo.TypeString)
+}
+
+func mapToFuncBasic(typeStr string) string {
+	switch typeStr {
 	case "void":
 		return ""
 	case "bool":
@@ -646,53 +886,33 @@ func mapToFunc(jsonType string) string {
 		return "Vector4"
 	case "mat4x4":
 		return "Matrix4x4"
-	case "bool[]":
-		return "Bool"
-	case "char8[]":
-		return "Char8"
-	case "char16[]":
-		return "Char16"
-	case "int8[]":
-		return "Int8"
-	case "int16[]":
-		return "Int16"
-	case "int32[]":
-		return "Int32"
-	case "int64[]":
-		return "Int64"
-	case "uint8[]":
-		return "UInt8"
-	case "uint16[]":
-		return "UInt16"
-	case "uint32[]":
-		return "UInt32"
-	case "uint64[]":
-		return "UInt64"
-	case "ptr32[]", "ptr64[]":
-		return "Pointer"
-	case "float[]":
-		return "Float"
-	case "double[]":
-		return "Double"
-	case "string[]":
-		return "String"
-	case "any[]":
-		return "Variant"
-	case "vec2[]":
-		return "Vector2"
-	case "vec3[]":
-		return "Vector3"
-	case "vec4[]":
-		return "Vector4"
-	case "mat4x4[]":
-		return "Matrix4x4"
 	default:
-		return "Function"
+		return "Pointer"
 	}
 }
 
-func mapToCType(jsonType string) string {
-	switch jsonType {
+func mapToCType(typeInfo TypeInfo) string {
+	// Handle function types
+	if typeInfo.IsFunc {
+		return "unsafe.Pointer"
+	}
+
+	// Handle array types
+	if typeInfo.IsArray {
+		return "C.Vector"
+	}
+
+	// Handle enum types - use the underlying type
+	if typeInfo.IsEnum {
+		return mapToCTypeBasic(typeInfo.TypeString)
+	}
+
+	// Handle basic types
+	return mapToCTypeBasic(typeInfo.TypeString)
+}
+
+func mapToCTypeBasic(typeStr string) string {
+	switch typeStr {
 	case "void":
 		return ""
 	case "bool":
@@ -735,15 +955,38 @@ func mapToCType(jsonType string) string {
 		return "C.Vector4"
 	case "mat4x4":
 		return "C.Matrix4x4"
-	case "bool[]", "char8[]", "char16[]", "int8[]", "int16[]", "int32[]", "int64[]", "uint8[]", "uint16[]", "uint32[]", "uint64[]", "ptr32[]", "ptr64[]", "float[]", "double[]", "string[]", "any[]", "vec2[]", "vec3[]", "vec4[]", "mat4x4[]":
-		return "C.Vector"
 	default:
-		return "unsafe.Pointer"
+		return "uintptr"
 	}
 }
 
-func mapToGoType(jsonType string) string {
-	switch jsonType {
+func mapToGoType(typeInfo TypeInfo) string {
+	// Handle function types
+	if typeInfo.IsFunc && typeInfo.FuncSig != nil {
+		return typeInfo.FuncSig.Name
+	}
+
+	// Handle array types
+	if typeInfo.IsArray && typeInfo.ElemType != nil {
+		elemType := mapToGoTypeBasic(typeInfo.ElemType.TypeString)
+		// Handle arrays of enums
+		if typeInfo.ElemType.IsEnum {
+			return "[]" + typeInfo.ElemType.EnumTypeName
+		}
+		return "[]" + elemType
+	}
+
+	// Handle enum types - use the actual enum type name
+	if typeInfo.IsEnum {
+		return typeInfo.EnumTypeName
+	}
+
+	// Handle basic types
+	return mapToGoTypeBasic(typeInfo.TypeString)
+}
+
+func mapToGoTypeBasic(typeStr string) string {
+	switch typeStr {
 	case "void":
 		return ""
 	case "bool":
@@ -778,50 +1021,14 @@ func mapToGoType(jsonType string) string {
 		return "string"
 	case "any":
 		return "interface{}"
-	case "bool[]":
-		return "[]bool"
-	case "int8[]":
-		return "[]int8"
-	case "int16[]":
-		return "[]int16"
-	case "int32[]":
-		return "[]int32"
-	case "int64[]":
-		return "[]int64"
-	case "uint8[]":
-		return "[]uint8"
-	case "uint16[]":
-		return "[]uint16"
-	case "uint32[]":
-		return "[]uint32"
-	case "uint64[]":
-		return "[]uint64"
-	case "ptr32[]", "ptr64[]":
-		return "[]uintptr"
-	case "float[]":
-		return "[]float32"
-	case "double[]":
-		return "[]float64"
-	case "string[]":
-		return "[]string"
-	case "any[]":
-		return "[]interface{}"
-	case "vec2[]":
-		return "[]Vector2"
-	case "vec3[]":
-		return "[]Vector3"
-	case "vec4[]":
-		return "[]Vector4"
-	case "mat4x4[]":
-		return "[]Matrix4x4"
 	case "vec2":
-		return "Vector2"
+		return "plugify.Vector2"
 	case "vec3":
-		return "Vector3"
+		return "plugify.Vector3"
 	case "vec4":
-		return "Vector4"
+		return "plugify.Vector4"
 	case "mat4x4":
-		return "Matrix4x4"
+		return "plugify.Matrix4x4"
 	default:
 		return "interface{}"
 	}
@@ -882,3 +1089,4 @@ typedef struct Variant {
 `
 	return os.WriteFile("autoexports.h", []byte(header), 0644)
 }
+
