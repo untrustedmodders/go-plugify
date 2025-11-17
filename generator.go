@@ -62,7 +62,7 @@ func generateName(name string) string {
 	return name
 }
 
-func Generator(
+func Generate(
 	pkgPath string,
 	outputFile string,
 	name string,
