@@ -1,56 +1,15 @@
-//go:generate generator.go
-
-package plugify
+package main
 
 import "C"
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
-	"io/ioutil"
+	"github.com/untrustedmodders/go-plugify"
 	"os"
 	"path/filepath"
 	"strings"
 )
-
-// Metadata represents the structure of the .pplugin file
-type Metadata struct {
-	//Name    string   `json:"name"`
-	Methods []Method `json:"methods"`
-}
-
-// Method represents a single exported method
-type Method struct {
-	Name        string     `json:"name"`
-	FuncName    string     `json:"funcName"`
-	ParamTypes  []Property `json:"paramTypes"`
-	RetType     Property   `json:"retType"`
-	Group       string     `json:"group,omitempty"`
-	Description string     `json:"description,omitempty"`
-}
-
-// EnumValue represents a single enumeration value
-type EnumValue struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Value       int64  `json:"value"`
-}
-
-// EnumObject represents an enumeration
-type EnumObject struct {
-	Name        string      `json:"name"`
-	Description string      `json:"description,omitempty"`
-	Values      []EnumValue `json:"values"`
-}
-
-// Property represents a parameter type
-type Property struct {
-	Type        string      `json:"type"`
-	Name        string      `json:"name"`
-	Description string      `json:"description,omitempty"`
-	Ref         bool        `json:"ref,omitempty"`
-	Prototype   *Method     `json:"prototype,omitempty"`
-	Enumerator  *EnumObject `json:"enum,omitempty"`
-}
 
 // invalidNames contains Go's reserved keywords and predeclared identifiers
 var invalidNames = map[string]struct{}{
@@ -76,7 +35,14 @@ func generateName(name string) string {
 	return name
 }
 
-func Generate(packageName string, rootFolder string) {
+func main() {
+	var (
+		pkgPath      = flag.String("package", "main", "Package path to generate (default: 'main')")
+		outputFolder = flag.String("output", ".", "Output result folder (default: '.')")
+	)
+
+	flag.Parse()
+
 	code := []string{fmt.Sprintf(`package %s
 
 // #include "autoexports.h"
@@ -88,10 +54,10 @@ import (
 )
 
 // Exported methods
-`, packageName)}
+`, *pkgPath)}
 
 	// Walk through the directory recursively
-	err := filepath.Walk(rootFolder, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(*outputFolder, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -99,19 +65,19 @@ import (
 		// Check if the file is a .pplugin file
 		if !info.IsDir() && strings.HasSuffix(info.Name(), ".pplugin") {
 			// Read the file
-			fileContent, err := ioutil.ReadFile(path)
+			fileContent, err := os.ReadFile(path)
 			if err != nil {
 				return fmt.Errorf("error reading file %s: %v", path, err)
 			}
 
 			// Parse the JSON content
-			var metadata Metadata
-			if err := json.Unmarshal(fileContent, &metadata); err != nil {
+			var manifest plugify.Manifest
+			if err := json.Unmarshal(fileContent, &manifest); err != nil {
 				return fmt.Errorf("error parsing JSON in file %s: %v", path, err)
 			}
 
 			// Generate export function wrappers
-			for _, method := range metadata.Methods {
+			for _, method := range manifest.Methods {
 				code = append(code, generateWrapper(method))
 			}
 		}
@@ -120,13 +86,13 @@ import (
 	})
 
 	if err != nil {
-		fmt.Printf("Error walking the path %v: %v\n", rootFolder, err)
+		fmt.Printf("Error walking the path %v: %v\n", *outputFolder, err)
 	}
 
 	// Write the generated file
 	err = os.WriteFile("autoexports.go", []byte(strings.Join(code, "")), 0644)
 	if err != nil {
-		fmt.Println("Error writing file:", err)
+		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -185,7 +151,7 @@ typedef struct Variant {
 	// Write the generated file
 	err = os.WriteFile("autoexports.h", []byte(header), 0644)
 	if err != nil {
-		fmt.Println("Error writing file:", err)
+		fmt.Fprintf(os.Stderr, "Error writing file: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -419,7 +385,7 @@ func mapToGoType(jsonType string) string {
 	}
 }
 
-func generateWrapper(method Method) string {
+func generateWrapper(method plugify.Method) string {
 	// Generate the function signature
 	var params []string
 	var callParams []string
