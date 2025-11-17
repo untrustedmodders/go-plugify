@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/untrustedmodders/go-plugify/compare/v1.2.3...v1.2.4) (2025-11-17)
+
+
+### Bug Fixes
+
+* add parser and move generators to separate folders ([84b1255](https://github.com/untrustedmodders/go-plugify/commit/84b1255462499cb21863f189449734a59f270d90))
+
 ## [1.2.3](https://github.com/untrustedmodders/go-plugify/compare/v1.2.2...v1.2.3) (2025-11-13)
 
 
