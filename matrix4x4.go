@@ -163,7 +163,7 @@ func RotationZ(angle float32) Matrix4x4 {
 // Print matrix as a formatted string
 func (m Matrix4x4) ToString() string {
 	return fmt.Sprintf(
-		"[%f, %f, %f, %f]\n[%f, %f, %f, %f]\n[%f, %f, %f, %f]\n[%f, %f, %f, %f]",
+		"Matrix4x4[%f, %f, %f, %f]\n[%f, %f, %f, %f]\n[%f, %f, %f, %f]\n[%f, %f, %f, %f]",
 		m.M[0][0], m.M[0][1], m.M[0][2], m.M[0][3],
 		m.M[1][0], m.M[1][1], m.M[1][2], m.M[1][3],
 		m.M[2][0], m.M[2][1], m.M[2][2], m.M[2][3],
