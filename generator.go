@@ -403,10 +403,22 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 			params := extractParams(sig.Params(), info, pkg)
 			retType := extractReturnType(sig.Results(), info, pkg)
 
-			// Get type-level documentation for delegate
-			var typeDesc string
+			// Get type-level documentation for delegate with doxygen parsing
+			var delegateDoc DocComment
 			if pkg != nil {
-				typeDesc = findTypeComment(pkg, aliasName)
+				delegateDoc = findTypeDelegateDoc(pkg, aliasName)
+			}
+
+			// Apply parameter descriptions from delegate documentation
+			for i := range params {
+				if desc, ok := delegateDoc.ParamDescs[params[i].Name]; ok {
+					params[i].Description = desc
+				}
+			}
+
+			// Apply return description from delegate documentation
+			if delegateDoc.ReturnDesc != "" {
+				retType.Description = delegateDoc.ReturnDesc
 			}
 
 			return TypeInfo{
@@ -417,7 +429,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 					Name:        aliasName, // Use the alias name
 					Params:      params,
 					Return:      retType,
-					Description: typeDesc,
+					Description: delegateDoc.Description,
 				},
 			}
 		}
@@ -507,10 +519,22 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 			params := extractParams(sig.Params(), info, pkg)
 			retType := extractReturnType(sig.Results(), info, pkg)
 
-			// Get type-level documentation for delegate
-			var typeDesc string
+			// Get type-level documentation for delegate with doxygen parsing
+			var delegateDoc DocComment
 			if pkg != nil {
-				typeDesc = findTypeComment(pkg, typeName)
+				delegateDoc = findTypeDelegateDoc(pkg, typeName)
+			}
+
+			// Apply parameter descriptions from delegate documentation
+			for i := range params {
+				if desc, ok := delegateDoc.ParamDescs[params[i].Name]; ok {
+					params[i].Description = desc
+				}
+			}
+
+			// Apply return description from delegate documentation
+			if delegateDoc.ReturnDesc != "" {
+				retType.Description = delegateDoc.ReturnDesc
 			}
 
 			return TypeInfo{
@@ -521,7 +545,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 					Name:        typeName, // Use the name from the named type
 					Params:      params,
 					Return:      retType,
-					Description: typeDesc,
+					Description: delegateDoc.Description,
 				},
 			}
 		}
@@ -710,6 +734,36 @@ func findTypeComment(pkg *packages.Package, typeName string) string {
 		}
 	}
 	return ""
+}
+
+// findTypeDelegateDoc finds and parses doxygen-style documentation for a delegate type
+func findTypeDelegateDoc(pkg *packages.Package, typeName string) DocComment {
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+
+				if typeSpec.Name.Name == typeName {
+					// Check for doc comment above the type
+					if genDecl.Doc != nil {
+						return parseDocComment(genDecl.Doc)
+					}
+				}
+			}
+		}
+	}
+	return DocComment{
+		ParamDescs:   make(map[string]string),
+		EnumValueMap: make(map[string]string),
+	}
 }
 
 func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
