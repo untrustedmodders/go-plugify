@@ -439,7 +439,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 			underlyingType := mapBasicType(basic)
 			// This is a type alias to a basic type (likely an enum)
 			// Try to extract enum values with descriptions
-			enumValues := findEnumValuesWithPkg(alias.Obj(), info, pkg)
+			enumValues := findEnumValues(pkg, alias.Obj())
 
 			// Get type-level documentation for enum
 			var typeDesc string
@@ -558,7 +558,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 			// Type aliases have the same underlying type but different name
 			if typeName != "" && typeName != underlyingType {
 				// Try to extract enum values with descriptions
-				enumValues := findEnumValuesWithPkg(obj, info, pkg)
+				enumValues := findEnumValues(pkg, obj)
 
 				// Get type-level documentation for enum
 				var typeDesc string
@@ -766,11 +766,7 @@ func findTypeDelegateDoc(pkg *packages.Package, typeName string) DocComment {
 	}
 }
 
-func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
-	return findEnumValuesWithPkg(typeObj, info, nil)
-}
-
-func findEnumValuesWithPkg(typeObj types.Object, info *types.Info, pkg *packages.Package) []EnumValue {
+func findEnumValues(pkg *packages.Package, typeObj types.Object) []EnumValue {
 	// Get the package where this type is defined
 	typePkg := typeObj.Pkg()
 	if typePkg == nil {
@@ -781,73 +777,15 @@ func findEnumValuesWithPkg(typeObj types.Object, info *types.Info, pkg *packages
 	enumType := typeObj.Type()
 	enumTypeName := typeObj.Name()
 
-	var enumValues []EnumValue
-
 	// If we have AST access, use it to find constants with explicit type annotations
 	if pkg != nil {
-		enumValues = findEnumValuesFromAST(pkg, enumTypeName)
+		enumValues := findEnumValuesFromAST(pkg, enumTypeName)
 		if len(enumValues) > 0 {
 			return enumValues
 		}
 	}
 
-	// Fallback: Iterate through all objects in the package scope
-	scope := typePkg.Scope()
-	for _, name := range scope.Names() {
-		obj := scope.Lookup(name)
-
-		// Check if it's a constant
-		constObj, ok := obj.(*types.Const)
-		if !ok {
-			continue
-		}
-
-		// Check if the constant's type matches our enum type
-		if !types.Identical(constObj.Type(), enumType) {
-			continue
-		}
-
-		// Extract the constant value
-		val := constObj.Val()
-		if val == nil {
-			continue
-		}
-
-		// Convert to int64
-		var intValue int64
-		switch val.Kind() {
-		case constant.Int:
-			// Get the int64 value
-			if i, ok := constant.Int64Val(val); ok {
-				intValue = i
-			} else {
-				// Value too large for int64, skip
-				continue
-			}
-		default:
-			// Not an integer constant, skip
-			continue
-		}
-
-		// Try to get comment for this constant
-		var description string
-		if pkg != nil {
-			description = findConstComment(pkg, constObj.Name())
-		}
-
-		enumValues = append(enumValues, EnumValue{
-			Name:        constObj.Name(),
-			Value:       intValue,
-			Description: description,
-		})
-	}
-
-	// Sort by value to ensure consistent ordering
-	sort.Slice(enumValues, func(i, j int) bool {
-		return enumValues[i].Value < enumValues[j].Value
-	})
-
-	return enumValues
+	return findEnumValuesInScope(pkg, typePkg, enumType)
 }
 
 // findEnumValuesFromAST extracts enum values by examining the AST to find constants
@@ -941,6 +879,68 @@ func findEnumValuesFromAST(pkg *packages.Package, enumTypeName string) []EnumVal
 				}
 			}
 		}
+	}
+
+	// Sort by value to ensure consistent ordering
+	sort.Slice(enumValues, func(i, j int) bool {
+		return enumValues[i].Value < enumValues[j].Value
+	})
+
+	return enumValues
+}
+
+func findEnumValuesInScope(pkg *packages.Package, typePkg *types.Package, enumType types.Type) []EnumValue {
+	var enumValues []EnumValue
+
+	// Fallback: Iterate through all objects in the package scope
+	scope := typePkg.Scope()
+	for _, name := range scope.Names() {
+		obj := scope.Lookup(name)
+
+		// Check if it's a constant
+		constObj, ok := obj.(*types.Const)
+		if !ok {
+			continue
+		}
+
+		// Check if the constant's type matches our enum type
+		if !types.Identical(constObj.Type(), enumType) {
+			continue
+		}
+
+		// Extract the constant value
+		val := constObj.Val()
+		if val == nil {
+			continue
+		}
+
+		// Convert to int64
+		var intValue int64
+		switch val.Kind() {
+		case constant.Int:
+			// Get the int64 value
+			if i, ok := constant.Int64Val(val); ok {
+				intValue = i
+			} else {
+				// Value too large for int64, skip
+				continue
+			}
+		default:
+			// Not an integer constant, skip
+			continue
+		}
+
+		// Try to get comment for this constant
+		var description string
+		if pkg != nil {
+			description = findConstComment(pkg, constObj.Name())
+		}
+
+		enumValues = append(enumValues, EnumValue{
+			Name:        constObj.Name(),
+			Value:       intValue,
+			Description: description,
+		})
 	}
 
 	// Sort by value to ensure consistent ordering
