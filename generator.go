@@ -14,34 +14,103 @@ import (
 )
 
 type ExportedFunction struct {
-	ExportName string
-	FuncName   string
-	Params     []ParamInfo
-	ReturnType TypeInfo
+	ExportName  string
+	FuncName    string
+	Params      []ParamInfo
+	ReturnType  TypeInfo
+	Description string
 }
 
 type ParamInfo struct {
-	Name string
-	Type TypeInfo
+	Name        string
+	Type        TypeInfo
+	Description string
 }
 
 type TypeInfo struct {
-	TypeString   string
-	IsRef        bool
-	IsFunc       bool
-	IsEnum       bool
-	IsArray      bool
+	TypeString string
+	IsRef      bool
+	IsFunc     bool
+	IsEnum     bool
+	IsArray    bool
 
 	EnumTypeName string
 	EnumValues   []EnumValue
 	ElemType     *TypeInfo
 	FuncSig      *FuncSignature
+	Description  string
 }
 
 type FuncSignature struct {
-	Name   string
-	Params []ParamInfo
-	Return TypeInfo
+	Name        string
+	Params      []ParamInfo
+	Return      TypeInfo
+	Description string
+}
+
+// DocComment represents parsed documentation from comments
+type DocComment struct {
+	Description  string
+	ParamDescs   map[string]string // param name -> description
+	ReturnDesc   string
+	EnumValueMap map[string]string // enum value name -> description
+}
+
+// parseDocComment parses doxygen-style comments and extracts @param, @return, etc.
+func parseDocComment(commentGroup *ast.CommentGroup) DocComment {
+	doc := DocComment{
+		ParamDescs:   make(map[string]string),
+		EnumValueMap: make(map[string]string),
+	}
+
+	if commentGroup == nil {
+		return doc
+	}
+
+	var descriptionLines []string
+	inDescription := true
+
+	for _, comment := range commentGroup.List {
+		text := strings.TrimSpace(strings.TrimPrefix(comment.Text, "//"))
+		text = strings.TrimSpace(strings.TrimPrefix(text, "/*"))
+		text = strings.TrimSpace(strings.TrimSuffix(text, "*/"))
+		text = strings.TrimSpace(strings.TrimPrefix(text, "*"))
+
+		// Skip plugify:export directives
+		if strings.HasPrefix(text, "plugify:export") {
+			continue
+		}
+
+		// Parse @param tag
+		if strings.HasPrefix(text, "@param") {
+			inDescription = false
+			parts := strings.Fields(text)
+			if len(parts) >= 3 {
+				paramName := parts[1]
+				paramDesc := strings.Join(parts[2:], " ")
+				doc.ParamDescs[paramName] = paramDesc
+			}
+			continue
+		}
+
+		// Parse @return tag
+		if strings.HasPrefix(text, "@return") {
+			inDescription = false
+			parts := strings.SplitN(text, "@return", 2)
+			if len(parts) == 2 {
+				doc.ReturnDesc = strings.TrimSpace(parts[1])
+			}
+			continue
+		}
+
+		// Collect description lines
+		if inDescription && text != "" {
+			descriptionLines = append(descriptionLines, text)
+		}
+	}
+
+	doc.Description = strings.Join(descriptionLines, " ")
+	return doc
 }
 
 // invalidNames contains Go's reserved keywords and predeclared identifiers
@@ -221,6 +290,9 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 				return true
 			}
 
+			// Parse documentation comments
+			docComment := parseDocComment(funcDecl.Doc)
+
 			// Get function signature from type info
 			obj := pkg.TypesInfo.ObjectOf(funcDecl.Name)
 			if obj == nil {
@@ -235,14 +307,25 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 			// Extract parameters
 			params := extractParams(sig.Params(), pkg.TypesInfo)
 
+			// Add parameter descriptions from doc comments
+			for i := range params {
+				if desc, ok := docComment.ParamDescs[params[i].Name]; ok {
+					params[i].Description = desc
+				}
+			}
+
 			// Extract return type
 			retType := extractReturnType(sig.Results(), pkg.TypesInfo)
 
+			// Add return description from doc comments
+			retType.Description = docComment.ReturnDesc
+
 			exports = append(exports, ExportedFunction{
-				ExportName: exportName,
-				FuncName:   "__" + funcDecl.Name.Name,
-				Params:     params,
-				ReturnType: retType,
+				ExportName:  exportName,
+				FuncName:    "__" + funcDecl.Name.Name,
+				Description: docComment.Description,
+				Params:      params,
+				ReturnType:  retType,
 			})
 
 			return true
@@ -506,10 +589,78 @@ func mapBasicType(basic *types.Basic) string {
 	}
 }
 
+// findConstComment finds the comment for a constant declaration in AST
+func findConstComment(pkg *packages.Package, constName string) string {
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				valueSpec, ok := spec.(*ast.ValueSpec)
+				if !ok {
+					continue
+				}
+
+				for _, name := range valueSpec.Names {
+					if name.Name == constName {
+						// Check for comment on the same line or doc comment
+						if valueSpec.Doc != nil {
+							docComment := parseDocComment(valueSpec.Doc)
+							return docComment.Description
+						}
+						if valueSpec.Comment != nil {
+							comment := valueSpec.Comment.Text()
+							comment = strings.TrimSpace(strings.TrimPrefix(comment, "//"))
+							comment = strings.TrimSpace(strings.TrimPrefix(comment, "/*"))
+							comment = strings.TrimSpace(strings.TrimSuffix(comment, "*/"))
+							return comment
+						}
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
+// findTypeComment finds the comment for a type declaration in AST
+func findTypeComment(pkg *packages.Package, typeName string) string {
+	for _, file := range pkg.Syntax {
+		for _, decl := range file.Decls {
+			genDecl, ok := decl.(*ast.GenDecl)
+			if !ok {
+				continue
+			}
+
+			for _, spec := range genDecl.Specs {
+				typeSpec, ok := spec.(*ast.TypeSpec)
+				if !ok {
+					continue
+				}
+
+				if typeSpec.Name.Name == typeName {
+					if genDecl.Doc != nil {
+						docComment := parseDocComment(genDecl.Doc)
+						return docComment.Description
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
 func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
+	return findEnumValuesWithPkg(typeObj, info, nil)
+}
+
+func findEnumValuesWithPkg(typeObj types.Object, info *types.Info, pkg *packages.Package) []EnumValue {
 	// Get the package where this type is defined
-	pkg := typeObj.Pkg()
-	if pkg == nil {
+	typePkg := typeObj.Pkg()
+	if typePkg == nil {
 		return nil
 	}
 
@@ -519,7 +670,7 @@ func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
 	var enumValues []EnumValue
 
 	// Iterate through all objects in the package scope
-	scope := pkg.Scope()
+	scope := typePkg.Scope()
 	for _, name := range scope.Names() {
 		obj := scope.Lookup(name)
 
@@ -556,9 +707,16 @@ func findEnumValues(typeObj types.Object, info *types.Info) []EnumValue {
 			continue
 		}
 
+		// Try to get comment for this constant
+		var description string
+		if pkg != nil {
+			description = findConstComment(pkg, constObj.Name())
+		}
+
 		enumValues = append(enumValues, EnumValue{
-			Name:  constObj.Name(),
-			Value: intValue,
+			Name:        constObj.Name(),
+			Value:       intValue,
+			Description: description,
 		})
 	}
 
@@ -574,10 +732,11 @@ func convertToManifestMethods(funcs []ExportedFunction) []Method {
 	methods := make([]Method, len(funcs))
 	for i, f := range funcs {
 		methods[i] = Method{
-			Name:       f.ExportName,
-			FuncName:   f.FuncName,
-			ParamTypes: convertParams(f.Params),
-			RetType:    convertReturnType(f.ReturnType),
+			Name:        f.ExportName,
+			FuncName:    f.FuncName,
+			ParamTypes:  convertParams(f.Params),
+			RetType:     convertReturnType(f.ReturnType),
+			Description: f.Description,
 		}
 	}
 	return methods
@@ -589,43 +748,51 @@ func convertParams(params []ParamInfo) []Property {
 		if p.Type.IsFunc {
 			// Function parameter with prototype
 			result[i] = Property{
-				Type: "function",
-				Name: p.Name,
-				Ref: p.Type.IsRef,
+				Type:        "function",
+				Name:        p.Name,
+				Description: p.Description,
+				Ref:         p.Type.IsRef,
 				Prototype: &Method{
-					Name:       p.Type.FuncSig.Name,
-					ParamTypes: convertParams(p.Type.FuncSig.Params),
-					RetType:    convertReturnType(p.Type.FuncSig.Return),
+					Name:        p.Type.FuncSig.Name,
+					FuncName:    "_",
+					Description: p.Type.FuncSig.Description,
+					ParamTypes:  convertParams(p.Type.FuncSig.Params),
+					RetType:     convertReturnType(p.Type.FuncSig.Return),
 				},
 			}
 		} else if p.Type.IsArray && p.Type.ElemType != nil && p.Type.ElemType.IsEnum {
 			// Array of enum parameter
 			result[i] = Property{
-				Type: p.Type.TypeString,
-				Name: p.Name,
-				Ref:  p.Type.IsRef,
+				Type:        p.Type.TypeString,
+				Name:        p.Name,
+				Description: p.Description,
+				Ref:         p.Type.IsRef,
 				Enumerator: &EnumObject{
-					Name:   p.Type.ElemType.EnumTypeName,
-					Values: p.Type.ElemType.EnumValues,
+					Name:        p.Type.ElemType.EnumTypeName,
+					Description: p.Type.ElemType.Description,
+					Values:      p.Type.ElemType.EnumValues,
 				},
 			}
 		} else if p.Type.IsEnum {
 			// Enum parameter
 			result[i] = Property{
-				Type: p.Type.TypeString,
-				Name: p.Name,
-				Ref:  p.Type.IsRef,
+				Type:        p.Type.TypeString,
+				Name:        p.Name,
+				Description: p.Description,
+				Ref:         p.Type.IsRef,
 				Enumerator: &EnumObject{
-					Name:   p.Type.EnumTypeName,
-					Values: p.Type.EnumValues,
+					Name:        p.Type.EnumTypeName,
+					Description: p.Type.Description,
+					Values:      p.Type.EnumValues,
 				},
 			}
 		} else {
 			// Regular parameter
 			result[i] = Property{
-				Type: p.Type.TypeString,
-				Ref:  p.Type.IsRef,
-				Name: p.Name,
+				Type:        p.Type.TypeString,
+				Ref:         p.Type.IsRef,
+				Name:        p.Name,
+				Description: p.Description,
 			}
 		}
 	}
@@ -636,11 +803,14 @@ func convertReturnType(t TypeInfo) Property {
 	if t.IsFunc {
 		// Function return type with prototype
 		return Property{
-			Type: "function",
+			Type:        "function",
+			Description: t.Description,
 			Prototype: &Method{
-				Name:       t.FuncSig.Name,
-				ParamTypes: convertParams(t.FuncSig.Params),
-				RetType:    convertReturnType(t.FuncSig.Return),
+				Name:        t.FuncSig.Name,
+				FuncName:    "_",
+				Description: t.FuncSig.Description,
+				ParamTypes:  convertParams(t.FuncSig.Params),
+				RetType:     convertReturnType(t.FuncSig.Return),
 			},
 		}
 	}
@@ -648,26 +818,31 @@ func convertReturnType(t TypeInfo) Property {
 	if t.IsArray && t.ElemType != nil && t.ElemType.IsEnum {
 		// Array of enum return type
 		return Property{
-			Type: t.TypeString,
+			Type:        t.TypeString,
+			Description: t.Description,
 			Enumerator: &EnumObject{
-				Name:   t.ElemType.EnumTypeName,
-				Values: t.ElemType.EnumValues,
+				Name:        t.ElemType.EnumTypeName,
+				Description: t.ElemType.Description,
+				Values:      t.ElemType.EnumValues,
 			},
 		}
 	}
 
 	if t.IsEnum {
 		return Property{
-			Type: t.TypeString,
+			Type:        t.TypeString,
+			Description: t.Description,
 			Enumerator: &EnumObject{
-				Name:   t.EnumTypeName,
-				Values: t.EnumValues,
+				Name:        t.EnumTypeName,
+				Description: t.Description,
+				Values:      t.EnumValues,
 			},
 		}
 	}
 
 	return Property{
-		Type: t.TypeString,
+		Type:        t.TypeString,
+		Description: t.Description,
 	}
 }
 
@@ -1093,4 +1268,3 @@ typedef struct Variant {
 `
 	return os.WriteFile("autoexports.h", []byte(header), 0644)
 }
-
