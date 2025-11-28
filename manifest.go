@@ -18,10 +18,10 @@ type Manifest struct {
 type Method struct {
 	Name        string     `json:"name"`
 	FuncName    string     `json:"funcName"`
+	Description string     `json:"description,omitempty"`
 	ParamTypes  []Property `json:"paramTypes"`
 	RetType     Property   `json:"retType"`
 	Group       string     `json:"group,omitempty"`
-	Description string     `json:"description,omitempty"`
 }
 
 // EnumValue represents a single enumeration value

@@ -322,7 +322,7 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 			}
 
 			// Extract parameters
-			params := extractParams(sig.Params(), pkg.TypesInfo)
+			params := extractParams(sig.Params(), pkg.TypesInfo, pkg)
 
 			// Add parameter descriptions from doc comments
 			for i := range params {
@@ -332,7 +332,7 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 			}
 
 			// Extract return type
-			retType := extractReturnType(sig.Results(), pkg.TypesInfo)
+			retType := extractReturnType(sig.Results(), pkg.TypesInfo, pkg)
 
 			// Add return description from doc comments
 			retType.Description = docComment.ReturnDesc
@@ -352,7 +352,7 @@ func extractExportedFunctions(pkg *packages.Package) []ExportedFunction {
 	return exports
 }
 
-func extractParams(params *types.Tuple, info *types.Info) []ParamInfo {
+func extractParams(params *types.Tuple, info *types.Info, pkg *packages.Package) []ParamInfo {
 	if params == nil {
 		return nil
 	}
@@ -362,30 +362,30 @@ func extractParams(params *types.Tuple, info *types.Info) []ParamInfo {
 		param := params.At(i)
 		result[i] = ParamInfo{
 			Name: param.Name(),
-			Type: mapTypeInfo(param.Type(), info),
+			Type: mapTypeInfo(param.Type(), info, pkg),
 		}
 	}
 	return result
 }
 
-func extractReturnType(results *types.Tuple, info *types.Info) TypeInfo {
+func extractReturnType(results *types.Tuple, info *types.Info, pkg *packages.Package) TypeInfo {
 	if results == nil || results.Len() == 0 {
 		return TypeInfo{TypeString: "void"}
 	}
 
 	// For now, handle single return value
 	// You could extend this for multiple returns
-	return mapTypeInfo(results.At(0).Type(), info)
+	return mapTypeInfo(results.At(0).Type(), info, pkg)
 }
 
-func mapTypeInfo(t types.Type, info *types.Info) TypeInfo {
-	return mapTypeInfoWithRef(t, info, false)
+func mapTypeInfo(t types.Type, info *types.Info, pkg *packages.Package) TypeInfo {
+	return mapTypeInfoWithRef(t, info, pkg, false)
 }
 
-func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
+func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, isRef bool) TypeInfo {
 	// Handle pointer types - set isRef and unwrap
 	if ptr, ok := t.(*types.Pointer); ok {
-		return mapTypeInfoWithRef(ptr.Elem(), info, true)
+		return mapTypeInfoWithRef(ptr.Elem(), info, pkg, true)
 	}
 
 	// Handle type aliases (Go 1.22+)
@@ -395,22 +395,29 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 
 		// Special case: 'any' is a built-in alias for interface{}, unwrap it
 		if aliasName == "any" {
-			return mapTypeInfoWithRef(rhs, info, isRef)
+			return mapTypeInfoWithRef(rhs, info, pkg, isRef)
 		}
 
 		// Check if alias is to a function type
 		if sig, ok := rhs.(*types.Signature); ok {
-			params := extractParams(sig.Params(), info)
-			retType := extractReturnType(sig.Results(), info)
+			params := extractParams(sig.Params(), info, pkg)
+			retType := extractReturnType(sig.Results(), info, pkg)
+
+			// Get type-level documentation for delegate
+			var typeDesc string
+			if pkg != nil {
+				typeDesc = findTypeComment(pkg, aliasName)
+			}
 
 			return TypeInfo{
 				TypeString: "function",
 				IsRef:      isRef,
 				IsFunc:     true,
 				FuncSig: &FuncSignature{
-					Name:   aliasName, // Use the alias name
-					Params: params,
-					Return: retType,
+					Name:        aliasName, // Use the alias name
+					Params:      params,
+					Return:      retType,
+					Description: typeDesc,
 				},
 			}
 		}
@@ -419,19 +426,27 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 		if basic, ok := rhs.(*types.Basic); ok {
 			underlyingType := mapBasicType(basic)
 			// This is a type alias to a basic type (likely an enum)
-			// Try to extract enum values
-			enumValues := findEnumValues(alias.Obj(), info)
+			// Try to extract enum values with descriptions
+			enumValues := findEnumValuesWithPkg(alias.Obj(), info, pkg)
+
+			// Get type-level documentation for enum
+			var typeDesc string
+			if pkg != nil {
+				typeDesc = findTypeComment(pkg, aliasName)
+			}
+
 			return TypeInfo{
 				TypeString:   underlyingType,
 				IsRef:        isRef,
 				IsEnum:       true,
 				EnumTypeName: aliasName,
 				EnumValues:   enumValues,
+				Description:  typeDesc,
 			}
 		}
 
 		// For other aliases, unwrap them
-		return mapTypeInfoWithRef(rhs, info, isRef)
+		return mapTypeInfoWithRef(rhs, info, pkg, isRef)
 	}
 
 	// Handle interface{} (any) - check this before slices since []any needs to detect any
@@ -452,7 +467,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 
 	// Handle slices/arrays
 	if slice, ok := t.(*types.Slice); ok {
-		elemType := mapTypeInfoWithRef(slice.Elem(), info, false)
+		elemType := mapTypeInfoWithRef(slice.Elem(), info, pkg, false)
 		return TypeInfo{
 			TypeString: elemType.TypeString + "[]",
 			IsRef:      isRef,
@@ -489,17 +504,24 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 
 		// Handle named function types (e.g., type Func1 func())
 		if sig, ok := underlying.(*types.Signature); ok {
-			params := extractParams(sig.Params(), info)
-			retType := extractReturnType(sig.Results(), info)
+			params := extractParams(sig.Params(), info, pkg)
+			retType := extractReturnType(sig.Results(), info, pkg)
+
+			// Get type-level documentation for delegate
+			var typeDesc string
+			if pkg != nil {
+				typeDesc = findTypeComment(pkg, typeName)
+			}
 
 			return TypeInfo{
 				TypeString: "function",
 				IsRef:      isRef,
 				IsFunc:     true,
 				FuncSig: &FuncSignature{
-					Name:   typeName, // Use the name from the named type
-					Params: params,
-					Return: retType,
+					Name:        typeName, // Use the name from the named type
+					Params:      params,
+					Return:      retType,
+					Description: typeDesc,
 				},
 			}
 		}
@@ -511,14 +533,22 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 			// Check if this is a type alias in the same package (likely an enum)
 			// Type aliases have the same underlying type but different name
 			if typeName != "" && typeName != underlyingType {
-				// Try to extract enum values
-				enumValues := findEnumValues(obj, info)
+				// Try to extract enum values with descriptions
+				enumValues := findEnumValuesWithPkg(obj, info, pkg)
+
+				// Get type-level documentation for enum
+				var typeDesc string
+				if pkg != nil {
+					typeDesc = findTypeComment(pkg, typeName)
+				}
+
 				return TypeInfo{
 					TypeString:   underlyingType,
 					IsRef:        isRef,
 					IsEnum:       true,
 					EnumTypeName: typeName,
 					EnumValues:   enumValues,
+					Description:  typeDesc,
 				}
 			}
 
@@ -541,8 +571,8 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, isRef bool) TypeInfo {
 
 	// Handle function types
 	if sig, ok := t.(*types.Signature); ok {
-		params := extractParams(sig.Params(), info)
-		retType := extractReturnType(sig.Results(), info)
+		params := extractParams(sig.Params(), info, pkg)
+		retType := extractReturnType(sig.Results(), info, pkg)
 
 		funcName := "callback"
 		// Try to get function type name from context if available
