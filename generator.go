@@ -689,9 +689,21 @@ func findTypeComment(pkg *packages.Package, typeName string) string {
 				}
 
 				if typeSpec.Name.Name == typeName {
+					// First check for doc comment above the type
 					if genDecl.Doc != nil {
 						docComment := parseDocComment(genDecl.Doc)
-						return docComment.Description
+						if docComment.Description != "" {
+							return docComment.Description
+						}
+					}
+
+					// Then check for inline comment on the same line
+					if typeSpec.Comment != nil {
+						comment := typeSpec.Comment.Text()
+						comment = strings.TrimSpace(strings.TrimPrefix(comment, "//"))
+						comment = strings.TrimSpace(strings.TrimPrefix(comment, "/*"))
+						comment = strings.TrimSpace(strings.TrimSuffix(comment, "*/"))
+						return comment
 					}
 				}
 			}
