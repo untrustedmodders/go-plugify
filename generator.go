@@ -678,10 +678,14 @@ func generateAutoExports(funcs []ExportedFunction, target string) error {
 // #include "autoexports.h"
 import "C"
 import (
-	_ "github.com/untrustedmodders/go-plugify"
-	_ "reflect"
-	_ "unsafe"
+	"reflect"
+	"unsafe"
+	"github.com/untrustedmodders/go-plugify"
 )
+
+var _ = reflect.TypeOf(0)
+var _ = unsafe.Sizeof(0)
+var _ = plugify.Plugin.Loaded
 
 // Exported methods
 `, target)}
