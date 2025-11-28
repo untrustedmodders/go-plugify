@@ -56,7 +56,7 @@ type DocComment struct {
 	EnumValueMap map[string]string // enum value name -> description
 }
 
-// parseDocComment parses doxygen-style comments and extracts @param, @return, etc.
+// parseDocComment parses doxygen-style comments and extracts @param, @return, @brief, etc.
 func parseDocComment(commentGroup *ast.CommentGroup) DocComment {
 	doc := DocComment{
 		ParamDescs:   make(map[string]string),
@@ -68,6 +68,7 @@ func parseDocComment(commentGroup *ast.CommentGroup) DocComment {
 	}
 
 	var descriptionLines []string
+	var briefDesc string
 	inDescription := true
 
 	for _, comment := range commentGroup.List {
@@ -78,6 +79,16 @@ func parseDocComment(commentGroup *ast.CommentGroup) DocComment {
 
 		// Skip plugify:export directives
 		if strings.HasPrefix(text, "plugify:export") {
+			continue
+		}
+
+		// Parse @brief tag
+		if strings.HasPrefix(text, "@brief") {
+			inDescription = false
+			parts := strings.SplitN(text, "@brief", 2)
+			if len(parts) == 2 {
+				briefDesc = strings.TrimSpace(parts[1])
+			}
 			continue
 		}
 
@@ -109,7 +120,13 @@ func parseDocComment(commentGroup *ast.CommentGroup) DocComment {
 		}
 	}
 
-	doc.Description = strings.Join(descriptionLines, " ")
+	// Use @brief if provided, otherwise use the collected description lines
+	if briefDesc != "" {
+		doc.Description = briefDesc
+	} else {
+		doc.Description = strings.Join(descriptionLines, " ")
+	}
+
 	return doc
 }
 
@@ -734,9 +751,9 @@ func convertToManifestMethods(funcs []ExportedFunction) []Method {
 		methods[i] = Method{
 			Name:        f.ExportName,
 			FuncName:    f.FuncName,
+			Description: f.Description,
 			ParamTypes:  convertParams(f.Params),
 			RetType:     convertReturnType(f.ReturnType),
-			Description: f.Description,
 		}
 	}
 	return methods
