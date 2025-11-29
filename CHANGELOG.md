@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.3.2](https://github.com/untrustedmodders/go-plugify/compare/v1.3.1...v1.3.2) (2025-11-29)
+
+
+### Bug Fixes
+
+* bump golang version ([3f5b32b](https://github.com/untrustedmodders/go-plugify/commit/3f5b32b0fe22f68f5ffe2312218a7a779e6a2586))
+* **claude:** add [@brief](https://github.com/brief) for main doc ([73f6d4c](https://github.com/untrustedmodders/go-plugify/commit/73f6d4c0a5db3bcfee658ab46f0968bba4db2d70))
+* **claude:** add doxygen parser ([6a5d9db](https://github.com/untrustedmodders/go-plugify/commit/6a5d9db22fa8ea956fec7b72472e66bc62c654fe))
+* **claude:** add extraction of documentation for enums and generate ([85ce6cd](https://github.com/untrustedmodders/go-plugify/commit/85ce6cdbd6eef7e0da632c594cce11c7ab45edfc))
+* **claude:** delegate documentation parsing ([eeefb7f](https://github.com/untrustedmodders/go-plugify/commit/eeefb7fabda8033937e0a773c9bc794a399cb1d7))
+* **claude:** enum description generation ([43a2633](https://github.com/untrustedmodders/go-plugify/commit/43a2633d87888447cce38db73c8a4dfde91a8591))
+* **claude:** enum description generation (2) ([7357b87](https://github.com/untrustedmodders/go-plugify/commit/7357b873e8b051eb2030c205c0bb9efe798053f7))
+* **claude:** warnings on unused ([8428136](https://github.com/untrustedmodders/go-plugify/commit/8428136eed6faa0a849908375e58e752a6a592b2))
+* matrix4x4 formatting ([f8decc2](https://github.com/untrustedmodders/go-plugify/commit/f8decc21953038a26bd3b3dbc05356fd43a6c245))
+
 ## [1.3.1](https://github.com/untrustedmodders/go-plugify/compare/v1.3.0...v1.3.1) (2025-11-17)
 
 
