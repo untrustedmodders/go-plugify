@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/untrustedmodders/go-plugify/compare/v1.3.2...v1.3.3) (2025-11-29)
+
+
+### Bug Fixes
+
+* add dependencies and conflicts to manifest generator ([09511bb](https://github.com/untrustedmodders/go-plugify/commit/09511bbf71cd58db4b81dc9427f40100fb0f6bfe))
+
 ## [1.3.2](https://github.com/untrustedmodders/go-plugify/compare/v1.3.1...v1.3.2) (2025-11-29)
 
 
