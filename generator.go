@@ -162,6 +162,9 @@ func Generate(
 	author string,
 	website string,
 	license string,
+	platforms []string,
+	dependencies []string,
+	conflicts []string,
 	entry string,
 	target string,
 ) error {
@@ -189,22 +192,35 @@ func Generate(
 		pluginEntry = pluginName
 	}
 
+	var pluginDependencies []Dependency
+	for _, dependency := range dependencies {
+		pluginDependencies = append(pluginDependencies, Dependency{Name: dependency})
+	}
+
+	var pluginConflicts []Conflict
+	for _, conflict := range conflicts {
+		pluginConflicts = append(pluginConflicts, Conflict{Name: conflict})
+	}
+
 	outputFile := output
 	if outputFile == "" {
 		outputFile = pluginName + ".pplugin"
 	}
 
 	manifest := Manifest{
-		Schema:      "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
-		Name:        pluginName,
-		Version:     version,
-		Description: description,
-		Author:      author,
-		Website:     website,
-		License:     license,
-		Entry:       pluginEntry,
-		Language:    "golang",
-		Methods:     convertToManifestMethods(exportedFuncs),
+		Schema:       "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
+		Name:         pluginName,
+		Version:      version,
+		Description:  description,
+		Author:       author,
+		Website:      website,
+		License:      license,
+		Platforms:    platforms,
+		Entry:        pluginEntry,
+		Dependencies: pluginDependencies,
+		Conflicts:    pluginConflicts,
+		Language:     "golang",
+		Methods:      convertToManifestMethods(exportedFuncs),
 	}
 
 	// Write JSON

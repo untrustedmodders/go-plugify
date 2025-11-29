@@ -2,16 +2,19 @@ package plugify
 
 // Manifest represents the structure of the .pplugin file
 type Manifest struct {
-	Schema      string   `json:"$schema"`
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	Description string   `json:"description,omitempty"`
-	Author      string   `json:"author,omitempty"`
-	Website     string   `json:"website,omitempty"`
-	License     string   `json:"license,omitempty"`
-	Entry       string   `json:"entry"`
-	Language    string   `json:"language"`
-	Methods     []Method `json:"methods"`
+	Schema       string       `json:"$schema"`
+	Name         string       `json:"name"`
+	Version      string       `json:"version"`
+	Description  string       `json:"description,omitempty"`
+	Author       string       `json:"author,omitempty"`
+	Website      string       `json:"website,omitempty"`
+	License      string       `json:"license,omitempty"`
+	Platforms    []string     `json:"platforms,omitempty"`
+	Dependencies []Dependency `json:"dependencies,omitempty"`
+	Conflicts    []Conflict   `json:"conflicts,omitempty"`
+	Entry        string       `json:"entry"`
+	Language     string       `json:"language"`
+	Methods      []Method     `json:"methods"`
 }
 
 // Method represents a single exported method
@@ -46,4 +49,18 @@ type Property struct {
 	Ref         bool        `json:"ref,omitempty"`
 	Prototype   *Method     `json:"prototype,omitempty"`
 	Enumerator  *EnumObject `json:"enum,omitempty"`
+}
+
+// Dependency represents a plugin's dependency
+type Dependency struct {
+	Name        string `json:"name"`
+	Constraints string `json:"constraints,omitempty"`
+	Optional    bool   `json:"optional,omitempty"`
+}
+
+// Conflict represents a plugin's conflict
+type Conflict struct {
+	Name        string `json:"name"`
+	Constraints string `json:"constraints,omitempty"`
+	Reason      string `json:"reason,omitempty"`
 }
