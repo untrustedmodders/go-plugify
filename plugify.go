@@ -145,13 +145,6 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetPluginDependencies(api[i])
 	i++
-	C.Plugify_SetGetPluginDependenciesSize(api[i])
-	i++
-
-	C.Plugify_SetDeleteCStr(api[i])
-	i++
-	C.Plugify_SetDeleteCStrArr(api[i])
-	i++
 
 	C.Plugify_SetConstructString(api[i])
 	i++
