@@ -259,10 +259,10 @@ func AssignVariant(v *PlgVariant, param any) {
 		valueType = Vector4Type
 		vec := param.(Vector4)
 		*(*PlgVector4)(unsafe.Pointer(v)) = *(*PlgVector4)(unsafe.Pointer(&vec))
-	case Matrix4x4:
-		valueType = Matrix4x4Type
-		vec := param.(Matrix4x4)
-		*(*PlgMatrix4x4)(unsafe.Pointer(v)) = *(*PlgMatrix4x4)(unsafe.Pointer(&vec))
+	/*case Matrix4x4:
+	valueType = Matrix4x4Type
+	vec := param.(Matrix4x4)
+	*(*PlgMatrix4x4)(unsafe.Pointer(v)) = *(*PlgMatrix4x4)(unsafe.Pointer(&vec))*/
 	default:
 		panicker(NewTypeNotFoundException(fmt.Sprintf("Type not found: %T", param)))
 	}
