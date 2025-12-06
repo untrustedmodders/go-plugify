@@ -400,49 +400,63 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 
 	baseDir := C.Plugify_GetBaseDir()
-	BaseDir = C.GoString(baseDir)
-	C.Plugify_DeleteCStr(baseDir)
+	BaseDir = GetStringData(&baseDir)
+	C.Plugify_DestroyString(&baseDir)
 
 	extensionsDir := C.Plugify_GetExtensionsDir()
-	ExtensionsDir = C.GoString(extensionsDir)
-	C.Plugify_DeleteCStr(extensionsDir)
+	ExtensionsDir = GetStringData(&extensionsDir)
+	C.Plugify_DestroyString(&extensionsDir)
 
 	configsDir := C.Plugify_GetConfigsDir()
-	ConfigsDir = C.GoString(configsDir)
-	C.Plugify_DeleteCStr(configsDir)
+	ConfigsDir = GetStringData(&configsDir)
+	C.Plugify_DestroyString(&configsDir)
 
 	dataDir := C.Plugify_GetDataDir()
-	DataDir = C.GoString(dataDir)
-	C.Plugify_DeleteCStr(dataDir)
+	DataDir = GetStringData(&dataDir)
+	C.Plugify_DestroyString(&dataDir)
 
 	logsDir := C.Plugify_GetLogsDir()
-	LogsDir = C.GoString(logsDir)
-	C.Plugify_DeleteCStr(logsDir)
+	LogsDir = GetStringData(&logsDir)
+	C.Plugify_DestroyString(&logsDir)
 
 	cacheDir := C.Plugify_GetCacheDir()
-	CacheDir = C.GoString(cacheDir)
-	C.Plugify_DeleteCStr(cacheDir)
+	CacheDir = GetStringData(&cacheDir)
+	C.Plugify_DestroyString(&cacheDir)
 
 	C.pluginHandle = handle
 
 	Plugin.Id = int64(C.Plugify_GetPluginId())
-	Plugin.Name = C.GoString(C.Plugify_GetPluginName())
-	Plugin.Description = C.GoString(C.Plugify_GetPluginDescription())
-	Plugin.Version = C.GoString(C.Plugify_GetPluginVersion())
-	Plugin.Author = C.GoString(C.Plugify_GetPluginAuthor())
-	Plugin.Website = C.GoString(C.Plugify_GetPluginWebsite())
-	Plugin.License = C.GoString(C.Plugify_GetPluginLicense())
+	name := C.Plugify_GetPluginName()
+	Plugin.Name = GetStringData(&name)
+	C.Plugify_DestroyString(&name)
+
+	description := C.Plugify_GetPluginDescription()
+	Plugin.Description = GetStringData(&description)
+	C.Plugify_DestroyString(&description)
+
+	versions := C.Plugify_GetPluginVersion()
+	Plugin.Version = GetStringData(&versions)
+	C.Plugify_DestroyString(&versions)
+
+	author := C.Plugify_GetPluginAuthor()
+	Plugin.Author = GetStringData(&author)
+	C.Plugify_DestroyString(&author)
+
+	website := C.Plugify_GetPluginWebsite()
+	Plugin.Website = GetStringData(&website)
+	C.Plugify_DestroyString(&website)
+
+	license := C.Plugify_GetPluginLicense()
+	Plugin.License = GetStringData(&license)
+	C.Plugify_DestroyString(&license)
 
 	location := C.Plugify_GetPluginLocation()
-	Plugin.Location = C.GoString(location)
-	C.Plugify_DeleteCStr(location)
+	Plugin.Location = GetStringData(&location)
+	C.Plugify_DestroyString(&location)
 
 	dependencies := C.Plugify_GetPluginDependencies()
-	Plugin.Dependencies = make([]string, int(C.Plugify_GetPluginDependenciesSize()))
-	for j := range Plugin.Dependencies {
-		Plugin.Dependencies[j] = C.GoString(*(**C.char)(unsafe.Pointer(uintptr(dependencies) + uintptr(j)*C.sizeof_uintptr_t)))
-	}
-	C.Plugify_DeleteCStrArr(dependencies)
+	Plugin.Dependencies = GetVectorDataString(&dependencies)
+	C.Plugify_DestroyVectorString(&dependencies)
 
 	context = C.PluginContext{
 		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),

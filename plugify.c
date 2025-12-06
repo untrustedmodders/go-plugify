@@ -21,30 +21,25 @@ PluginHandle pluginHandle = NULL;
 // Function pointers
 void* (*GetMethodPtr)(const char*) = NULL;
 void (*GetMethodPtr2)(const char*, void**) = NULL;
-const char* (*GetBaseDir)() = NULL;
-const char* (*GetExtensionsDir)() = NULL;
-const char* (*GetConfigsDir)() = NULL;
-const char* (*GetDataDir)() = NULL;
-const char* (*GetLogsDir)() = NULL;
-const char* (*GetCacheDir)() = NULL;
+String (*GetBaseDir)() = NULL;
+String (*GetExtensionsDir)() = NULL;
+String (*GetConfigsDir)() = NULL;
+String (*GetDataDir)() = NULL;
+String (*GetLogsDir)() = NULL;
+String (*GetCacheDir)() = NULL;
 bool (*IsExtensionLoaded)(_GoString_, _GoString_) = NULL;
 void (*PrintException)(_GoString_) = NULL;
 
 // Function pointers for PluginHandle functions
 ptrdiff_t (*GetPluginId)(PluginHandle) = NULL;
-const char* (*GetPluginName)(PluginHandle) = NULL;
-const char* (*GetPluginDescription)(PluginHandle) = NULL;
-const char* (*GetPluginVersion)(PluginHandle) = NULL;
-const char* (*GetPluginAuthor)(PluginHandle) = NULL;
-const char* (*GetPluginWebsite)(PluginHandle) = NULL;
-const char* (*GetPluginLicense)(PluginHandle) = NULL;
-const char* (*GetPluginLocation)(PluginHandle) = NULL;
-void* (*GetPluginDependencies)(PluginHandle) = NULL;
-ptrdiff_t (*GetPluginDependenciesSize)(PluginHandle) = NULL;
-
-// Function pointers for deleting C strings
-void (*DeleteCStr)(const char*) = NULL;
-void (*DeleteCStrArr)(void*) = NULL;
+String (*GetPluginName)(PluginHandle) = NULL;
+String (*GetPluginDescription)(PluginHandle) = NULL;
+String (*GetPluginVersion)(PluginHandle) = NULL;
+String (*GetPluginAuthor)(PluginHandle) = NULL;
+String (*GetPluginWebsite)(PluginHandle) = NULL;
+String (*GetPluginLicense)(PluginHandle) = NULL;
+String (*GetPluginLocation)(PluginHandle) = NULL;
+Vector (*GetPluginDependencies)(PluginHandle) = NULL;
 
 // Function pointers for String functions
 String (*ConstructString)(_GoString_) = NULL;
@@ -189,17 +184,17 @@ void* Plugify_GetMethodPtr(const char* name) { return GetMethodPtr(name); }
 // Function to call GetMethodPtr2
 void Plugify_GetMethodPtr2(const char* name, void** dest) { GetMethodPtr2(name, dest); }
 // Function to call GetBaseDir
-const char* Plugify_GetBaseDir() { return GetBaseDir(); }
+String Plugify_GetBaseDir() { return GetBaseDir(); }
 // Function to call GetExtensionsDir
-const char* Plugify_GetExtensionsDir() { return GetExtensionsDir(); }
+String Plugify_GetExtensionsDir() { return GetExtensionsDir(); }
 // Function to call GetConfigsDir
-const char* Plugify_GetConfigsDir() { return GetConfigsDir(); }
+String Plugify_GetConfigsDir() { return GetConfigsDir(); }
 // Function to call GetDataDir
-const char* Plugify_GetDataDir() { return GetDataDir(); }
+String Plugify_GetDataDir() { return GetDataDir(); }
 // Function to call GetLogsDir
-const char* Plugify_GetLogsDir() { return GetLogsDir(); }
+String Plugify_GetLogsDir() { return GetLogsDir(); }
 // Function to call GetCacheDir
-const char* Plugify_GetCacheDir() { return GetCacheDir(); }
+String Plugify_GetCacheDir() { return GetCacheDir(); }
 // Function to call IsExtensionLoaded
 bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint) { return IsExtensionLoaded(name, constraint); }
 // Function to call PrintException
@@ -207,27 +202,21 @@ void Plugify_PrintException(_GoString_ message) { PrintException(message); }
 // Function to call GetPluginId
 ptrdiff_t Plugify_GetPluginId() { return GetPluginId(pluginHandle); }
 // Function to call GetPluginName
-const char* Plugify_GetPluginName() { return GetPluginName(pluginHandle); }
+String Plugify_GetPluginName() { return GetPluginName(pluginHandle); }
 // Function to call GetPluginDescription
-const char* Plugify_GetPluginDescription() { return GetPluginDescription(pluginHandle); }
+String Plugify_GetPluginDescription() { return GetPluginDescription(pluginHandle); }
 // Function to call GetPluginVersion
-const char* Plugify_GetPluginVersion() { return GetPluginVersion(pluginHandle); }
+String Plugify_GetPluginVersion() { return GetPluginVersion(pluginHandle); }
 // Function to call GetPluginAuthor
-const char* Plugify_GetPluginAuthor() { return GetPluginAuthor(pluginHandle); }
+String Plugify_GetPluginAuthor() { return GetPluginAuthor(pluginHandle); }
 // Function to call GetPluginWebsite
-const char* Plugify_GetPluginWebsite() { return GetPluginWebsite(pluginHandle); }
+String Plugify_GetPluginWebsite() { return GetPluginWebsite(pluginHandle); }
 // Function to call GetPluginLicense
-const char* Plugify_GetPluginLicense() { return GetPluginLicense(pluginHandle); }
+String Plugify_GetPluginLicense() { return GetPluginLicense(pluginHandle); }
 // Function to call GetPluginLocation
-const char* Plugify_GetPluginLocation() { return GetPluginLocation(pluginHandle); }
+String Plugify_GetPluginLocation() { return GetPluginLocation(pluginHandle); }
 // Function to call GetPluginDependencies
-void* Plugify_GetPluginDependencies() { return GetPluginDependencies(pluginHandle); }
-// Function to call GetPluginDependenciesSize
-ptrdiff_t Plugify_GetPluginDependenciesSize() { return GetPluginDependenciesSize(pluginHandle); }
-// Function to delete C string
-void Plugify_DeleteCStr(const char* str) { DeleteCStr(str); }
-// Function to delete C string array
-void Plugify_DeleteCStrArr(void* arr) { DeleteCStrArr(arr); }
+Vector Plugify_GetPluginDependencies() { return GetPluginDependencies(pluginHandle); }
 // Function to construct a string
 String Plugify_ConstructString(_GoString_ source) { return ConstructString(source); }
 // Function to destroy a string
@@ -367,26 +356,23 @@ EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index) { return 
 
 void Plugify_SetGetMethodPtr(void* ptr) { GetMethodPtr = (void* (*)(const char*)) ptr; }
 void Plugify_SetGetMethodPtr2(void* ptr) { GetMethodPtr2 = (void (*)(const char*, void**)) ptr; }
-void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (const char* (*)()) ptr; }
-void Plugify_SetGetExtensionsDir(void* ptr) { GetExtensionsDir = (const char* (*)()) ptr; }
-void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (const char* (*)()) ptr; }
-void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (const char* (*)()) ptr; }
-void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (const char* (*)()) ptr; }
-void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (const char* (*)()) ptr; }
+void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (String (*)()) ptr; }
+void Plugify_SetGetExtensionsDir(void* ptr) { GetExtensionsDir = (String (*)()) ptr; }
+void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (String (*)()) ptr; }
+void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (String (*)()) ptr; }
+void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (String (*)()) ptr; }
+void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (String (*)()) ptr; }
 void Plugify_SetIsExtensionLoaded(void* ptr) { IsExtensionLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
 void Plugify_SetPrintException(void* ptr) { PrintException = (void (*)(_GoString_)) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginDescription(void* ptr) { GetPluginDescription = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginVersion(void* ptr) { GetPluginVersion = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginAuthor(void* ptr) { GetPluginAuthor = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginWebsite(void* ptr) { GetPluginWebsite = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginLicense(void* ptr) { GetPluginLicense = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginLocation(void* ptr) { GetPluginLocation = (const char* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginDependencies(void* ptr) { GetPluginDependencies = (void* (*)(PluginHandle)) ptr; }
-void Plugify_SetGetPluginDependenciesSize(void* ptr) { GetPluginDependenciesSize = (ptrdiff_t (*)(PluginHandle)) ptr; }
-void Plugify_SetDeleteCStr(void* ptr) { DeleteCStr = (void (*)(const char*)) ptr; }
-void Plugify_SetDeleteCStrArr(void* ptr) { DeleteCStrArr = (void (*)(void*)) ptr; }
+void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginDescription(void* ptr) { GetPluginDescription = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginVersion(void* ptr) { GetPluginVersion = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginAuthor(void* ptr) { GetPluginAuthor = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginWebsite(void* ptr) { GetPluginWebsite = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginLicense(void* ptr) { GetPluginLicense = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginLocation(void* ptr) { GetPluginLocation = (String (*)(PluginHandle)) ptr; }
+void Plugify_SetGetPluginDependencies(void* ptr) { GetPluginDependencies = (Vector (*)(PluginHandle)) ptr; }
 void Plugify_SetConstructString(void* ptr) { ConstructString = (String (*)(_GoString_)) ptr; }
 void Plugify_SetDestroyString(void* ptr) { DestroyString = (void (*)(String*)) ptr; }
 void Plugify_SetGetStringData(void* ptr) { GetStringData = (const char* (*)(String*)) ptr; }

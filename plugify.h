@@ -77,28 +77,24 @@ extern PluginHandle pluginHandle;
 // Extern declarations for Plugify_ functions
 extern void* Plugify_GetMethodPtr(const char* name);
 extern void Plugify_GetMethodPtr2(const char* name, void** dest);
-extern const char* Plugify_GetBaseDir();
-extern const char* Plugify_GetExtensionsDir();
-extern const char* Plugify_GetConfigsDir();
-extern const char* Plugify_GetDataDir();
-extern const char* Plugify_GetLogsDir();
-extern const char* Plugify_GetCacheDir();
+extern String Plugify_GetBaseDir();
+extern String Plugify_GetExtensionsDir();
+extern String Plugify_GetConfigsDir();
+extern String Plugify_GetDataDir();
+extern String Plugify_GetLogsDir();
+extern String Plugify_GetCacheDir();
 extern bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint);
 extern void Plugify_PrintException(_GoString_ message);
 
 extern ptrdiff_t Plugify_GetPluginId();
-extern const char* Plugify_GetPluginName();
-extern const char* Plugify_GetPluginLicense();
-extern const char* Plugify_GetPluginDescription();
-extern const char* Plugify_GetPluginVersion();
-extern const char* Plugify_GetPluginAuthor();
-extern const char* Plugify_GetPluginWebsite();
-extern const char* Plugify_GetPluginLocation();
-extern void* Plugify_GetPluginDependencies();
-extern ptrdiff_t Plugify_GetPluginDependenciesSize();
-
-extern void Plugify_DeleteCStr(const char* str);
-extern void Plugify_DeleteCStrArr(void* arr);
+extern String Plugify_GetPluginName();
+extern String Plugify_GetPluginLicense();
+extern String Plugify_GetPluginDescription();
+extern String Plugify_GetPluginVersion();
+extern String Plugify_GetPluginAuthor();
+extern String Plugify_GetPluginWebsite();
+extern String Plugify_GetPluginLocation();
+extern Vector Plugify_GetPluginDependencies();
 
 extern String Plugify_ConstructString(_GoString_ source);
 extern void Plugify_DestroyString(String* string);
