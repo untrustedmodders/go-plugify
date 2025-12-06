@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0](https://github.com/untrustedmodders/go-plugify/compare/v1.3.3...v1.4.0) (2025-12-06)
+
+
+### Features
+
+* change api for string getters ([069f89e](https://github.com/untrustedmodders/go-plugify/commit/069f89e3815f4d970441e4d0bee3de7e403624e5))
+
+
+### Bug Fixes
+
+* remove matrix4x4 from any as it not initially was supported ([7d8d362](https://github.com/untrustedmodders/go-plugify/commit/7d8d362e397381b1469cfaba6de81d440fc21545))
+
 ## [1.3.3](https://github.com/untrustedmodders/go-plugify/compare/v1.3.2...v1.3.3) (2025-11-29)
 
 
