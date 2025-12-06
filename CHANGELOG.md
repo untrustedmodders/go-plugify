@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/untrustedmodders/go-plugify/compare/v1.4.0...v1.4.1) (2025-12-06)
+
+
+### Bug Fixes
+
+* remove unused functions ([f142917](https://github.com/untrustedmodders/go-plugify/commit/f142917e65d54fcbc629ac6abcc5ed0aaf8ebb79))
+
 ## [1.4.0](https://github.com/untrustedmodders/go-plugify/compare/v1.3.3...v1.4.0) (2025-12-06)
 
 
