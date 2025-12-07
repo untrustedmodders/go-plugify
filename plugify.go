@@ -18,7 +18,7 @@ type PluginUpdateCallback func(dt float32)
 type PluginEndCallback func()
 type PluginPanicCallback func() []byte
 
-type Plugify struct {
+type PluginInfo struct {
 	Id           int64
 	Name         string
 	Description  string
@@ -41,7 +41,7 @@ type Plugify struct {
 	Loaded bool
 }
 
-var Plugin = Plugify{
+var Plugin = PluginInfo{
 	Id:           -1,
 	Name:         "",
 	Description:  "",
