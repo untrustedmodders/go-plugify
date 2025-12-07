@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/untrustedmodders/go-plugify/compare/v1.4.1...v1.4.2) (2025-12-07)
+
+
+### Bug Fixes
+
+* change release type to go ([7685b82](https://github.com/untrustedmodders/go-plugify/commit/7685b829f74f29a7f76772930bb197412f914619))
+
 ## [1.4.1](https://github.com/untrustedmodders/go-plugify/compare/v1.4.0...v1.4.1) (2025-12-06)
 
 
