@@ -126,7 +126,7 @@ func GetVariantData(v *PlgVariant) any {
 	}
 }
 
-func AssignVariant(v *PlgVariant, param any) {
+func SetVariantData(v *PlgVariant, param any) {
 	var valueType ValueType
 	switch param.(type) {
 	case nil:
@@ -270,9 +270,14 @@ func AssignVariant(v *PlgVariant, param any) {
 	v.current = C.uint8_t(valueType)
 }
 
+func AssignVariant(v *PlgVariant, param any) {
+	DestroyVariant(v)
+	SetVariantData(v, param)
+}
+
 func ConstructVariant(v any) PlgVariant {
 	var variant PlgVariant
-	AssignVariant(&variant, v)
+	SetVariantData(&variant, v)
 	return variant
 }
 
