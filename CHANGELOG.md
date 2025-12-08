@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.3](https://github.com/untrustedmodders/go-plugify/compare/v1.4.2...v1.4.3) (2025-12-08)
+
+
+### Bug Fixes
+
+* leaking memory on reassigning existing variant ([7e31f2e](https://github.com/untrustedmodders/go-plugify/commit/7e31f2e282d57922b31d3b9307bf1059915080a1))
+
 ## [1.4.2](https://github.com/untrustedmodders/go-plugify/compare/v1.4.1...v1.4.2) (2025-12-07)
 
 
