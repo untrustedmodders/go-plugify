@@ -75,8 +75,8 @@ typedef void* PluginHandle;
 extern PluginHandle pluginHandle;
 
 // Extern declarations for Plugify_ functions
-extern void* Plugify_GetMethodPtr(const char* name);
-extern void Plugify_GetMethodPtr2(const char* name, void** dest);
+extern void* Plugify_GetMethodPtr(const char* name, void(*cleanup)());
+extern void Plugify_GetMethodPtr2(const char* name, void** address);
 extern String Plugify_GetBaseDir();
 extern String Plugify_GetExtensionsDir();
 extern String Plugify_GetConfigsDir();
