@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.4](https://github.com/untrustedmodders/go-plugify/compare/v1.4.3...v1.4.4) (2025-12-13)
+
+
+### Bug Fixes
+
+* changes in api ([ba850eb](https://github.com/untrustedmodders/go-plugify/commit/ba850eb834d6f0dda26a4d62d291705ceaaa7b2e))
+* remove get method ptr ([b8d60c8](https://github.com/untrustedmodders/go-plugify/commit/b8d60c8da63a955262ae3f8061c8b18df5a8488e))
+
 ## [1.4.3](https://github.com/untrustedmodders/go-plugify/compare/v1.4.2...v1.4.3) (2025-12-08)
 
 
