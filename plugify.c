@@ -19,8 +19,6 @@ _Static_assert(sizeof(Return) == 16, "Unsupported Return size");
 PluginHandle pluginHandle = NULL;
 
 // Function pointers
-void* (*GetMethodPtr)(const char*, void(*)()) = NULL;
-void (*GetMethodPtr2)(const char*, void**) = NULL;
 String (*GetBaseDir)() = NULL;
 String (*GetExtensionsDir)() = NULL;
 String (*GetConfigsDir)() = NULL;
@@ -179,10 +177,6 @@ ManagedType (*GetMethodParamType)(MethodHandle, ptrdiff_t) = NULL;
 MethodHandle (*GetMethodPrototype)(MethodHandle, ptrdiff_t) = NULL;
 EnumHandle (*GetMethodEnum)(MethodHandle, ptrdiff_t) = NULL;
 
-// Function to call GetMethodPtr
-void* Plugify_GetMethodPtr(const char* name, void(*cleanup)()) { return GetMethodPtr(name, cleanup); }
-// Function to call GetMethodPtr2
-void Plugify_GetMethodPtr2(const char* name, void** address) { GetMethodPtr2(name, address); }
 // Function to call GetBaseDir
 String Plugify_GetBaseDir() { return GetBaseDir(); }
 // Function to call GetExtensionsDir
@@ -354,8 +348,6 @@ ManagedType Plugify_GetMethodParamType(MethodHandle handle, ptrdiff_t index) { r
 MethodHandle Plugify_GetMethodPrototype(MethodHandle handle, ptrdiff_t index) { return GetMethodPrototype(handle, index); }
 EnumHandle Plugify_GetMethodEnum(MethodHandle handle, ptrdiff_t index) { return GetMethodEnum(handle, index); }
 
-void Plugify_SetGetMethodPtr(void* ptr) { GetMethodPtr = (void* (*)(const char*, void(*)())) ptr; }
-void Plugify_SetGetMethodPtr2(void* ptr) { GetMethodPtr2 = (void (*)(const char*, void**)) ptr; }
 void Plugify_SetGetBaseDir(void* ptr) { GetBaseDir = (String (*)()) ptr; }
 void Plugify_SetGetExtensionsDir(void* ptr) { GetExtensionsDir = (String (*)()) ptr; }
 void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (String (*)()) ptr; }

@@ -106,10 +106,6 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 		return kApiVersion
 	}
 	i := 0
-	C.Plugify_SetGetMethodPtr(api[i])
-	i++
-	C.Plugify_SetGetMethodPtr2(api[i])
-	i++
 	C.Plugify_SetGetBaseDir(api[i])
 	i++
 	C.Plugify_SetGetExtensionsDir(api[i])
