@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.5](https://github.com/untrustedmodders/go-plugify/compare/v1.4.4...v1.4.5) (2025-12-21)
+
+
+### Bug Fixes
+
+* add support of uintptr ([a655b3e](https://github.com/untrustedmodders/go-plugify/commit/a655b3e410290625b540b5cbe47c034f029295b4))
+
 ## [1.4.4](https://github.com/untrustedmodders/go-plugify/compare/v1.4.3...v1.4.4) (2025-12-13)
 
 
