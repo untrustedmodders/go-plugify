@@ -9,6 +9,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"unsafe"
 
 	"golang.org/x/tools/go/packages"
 )
@@ -488,7 +489,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 		}
 		// Non-empty interfaces are treated as pointers
 		return TypeInfo{
-			TypeString: "ptr64",
+			TypeString: getPtrType(),
 			IsRef:      isRef,
 		}
 	}
@@ -603,7 +604,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 			_ = structType // Use the variable to avoid unused warning
 			// For now, treat unknown structs as unsafe.Pointer
 			return TypeInfo{
-				TypeString: "ptr64",
+				TypeString: getPtrType(),
 				IsRef:      isRef,
 			}
 		}
@@ -638,7 +639,7 @@ func mapTypeInfoWithRef(t types.Type, info *types.Info, pkg *packages.Package, i
 
 	// Default - unknown type
 	return TypeInfo{
-		TypeString: "ptr64",
+		TypeString: getPtrType(),
 		IsRef:      isRef,
 	}
 }
@@ -653,7 +654,7 @@ func mapBasicType(basic *types.Basic) string {
 		return "int16"
 	case types.Int32:
 		return "int32"
-	case types.Int64, types.Int:
+	case types.Int64:
 		return "int64"
 	case types.Uint8:
 		return "uint8"
@@ -661,7 +662,7 @@ func mapBasicType(basic *types.Basic) string {
 		return "uint16"
 	case types.Uint32:
 		return "uint32"
-	case types.Uint64, types.Uint:
+	case types.Uint64:
 		return "uint64"
 	case types.Float32:
 		return "float"
@@ -669,8 +670,16 @@ func mapBasicType(basic *types.Basic) string {
 		return "double"
 	case types.String:
 		return "string"
+	case types.UnsafePointer:
+		return getPtrType()
+	case types.Uintptr:
+		return getPtrType()
 	case types.UntypedNil:
-		return "ptr64" // or ptr32 depending on architecture
+		return getPtrType()
+	case types.Uint:
+		return getUIntType()
+	case types.Int:
+		return getIntType()
 	default:
 		return basic.String()
 	}
@@ -1082,6 +1091,30 @@ func convertReturnType(t TypeInfo) Property {
 	return Property{
 		Type:        t.TypeString,
 		Description: t.Description,
+	}
+}
+
+func getPtrType() string {
+	if unsafe.Sizeof(uintptr(0)) == 4 {
+		return "ptr32"
+	} else {
+		return "ptr64"
+	}
+}
+
+func getIntType() string {
+	if unsafe.Sizeof(uintptr(0)) == 4 {
+		return "int32"
+	} else {
+		return "int64"
+	}
+}
+
+func getUIntType() string {
+	if unsafe.Sizeof(uintptr(0)) == 4 {
+		return "uint32"
+	} else {
+		return "uint64"
 	}
 }
 
