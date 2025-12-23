@@ -304,11 +304,11 @@ var reflectToValueType = map[reflect.Type]ValueType{
 	reflect.TypeOf(reflect.TypeOf(nil)): Pointer, // For function pointers
 }
 
-func createManagedType(t reflect.Type) ManagedType {
+func createManagedType(t reflect.Type) (ManagedType, error) {
 	baseType := t
 
 	if baseType.Kind() == reflect.Func {
-		return ManagedType{Function, false}
+		return ManagedType{Function, false}, nil
 	}
 
 	ref := t.Kind() == reflect.Ptr
@@ -317,10 +317,10 @@ func createManagedType(t reflect.Type) ManagedType {
 	}
 
 	if val, ok := reflectToValueType[baseType]; ok {
-		return ManagedType{val, ref}
+		return ManagedType{val, ref}, nil
 	}
 
-	return ManagedType{Invalid, false}
+	return ManagedType{}, fmt.Errorf("unsupported type: %v", t)
 }
 
 func createFunctionType(method C.MethodHandle) reflect.Type {
@@ -358,19 +358,29 @@ func pin[T any](val T, pool *memoryPool, size int) uint64 {
 	return uint64(uintptr(unsafe.Pointer(tmp)))
 }
 
-func getParameterTypes(fnType reflect.Type) []ManagedType {
-	parameterTypes := make([]ManagedType, fnType.NumIn())
-	for i := 0; i < fnType.NumIn(); i++ {
-		parameterTypes[i] = createManagedType(fnType.In(i))
+func getParameterTypes(fnType reflect.Type) ([]ManagedType, error) {
+	numIn := fnType.NumIn()
+	parameterTypes := make([]ManagedType, numIn)
+	for i := 0; i < numIn; i++ {
+		mt, err := createManagedType(fnType.In(i))
+		if err != nil {
+			return nil, fmt.Errorf("parameter %d: %w", i, err)
+		}
+		parameterTypes[i] = mt
 	}
-	return parameterTypes
+	return parameterTypes, nil
 }
 
-func getReturnType(fnType reflect.Type) (ManagedType, int) {
-	if fnType.NumOut() > 0 {
-		return createManagedType(fnType.Out(0)), 1
+func getReturnType(fnType reflect.Type) (ManagedType, int, error) {
+	numOut := fnType.NumOut()
+	if numOut > 0 {
+		mt, err := createManagedType(fnType.Out(0))
+		if err != nil {
+			return ManagedType{}, 0, fmt.Errorf("return type: %w", err)
+		}
+		return mt, numOut, nil
 	}
-	return ManagedType{Void, false}, 0
+	return ManagedType{Void, false}, 0, nil
 }
 
 func hasReturnType(returnType ManagedType) bool {
@@ -425,8 +435,14 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 		panicker("expected a function")
 	}
 
-	parameterTypes := getParameterTypes(fnType)
-	returnType, retCount := getReturnType(fnType)
+	parameterTypes, err := getParameterTypes(fnType)
+	if err != nil {
+		panicker(err.Error())
+	}
+	returnType, retCount, err := getReturnType(fnType)
+	if err != nil {
+		panicker(err.Error())
+	}
 
 	hasRet := hasReturnType(returnType)
 
