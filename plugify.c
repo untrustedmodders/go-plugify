@@ -483,26 +483,3 @@ void Plugify_SetGetMethodParamCount(void* ptr) { GetMethodParamCount = (ptrdiff_
 void Plugify_SetGetMethodParamType(void* ptr) { GetMethodParamType = (ManagedType (*)(MethodHandle, ptrdiff_t)) ptr; }
 void Plugify_SetGetMethodPrototype(void* ptr) { GetMethodPrototype = (MethodHandle (*)(MethodHandle, ptrdiff_t)) ptr; }
 void Plugify_SetGetMethodEnum(void* ptr) { GetMethodEnum = (EnumHandle (*)(MethodHandle, ptrdiff_t)) ptr; }
-
-#ifdef _WIN32
-#include <malloc.h>
-void* aligned_malloc(size_t size, size_t alignment) {
-	void* ptr = _aligned_malloc(size, alignment);
-	memset(ptr, 0, size);
-	return ptr;
-}
-
-void aligned_free(void* ptr) {
-	_aligned_free(ptr);
-}
-#else
-void* aligned_malloc(size_t size, size_t alignment) {
-	void* ptr = aligned_alloc(alignment, size);
-	memset(ptr, 0, size);
-	return ptr;
-}
-
-void aligned_free(void* ptr) {
-	free(ptr);
-}
-#endif

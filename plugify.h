@@ -367,9 +367,6 @@ extern void Plugify_SetGetMethodParamType(void* ptr);
 extern void Plugify_SetGetMethodPrototype(void* ptr);
 extern void Plugify_SetGetMethodEnum(void* ptr);
 
-extern void* aligned_malloc(size_t size, size_t alignment);
-extern void aligned_free(void* ptr);
-
 #ifdef __cplusplus
 }
 #endif
