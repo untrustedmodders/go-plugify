@@ -43,7 +43,7 @@ func AssignString(s *PlgString, str string) {
 // Variant functions
 
 func GetVariantData(v *PlgVariant) any {
-	switch ValueType(v.current) {
+	switch valueType(v.current) {
 	case Invalid, Void:
 		return nil
 	case Bool:
@@ -127,7 +127,7 @@ func GetVariantData(v *PlgVariant) any {
 }
 
 func SetVariantData(v *PlgVariant, param any) {
-	var valueType ValueType
+	var valueType valueType
 	switch param.(type) {
 	case nil:
 		valueType = Invalid

@@ -7,7 +7,6 @@ import "C"
 import (
 	"fmt"
 	"reflect"
-	"runtime"
 	"strings"
 	"sync"
 	"unsafe"
@@ -17,312 +16,6 @@ var (
 	callbacks []C.JitCallback
 	calls     []C.JitCall
 )
-
-const alignment int = 16
-
-const isWindows bool = runtime.GOOS == "windows" && runtime.GOARCH != "arm64"
-const is32bit bool = runtime.GOARCH == "386" || runtime.GOARCH == "arm"
-
-type ValueType byte
-
-const (
-	Invalid ValueType = iota
-
-	// C types
-	Void
-	Bool
-	Char8
-	Char16
-	Int8
-	Int16
-	Int32
-	Int64
-	UInt8
-	UInt16
-	UInt32
-	UInt64
-	Pointer
-	Float
-	Double
-	Function
-
-	// plg::string
-	String
-
-	// plg::any
-	Any
-
-	// plg::vector
-	ArrayBool
-	ArrayChar8
-	ArrayChar16
-	ArrayInt8
-	ArrayInt16
-	ArrayInt32
-	ArrayInt64
-	ArrayUInt8
-	ArrayUInt16
-	ArrayUInt32
-	ArrayUInt64
-	ArrayPointer
-	ArrayFloat
-	ArrayDouble
-	ArrayString
-	ArrayAny
-	ArrayVector2
-	ArrayVector3
-	ArrayVector4
-	ArrayMatrix4x4
-
-	// plg:vec
-	Vector2Type
-	Vector3Type
-	Vector4Type
-
-	// plg:mat
-	Matrix4x4Type
-
-	// Helpers
-	_BaseStart = Void
-	_BaseEnd   = Function
-
-	_FloatStart = Float
-	_FloatEnd   = Double
-
-	_ObjectStart = String
-	_ObjectEnd   = ArrayMatrix4x4
-
-	_ArrayStart = ArrayBool
-	_ArrayEnd   = ArrayMatrix4x4
-
-	_StructStart = Vector2Type
-	_StructEnd   = Matrix4x4Type
-
-	_LastAssigned = Matrix4x4Type
-)
-
-const maxPoolSize int = 4088 // max size around ~2632 as [32 (params) + 1 (ret)] * [64 (mat4x4) + 8 (void*)] + 256 [32 (params) * 8 (void*)]
-
-type memoryPool struct {
-	pool     [maxPoolSize]byte
-	nextFree int
-}
-
-func roundUp(val int) int {
-	return (val + (alignment - 1)) &^ (alignment - 1)
-}
-
-func (p *memoryPool) alloc(size int) unsafe.Pointer {
-	alignedNextFree := roundUp(p.nextFree)
-	nextFree := alignedNextFree + size
-
-	p.ensure(nextFree)
-
-	ptr := unsafe.Pointer(&p.pool[alignedNextFree])
-	p.nextFree = nextFree
-
-	return ptr
-}
-
-func (p *memoryPool) reset() {
-	p.nextFree = 0
-}
-
-func (p *memoryPool) free() {}
-
-func (p *memoryPool) ensure(nextFree int) {
-	if nextFree > len(p.pool) {
-		panicker("memory pool exhausted")
-	}
-}
-
-func sizeOfValueType(vt ValueType) int {
-	switch vt {
-	case Void:
-		return 0
-	case Bool, Char8, Int8, UInt8:
-		return C.sizeof_bool
-	case Char16, Int16, UInt16:
-		return C.sizeof_char16_t
-	case Int32, UInt32, Float:
-		return C.sizeof_float
-	case Int64, UInt64, Double:
-		return C.sizeof_double
-	case Function, Pointer:
-		return C.sizeof_ptrdiff_t
-	case String:
-		return C.sizeof_String
-	case Any:
-		return C.sizeof_Variant
-	case ArrayBool, ArrayChar8, ArrayChar16, ArrayInt8, ArrayInt16, ArrayInt32,
-		ArrayInt64, ArrayUInt8, ArrayUInt16, ArrayUInt32, ArrayUInt64, ArrayPointer,
-		ArrayFloat, ArrayDouble, ArrayString, ArrayAny, ArrayVector2, ArrayVector3,
-		ArrayVector4, ArrayMatrix4x4:
-		return C.sizeof_Vector
-	case Vector2Type:
-		return C.sizeof_Vector2 // 2 floats
-	case Vector3Type:
-		return C.sizeof_Vector3 // 3 floats
-	case Vector4Type:
-		return C.sizeof_Vector4 // 4 floats
-	case Matrix4x4Type:
-		return C.sizeof_Matrix4x4 // 16 floats
-	default:
-		return 0
-	}
-}
-
-func getValueTypeSize(vt ValueType) int {
-	return roundUp(sizeOfValueType(vt))
-}
-
-type ManagedType struct {
-	valueType ValueType
-	ref       bool
-}
-
-const (
-	ExpectedSize = 2
-	_            = uint(unsafe.Sizeof(ManagedType{})) - ExpectedSize
-)
-
-var valueTypeToReflect = map[ValueType]reflect.Type{
-	Void:           reflect.TypeOf(nil),
-	Bool:           reflect.TypeOf(true),
-	Char8:          reflect.TypeOf(int8(0)),
-	Char16:         reflect.TypeOf(uint16(0)),
-	Int8:           reflect.TypeOf(int8(0)),
-	Int16:          reflect.TypeOf(int16(0)),
-	Int32:          reflect.TypeOf(int32(0)),
-	Int64:          reflect.TypeOf(int64(0)),
-	UInt8:          reflect.TypeOf(uint8(0)),
-	UInt16:         reflect.TypeOf(uint16(0)),
-	UInt32:         reflect.TypeOf(uint32(0)),
-	UInt64:         reflect.TypeOf(uint64(0)),
-	Pointer:        reflect.TypeOf(uintptr(0)),
-	Float:          reflect.TypeOf(float32(0)),
-	Double:         reflect.TypeOf(float64(0)),
-	String:         reflect.TypeOf(""),
-	ArrayBool:      reflect.TypeOf([]bool{}),
-	ArrayChar8:     reflect.TypeOf([]int8{}),
-	ArrayChar16:    reflect.TypeOf([]uint16{}),
-	ArrayInt8:      reflect.TypeOf([]int8{}),
-	ArrayInt16:     reflect.TypeOf([]int16{}),
-	ArrayInt32:     reflect.TypeOf([]int32{}),
-	ArrayInt64:     reflect.TypeOf([]int64{}),
-	ArrayUInt8:     reflect.TypeOf([]uint8{}),
-	ArrayUInt16:    reflect.TypeOf([]uint16{}),
-	ArrayUInt32:    reflect.TypeOf([]uint32{}),
-	ArrayUInt64:    reflect.TypeOf([]uint64{}),
-	ArrayPointer:   reflect.TypeOf([]uintptr{}),
-	ArrayFloat:     reflect.TypeOf([]float32{}),
-	ArrayDouble:    reflect.TypeOf([]float64{}),
-	ArrayString:    reflect.TypeOf([]string{}),
-	ArrayAny:       reflect.TypeOf([]any{}),
-	ArrayVector2:   reflect.TypeOf([]Vector2{}),
-	ArrayVector3:   reflect.TypeOf([]Vector3{}),
-	ArrayVector4:   reflect.TypeOf([]Vector4{}),
-	ArrayMatrix4x4: reflect.TypeOf([]Matrix4x4{}),
-	Vector2Type:    reflect.TypeOf(Vector2{}),
-	Vector3Type:    reflect.TypeOf(Vector3{}),
-	Vector4Type:    reflect.TypeOf(Vector4{}),
-	Matrix4x4Type:  reflect.TypeOf(Matrix4x4{}),
-}
-
-func convertToReflectType(m C.MethodHandle, i int) reflect.Type {
-	mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-
-	if mt.ref {
-		return reflect.TypeOf((*interface{})(nil)).Elem()
-	}
-
-	vt := ValueType(mt.valueType)
-
-	if val, ok := valueTypeToReflect[vt]; ok {
-		return val
-	}
-
-	if vt == Function {
-		return createFunctionType(C.Plugify_GetMethodPrototype(m, C.ptrdiff_t(i)))
-	}
-
-	return reflect.TypeOf((*interface{})(nil)).Elem()
-}
-
-var reflectToValueType = map[reflect.Type]ValueType{
-	reflect.TypeOf(nil):                 Void,
-	reflect.TypeOf(true):                Bool,
-	reflect.TypeOf(int8(0)):             Int8,
-	reflect.TypeOf(int16(0)):            Int16,
-	reflect.TypeOf(int32(0)):            Int32,
-	reflect.TypeOf(int64(0)):            Int64,
-	reflect.TypeOf(uint8(0)):            UInt8,
-	reflect.TypeOf(uint16(0)):           UInt16,
-	reflect.TypeOf(uint32(0)):           UInt32,
-	reflect.TypeOf(uint64(0)):           UInt64,
-	reflect.TypeOf(uintptr(0)):          Pointer,
-	reflect.TypeOf(float32(0)):          Float,
-	reflect.TypeOf(float64(0)):          Double,
-	reflect.TypeOf(""):                  String,
-	reflect.TypeOf([]bool{}):            ArrayBool,
-	reflect.TypeOf([]int8{}):            ArrayInt8,
-	reflect.TypeOf([]int16{}):           ArrayInt16,
-	reflect.TypeOf([]int32{}):           ArrayInt32,
-	reflect.TypeOf([]int64{}):           ArrayInt64,
-	reflect.TypeOf([]uint8{}):           ArrayUInt8,
-	reflect.TypeOf([]uint16{}):          ArrayUInt16,
-	reflect.TypeOf([]uint32{}):          ArrayUInt32,
-	reflect.TypeOf([]uint64{}):          ArrayUInt64,
-	reflect.TypeOf([]uintptr{}):         ArrayPointer,
-	reflect.TypeOf([]float32{}):         ArrayFloat,
-	reflect.TypeOf([]float64{}):         ArrayDouble,
-	reflect.TypeOf([]string{}):          ArrayString,
-	reflect.TypeOf([]any{}):             ArrayAny,
-	reflect.TypeOf([]Vector2{}):         ArrayVector2,
-	reflect.TypeOf([]Vector3{}):         ArrayVector3,
-	reflect.TypeOf([]Vector4{}):         ArrayVector4,
-	reflect.TypeOf([]Matrix4x4{}):       ArrayMatrix4x4,
-	reflect.TypeOf(Vector2{}):           Vector2Type,
-	reflect.TypeOf(Vector3{}):           Vector3Type,
-	reflect.TypeOf(Vector4{}):           Vector4Type,
-	reflect.TypeOf(Matrix4x4{}):         Matrix4x4Type,
-	reflect.TypeOf((*any)(nil)).Elem():  Any,
-	reflect.TypeOf(reflect.TypeOf(nil)): Pointer, // For function pointers
-}
-
-func createManagedType(t reflect.Type) (ManagedType, error) {
-	baseType := t
-
-	if baseType.Kind() == reflect.Func {
-		return ManagedType{Function, false}, nil
-	}
-
-	ref := t.Kind() == reflect.Ptr
-	if ref {
-		baseType = t.Elem()
-	}
-
-	if val, ok := reflectToValueType[baseType]; ok {
-		return ManagedType{val, ref}, nil
-	}
-
-	return ManagedType{}, fmt.Errorf("unsupported type: %v", t)
-}
-
-func createFunctionType(method C.MethodHandle) reflect.Type {
-	if method == nil {
-		panicker("expected a function")
-	}
-
-	count := int(C.Plugify_GetMethodParamCount(method))
-	in := make([]reflect.Type, count)
-	for i := range in {
-		in[i] = convertToReflectType(method, i)
-	}
-	out := []reflect.Type{convertToReflectType(method, -1)}
-
-	return reflect.FuncOf(in, out, false)
-}
 
 type function struct {
 	fn   any
@@ -338,70 +31,10 @@ func raw[T any](val T) uint64 {
 	return *(*uint64)(unsafe.Pointer(&val))
 }
 
-func pin[T any](val T, pool *memoryPool, size int) uint64 {
-	tmp := (*T)(pool.alloc(size))
+func pin[T any](val T, pool *arena, size int) uint64 {
+	tmp := (*T)(pool.Alloc(size))
 	*tmp = val
 	return uint64(uintptr(unsafe.Pointer(tmp)))
-}
-
-func getParameterTypes(fnType reflect.Type) ([]ManagedType, error) {
-	numIn := fnType.NumIn()
-	parameterTypes := make([]ManagedType, numIn)
-	for i := 0; i < numIn; i++ {
-		mt, err := createManagedType(fnType.In(i))
-		if err != nil {
-			return nil, fmt.Errorf("parameter %d: %w", i, err)
-		}
-		parameterTypes[i] = mt
-	}
-	return parameterTypes, nil
-}
-
-func getReturnType(fnType reflect.Type) (ManagedType, int, error) {
-	numOut := fnType.NumOut()
-	if numOut > 0 {
-		mt, err := createManagedType(fnType.Out(0))
-		if err != nil {
-			return ManagedType{}, 0, fmt.Errorf("return type: %w", err)
-		}
-		return mt, numOut, nil
-	}
-	return ManagedType{Void, false}, 0, nil
-}
-
-func hasReturnType(returnType ManagedType) bool {
-	hasRet := returnType.valueType >= _ObjectStart && returnType.valueType <= _ObjectEnd // params which pass by refs by default
-	if !hasRet {
-		var firstHidden ValueType
-		if isWindows || is32bit {
-			firstHidden = Vector3Type
-		} else {
-			firstHidden = Matrix4x4Type
-		}
-		hasRet = returnType.valueType >= firstHidden && returnType.valueType <= _StructEnd
-	}
-	return hasRet
-}
-
-func calculatePoolSize(parameterTypes []ManagedType, hasRet bool, returnType ManagedType) (int, int, int) {
-	paramCount := len(parameterTypes)
-	if hasRet {
-		paramCount += 1
-	}
-	paramSize := roundUp(paramCount * sizeOfValueType(UInt64))
-	poolSize := paramSize
-
-	for _, t := range parameterTypes {
-		if t.ref || t.valueType >= _ObjectStart && t.valueType <= _ObjectEnd {
-			poolSize += getValueTypeSize(t.valueType)
-		}
-	}
-
-	if hasRet {
-		poolSize += getValueTypeSize(returnType.valueType)
-	}
-
-	return roundUp(poolSize), paramSize, paramCount
 }
 
 func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) any {
@@ -432,7 +65,11 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 
 	hasRet := hasReturnType(returnType)
 
-	poolSize, paramSize, paramCount := calculatePoolSize(parameterTypes, hasRet, returnType)
+	paramCount := len(parameterTypes)
+	if hasRet {
+		paramCount += 1
+	}
+	paramSize := paramCount * sizeOfValueType(UInt64)
 
 	call := C.Plugify_NewCall(fnPtr, (*C.ManagedType)(unsafe.Pointer(unsafe.SliceData(parameterTypes))), C.ptrdiff_t(fnType.NumIn()), *(*C.ManagedType)(unsafe.Pointer(&returnType)))
 	if call == nil {
@@ -447,10 +84,9 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 	}
 
 	wrapper := reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
-		var pool memoryPool
-		pool.ensure(poolSize)
+		var pool arena
 
-		params := unsafe.Slice((*uint64)(pool.alloc(paramSize)), paramCount)
+		params := unsafe.Slice((*uint64)(pool.Alloc(paramSize)), paramCount)
 
 		results := make([]reflect.Value, retCount)
 
@@ -458,8 +94,8 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 
 		retType := returnType.valueType
 		if hasRet {
-			size := getValueTypeSize(retType)
-			ptr := uint64(uintptr(pool.alloc(size)))
+			size := sizeOfValueType(retType)
+			ptr := uint64(uintptr(pool.Alloc(size)))
 			switch retType {
 			case Vector2Type, Vector3Type, Vector4Type, Matrix4x4Type:
 				break
@@ -517,7 +153,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 		for i, arg := range args {
 			paramType := parameterTypes[i]
 			valueType := paramType.valueType
-			size := getValueTypeSize(valueType)
+			size := sizeOfValueType(valueType)
 			var ptr uint64
 			if paramType.ref {
 				switch valueType {
@@ -1042,7 +678,7 @@ func heap[T any](v T) *T {
 	return &v
 }
 
-func paramRefToObject(vt ValueType, p *C.Parameters, i C.size_t) reflect.Value {
+func paramRefToObject(vt valueType, p *C.Parameters, i C.size_t) reflect.Value {
 	switch vt {
 	case Bool:
 		return reflect.ValueOf(getArgument[*bool](p, i))
@@ -1130,7 +766,7 @@ func paramRefToObject(vt ValueType, p *C.Parameters, i C.size_t) reflect.Value {
 	}
 }
 
-func paramToObject(m C.MethodHandle, vt ValueType, p *C.Parameters, i C.size_t) reflect.Value {
+func paramToObject(m C.MethodHandle, vt valueType, p *C.Parameters, i C.size_t) reflect.Value {
 	switch vt {
 	case Bool:
 		return reflect.ValueOf(getArgument[bool](p, i))
@@ -1220,7 +856,7 @@ func paramToObject(m C.MethodHandle, vt ValueType, p *C.Parameters, i C.size_t) 
 	return reflect.ValueOf(nil)
 }
 
-func setRefParam(vt ValueType, p *C.Parameters, i C.size_t, val reflect.Value) {
+func setRefParam(vt valueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 	switch vt {
 	case Bool:
 		setArgument(p, i, val.Interface().(*bool))
@@ -1307,7 +943,7 @@ func setRefParam(vt ValueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 	}
 }
 
-func setObjReturn(vt ValueType, r *C.Return, rets []reflect.Value) {
+func setObjReturn(vt valueType, r *C.Return, rets []reflect.Value) {
 	switch vt {
 	case Void:
 		// Do nothing
@@ -1413,7 +1049,7 @@ func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 
 			for i := C.size_t(0); i < count; i++ {
 				mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-				vt := ValueType(mt.valueType)
+				vt := valueType(mt.valueType)
 				if mt.ref {
 					args[i] = paramRefToObject(vt, p, i)
 				} else {
@@ -1424,12 +1060,12 @@ func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 			rets := fnValue.Call(args)
 
 			mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(-1))
-			vt := ValueType(mt.valueType)
+			vt := valueType(mt.valueType)
 			setObjReturn(vt, r, rets)
 
 			for i := C.size_t(0); i < count; i++ {
 				mt = C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-				vt = ValueType(mt.valueType)
+				vt = valueType(mt.valueType)
 				if mt.ref {
 					setRefParam(vt, p, i, args[i])
 				}
