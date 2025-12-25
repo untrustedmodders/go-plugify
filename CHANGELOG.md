@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.6](https://github.com/untrustedmodders/go-plugify/compare/v1.4.5...v1.4.6) (2025-12-25)
+
+
+### Bug Fixes
+
+* add error signalling for invalid parameter types ([7dcd59d](https://github.com/untrustedmodders/go-plugify/commit/7dcd59db93883c2d790582fb93e7452e3241a7e3))
+* refactor of marshal class ([dd2d660](https://github.com/untrustedmodders/go-plugify/commit/dd2d660e63352e9c31340dc90698ffb473eda29c))
+* rework pool allocation to stack memory ([0e5a0bd](https://github.com/untrustedmodders/go-plugify/commit/0e5a0bd7331e5d3a4632efef78f06bcc3795ba2e))
+
 ## [1.4.5](https://github.com/untrustedmodders/go-plugify/compare/v1.4.4...v1.4.5) (2025-12-21)
 
 
