@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.7](https://github.com/untrustedmodders/go-plugify/compare/v1.4.6...v1.4.7) (2025-12-26)
+
+
+### Bug Fixes
+
+* add stacktrace to internal calls and make some methods private ([78daaed](https://github.com/untrustedmodders/go-plugify/commit/78daaed4f76cb99bc111e6f1f66cd3675e03c3a2))
+
 ## [1.4.6](https://github.com/untrustedmodders/go-plugify/compare/v1.4.5...v1.4.6) (2025-12-25)
 
 
