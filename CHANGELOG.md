@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.8](https://github.com/untrustedmodders/go-plugify/compare/v1.4.7...v1.4.8) (2025-12-26)
+
+
+### Bug Fixes
+
+* export names ([4fd5b9c](https://github.com/untrustedmodders/go-plugify/commit/4fd5b9c024c0ed43258fb7d08e93d921e0f4ba19))
+
 ## [1.4.7](https://github.com/untrustedmodders/go-plugify/compare/v1.4.6...v1.4.7) (2025-12-26)
 
 
