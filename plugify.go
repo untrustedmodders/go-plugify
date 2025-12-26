@@ -100,7 +100,7 @@ func PrintException(msg string) {
 	C.Plugify_PrintException(msg)
 }
 
-//export Plugify_Init
+//export plugify_Init
 func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
 	if version < kApiVersion {
 		return kApiVersion
@@ -457,19 +457,19 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	return 0
 }
 
-//export Plugify_PluginStart
+//export plugify_PluginStart
 func plugify_PluginStart() {
 	Plugin.Loaded = true
 
 	Plugin.fnPluginStartCallback()
 }
 
-//export Plugify_PluginUpdate
+//export plugify_PluginUpdate
 func plugify_PluginUpdate(dt float32) {
 	Plugin.fnPluginUpdateCallback(dt)
 }
 
-//export Plugify_PluginEnd
+//export plugify_PluginEnd
 func plugify_PluginEnd() {
 	Plugin.fnPluginEndCallback()
 
@@ -491,7 +491,7 @@ func plugify_PluginEnd() {
 	Plugin.Loaded = false
 }
 
-//export Plugify_PluginContext
+//export plugify_PluginContext
 func plugify_PluginContext() *C.PluginContext {
 	return &context
 }

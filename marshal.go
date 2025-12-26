@@ -1034,7 +1034,7 @@ func setObjReturn(vt valueType, r *C.Return, rets []reflect.Value) {
 	}
 }
 
-//export Plugify_InternalCall
+//export plugify_InternalCall
 func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
 	Block{
 		Try: func() {
