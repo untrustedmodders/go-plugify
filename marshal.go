@@ -1035,7 +1035,7 @@ func setObjReturn(vt valueType, r *C.Return, rets []reflect.Value) {
 }
 
 //export Plugify_InternalCall
-func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
+func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
 	Block{
 		Try: func() {
 			fn, ok := functionMap[data]
@@ -1072,8 +1072,7 @@ func Plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 			}
 		},
 		Catch: func(e Exception) {
-			msg := fmt.Sprintf("%v", e)
-			PrintException(msg)
+			PrintStacktrace(e)
 		},
 	}.Do()
 }

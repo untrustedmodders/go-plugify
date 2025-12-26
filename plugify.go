@@ -101,7 +101,7 @@ func PrintException(msg string) {
 }
 
 //export Plugify_Init
-func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
+func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
 	if version < kApiVersion {
 		return kApiVersion
 	}
@@ -458,19 +458,19 @@ func Plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 }
 
 //export Plugify_PluginStart
-func Plugify_PluginStart() {
+func plugify_PluginStart() {
 	Plugin.Loaded = true
 
 	Plugin.fnPluginStartCallback()
 }
 
 //export Plugify_PluginUpdate
-func Plugify_PluginUpdate(dt float32) {
+func plugify_PluginUpdate(dt float32) {
 	Plugin.fnPluginUpdateCallback(dt)
 }
 
 //export Plugify_PluginEnd
-func Plugify_PluginEnd() {
+func plugify_PluginEnd() {
 	Plugin.fnPluginEndCallback()
 
 	clear(functionMap)
@@ -492,16 +492,20 @@ func Plugify_PluginEnd() {
 }
 
 //export Plugify_PluginContext
-func Plugify_PluginContext() *C.PluginContext {
+func plugify_PluginContext() *C.PluginContext {
 	return &context
 }
 
-func panicker(v any) {
-	msg := fmt.Sprintf("%v", v)
+func PrintStacktrace(err any) {
+	msg := fmt.Sprintf("%v", err)
 	stack := Plugin.fnPluginPanicCallback()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
 	PrintException(msg)
-	panic(v)
+}
+
+func panicker(err any) {
+	PrintStacktrace(err)
+	panic(err)
 }
