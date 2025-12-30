@@ -659,7 +659,6 @@ func GetVectorDataUInt64(v *PlgVector) []uint64 {
 
 func GetVectorDataPointer(v *PlgVector) []uintptr {
 	size := int(C.Plugify_GetVectorSizePointer(v))
-	fmt.Println(size)
 	arr := make([]uintptr, size)
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataPointer(v)
