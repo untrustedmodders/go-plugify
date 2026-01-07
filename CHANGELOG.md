@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/untrustedmodders/go-plugify/compare/v1.4.9...v1.5.0) (2026-01-07)
+
+
+### Features
+
+* add better custom path splitting ([04c7297](https://github.com/untrustedmodders/go-plugify/commit/04c729787f638a5ce305fd2c1095e87de0d636ac))
+
 ## [1.4.9](https://github.com/untrustedmodders/go-plugify/compare/v1.4.8...v1.4.9) (2025-12-30)
 
 
