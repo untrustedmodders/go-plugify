@@ -7,6 +7,7 @@ import "C"
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 	"unsafe"
@@ -1099,17 +1100,11 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 		}
 	}
 
-	pkgPath := valueType.PkgPath()
-	if pkgPath == "main" {
-		pkgPath = Plugin.Name
-	} else {
-		lastSlashIndex := strings.LastIndex(pkgPath, "/")
-		if lastSlashIndex != -1 {
-			pkgPath = pkgPath[lastSlashIndex+1:]
-		}
+	name, err := getFunctionName(valueType)
+	if err != nil {
+		panicker(err)
 	}
 
-	name := fmt.Sprintf("%s.%s", pkgPath, valueType.Name())
 	callback := C.Plugify_NewCallback(name, fnPtr)
 	if callback == nil {
 		panicker(fmt.Sprintf("%s (jit error: not found)", name))
@@ -1125,4 +1120,68 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 	functionMap[fnPtr] = function{fn, addr}
 
 	return addr
+}
+
+func getFunctionName(t reflect.Type) (string, error) {
+	pkg, err := normalizePkgName(t)
+	if err != nil {
+		return "", err
+	}
+	name := t.Name()
+	if name == "" {
+		return "", fmt.Errorf("no package name for type %v", t)
+	}
+	return fmt.Sprintf("%s.%s", pkg, name), nil
+}
+
+func normalizePkgName(t reflect.Type) (string, error) {
+	path := t.PkgPath()
+	if path == "" {
+		return "", fmt.Errorf("no package path for type %v", t)
+	}
+	if path == "main" {
+		return Plugin.Name, nil
+	}
+
+	parts := splitModulePath(path)
+
+	i := 0
+	if isExternalModule(parts) {
+		i = 2 // repo name only from example.com/<owner>/<repo>/...
+	} else {
+		i = len(parts) - 1
+	}
+
+	// remove suffix before - or . as they consider invalid in plugify anyway
+	return trimSuffix(parts[i]), nil
+}
+
+func splitModulePath(path string) []string {
+	parts := strings.Split(path, "/")
+	i := len(parts) - 1
+	if i > 0 {
+		if isVersionSegment(parts[i]) {
+			parts = parts[:i]
+		}
+	}
+	return parts
+}
+
+func isVersionSegment(s string) bool {
+	if len(s) < 2 || s[0] != 'v' {
+		return false
+	}
+	_, err := strconv.Atoi(s[1:])
+	return err == nil
+}
+
+func isExternalModule(parts []string) bool {
+	return len(parts) >= 3 && strings.Contains(parts[0], ".")
+}
+
+func trimSuffix(s string) string {
+	if i := strings.LastIndexAny(s, "-."); i != -1 {
+		return s[i+1:]
+	}
+	return s
 }
