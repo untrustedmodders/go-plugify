@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.2](https://github.com/untrustedmodders/go-plugify/compare/v1.6.1...v1.6.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* rework logger ([1de3940](https://github.com/untrustedmodders/go-plugify/commit/1de394099f99b603d8b2eb1776f2b3d1e0800096))
+
 ## [1.6.1](https://github.com/untrustedmodders/go-plugify/compare/v1.6.0...v1.6.1) (2026-03-10)
 
 
