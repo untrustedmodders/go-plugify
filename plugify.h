@@ -74,14 +74,6 @@ typedef enum Severity {
     Fatal
 } Severity;
 
-typedef struct Location {
-    ptrdiff_t line;
-    ptrdiff_t column;
-    _GoString_ file_name;
-    _GoString_ function_name;
-    _GoString_ module_name;
-} Location;
-
 typedef struct PluginContext {
 	bool hasUpdate;
 	bool hasStart;
@@ -100,7 +92,7 @@ extern String Plugify_GetDataDir();
 extern String Plugify_GetLogsDir();
 extern String Plugify_GetCacheDir();
 extern bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint);
-extern void Plugify_Log(_GoString_ message, Severity severity, Location* location);
+extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module);
 
 extern ptrdiff_t Plugify_GetPluginId();
 extern String Plugify_GetPluginName();

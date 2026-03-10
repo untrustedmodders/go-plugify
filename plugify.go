@@ -109,22 +109,16 @@ const (
 	Fatal
 )
 
-func log(msg string, sev Severity, line int, column int, file string, function string) {
-	C.Plugify_Log(msg, C.Severity(sev), &C.Location{
-		line:          C.ptrdiff_t(line),
-		column:        C.ptrdiff_t(column),
-		file_name:     file,
-		function_name: function,
-		module_name:   Plugin.Name,
-	})
+func log(msg string, sev Severity, line int, file string, function string) {
+	C.Plugify_Log(msg, C.Severity(sev), C.ptrdiff_t(line), file, function, Plugin.Name)
 }
 
 func Log(msg string, sev Severity, skip int) {
 	pc, file, line, ok := runtime.Caller(skip)
 	if ok {
-		log(msg, sev, line, 0, filepath.Base(file), runtime.FuncForPC(pc).Name())
+		log(msg, sev, line, filepath.Base(file), runtime.FuncForPC(pc).Name())
 	} else {
-		log(msg, sev, 0, 0, "", "")
+		log(msg, sev, 0, "", "")
 	}
 }
 
