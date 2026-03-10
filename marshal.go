@@ -1072,8 +1072,8 @@ func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 				}
 			}
 		},
-		Catch: func(e Exception) {
-			PrintStacktrace(e)
+		Catch: func(ex Exception) {
+			stacktrace(ex)
 		},
 	}.Do()
 }

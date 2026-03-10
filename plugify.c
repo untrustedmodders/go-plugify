@@ -26,7 +26,7 @@ String (*GetDataDir)() = NULL;
 String (*GetLogsDir)() = NULL;
 String (*GetCacheDir)() = NULL;
 bool (*IsExtensionLoaded)(_GoString_, _GoString_) = NULL;
-void (*PrintException)(_GoString_) = NULL;
+void (*Log)(_GoString_, Severity, Location*) = NULL;
 
 // Function pointers for PluginHandle functions
 ptrdiff_t (*GetPluginId)(PluginHandle) = NULL;
@@ -191,8 +191,8 @@ String Plugify_GetLogsDir() { return GetLogsDir(); }
 String Plugify_GetCacheDir() { return GetCacheDir(); }
 // Function to call IsExtensionLoaded
 bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint) { return IsExtensionLoaded(name, constraint); }
-// Function to call PrintException
-void Plugify_PrintException(_GoString_ message) { PrintException(message); }
+// Function to call Log
+void Plugify_Log(_GoString_ message, Severity severity, Location* location) { Log(message, severity, location); }
 // Function to call GetPluginId
 ptrdiff_t Plugify_GetPluginId() { return GetPluginId(pluginHandle); }
 // Function to call GetPluginName
@@ -355,7 +355,7 @@ void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (String (*)()) ptr; }
 void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (String (*)()) ptr; }
 void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (String (*)()) ptr; }
 void Plugify_SetIsExtensionLoaded(void* ptr) { IsExtensionLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
-void Plugify_SetPrintException(void* ptr) { PrintException = (void (*)(_GoString_)) ptr; }
+void Plugify_SetLog(void* ptr) { Log = (void (*)(_GoString_, Severity, Location*)) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (String (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginDescription(void* ptr) { GetPluginDescription = (String (*)(PluginHandle)) ptr; }

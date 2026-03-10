@@ -7,6 +7,7 @@ package plugify
 import "C"
 import (
 	"fmt"
+	"path/filepath"
 	"runtime"
 	"unsafe"
 )
@@ -96,8 +97,35 @@ func IsExtensionLoaded(name string, constraint string) bool {
 	return bool(C.Plugify_IsExtensionLoaded(name, constraint))
 }
 
-func PrintException(msg string) {
-	C.Plugify_PrintException(msg)
+type Severity int
+
+const (
+	Unknown Severity = iota
+	Verbose
+	Debug
+	Info
+	Warning
+	Error
+	Fatal
+)
+
+func log(msg string, sev Severity, line int, column int, file string, function string) {
+	C.Plugify_Log(msg, C.Severity(sev), &C.Location{
+		line:          C.ptrdiff_t(line),
+		column:        C.ptrdiff_t(column),
+		file_name:     file,
+		function_name: function,
+		module_name:   Plugin.Name,
+	})
+}
+
+func Log(msg string, sev Severity, skip int) {
+	pc, file, line, ok := runtime.Caller(skip)
+	if ok {
+		log(msg, sev, line, 0, filepath.Base(file), runtime.FuncForPC(pc).Name())
+	} else {
+		log(msg, sev, 0, 0, "", "")
+	}
 }
 
 //export plugify_Init
@@ -120,7 +148,7 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetIsExtensionLoaded(api[i])
 	i++
-	C.Plugify_SetPrintException(api[i])
+	C.Plugify_SetLog(api[i])
 	i++
 
 	C.Plugify_SetGetPluginId(api[i])
@@ -496,16 +524,16 @@ func plugify_PluginContext() *C.PluginContext {
 	return &context
 }
 
-func PrintStacktrace(err any) {
+func stacktrace(err any) {
 	msg := fmt.Sprintf("%v", err)
 	stack := Plugin.fnPluginPanicCallback()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
-	PrintException(msg)
+	Log(msg, Error, 3)
 }
 
 func panicker(err any) {
-	PrintStacktrace(err)
+	stacktrace(err)
 	panic(err)
 }
