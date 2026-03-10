@@ -101,7 +101,7 @@ type Severity int
 
 const (
 	Unknown Severity = iota
-	Verbose
+	Trace
 	Debug
 	Info
 	Warning
