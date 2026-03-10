@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/untrustedmodders/go-plugify/compare/v1.5.0...v1.6.0) (2026-03-10)
+
+
+### Features
+
+* add logger ([a8d97e3](https://github.com/untrustedmodders/go-plugify/commit/a8d97e300d0ce0cfcedb78b6c83dd3d5c38926bb))
+
 ## [1.5.0](https://github.com/untrustedmodders/go-plugify/compare/v1.4.9...v1.5.0) (2026-01-07)
 
 
