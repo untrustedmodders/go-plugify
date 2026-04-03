@@ -93,6 +93,7 @@ extern String Plugify_GetLogsDir();
 extern String Plugify_GetCacheDir();
 extern bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint);
 extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module);
+extern Severity Plugify_GetSeverity();
 
 extern ptrdiff_t Plugify_GetPluginId();
 extern String Plugify_GetPluginName();
@@ -249,6 +250,7 @@ extern void Plugify_SetGetLogsDir(void* ptr);
 extern void Plugify_SetGetCacheDir(void* ptr);
 extern void Plugify_SetIsExtensionLoaded(void* ptr);
 extern void Plugify_SetLog(void* ptr);
+extern void Plugify_SetGetSeverity(void* ptr);
 extern void Plugify_SetGetPluginId(void* ptr);
 extern void Plugify_SetGetPluginName(void* ptr);
 extern void Plugify_SetGetPluginDescription(void* ptr);

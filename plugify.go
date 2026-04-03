@@ -109,11 +109,17 @@ const (
 	Fatal
 )
 
+var minSeverity Severity
+
 func log(msg string, sev Severity, line int, file string, function string) {
 	C.Plugify_Log(msg, C.Severity(sev), C.ptrdiff_t(line), file, function, Plugin.Name)
 }
 
 func Log(msg string, sev Severity, skip int) {
+	if sev < minSeverity {
+		return
+	}
+
 	pc, file, line, ok := runtime.Caller(skip)
 	if ok {
 		log(msg, sev, line, filepath.Base(file), runtime.FuncForPC(pc).Name())
@@ -143,6 +149,8 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	C.Plugify_SetIsExtensionLoaded(api[i])
 	i++
 	C.Plugify_SetLog(api[i])
+	i++
+	C.Plugify_SetGetSeverity(api[i])
 	i++
 
 	C.Plugify_SetGetPluginId(api[i])
@@ -468,6 +476,8 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	dependencies := C.Plugify_GetPluginDependencies()
 	Plugin.Dependencies = GetVectorDataString(&dependencies)
 	C.Plugify_DestroyVectorString(&dependencies)
+
+	minSeverity = Severity(C.Plugify_GetSeverity())
 
 	context = C.PluginContext{
 		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),
