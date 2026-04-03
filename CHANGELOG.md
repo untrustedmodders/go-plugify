@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/untrustedmodders/go-plugify/compare/v1.6.2...v1.7.0) (2026-04-03)
+
+
+### Features
+
+* changed ToString method to String for Vector2/3/4/Matrix4x4 to honor fmt.Stinger interface. ([05b8696](https://github.com/untrustedmodders/go-plugify/commit/05b869646cddc45c7c83a80060586dd64c98c1d6))
+
+
+### Bug Fixes
+
+* prevent calling log if severity is low ([b53c163](https://github.com/untrustedmodders/go-plugify/commit/b53c163c74e38aa08c9c6848465fad6c6ff1dd5b))
+
 ## [1.6.2](https://github.com/untrustedmodders/go-plugify/compare/v1.6.1...v1.6.2) (2026-03-10)
 
 
