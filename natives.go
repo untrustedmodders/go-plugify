@@ -169,7 +169,7 @@ func SetVariantData(v *PlgVariant, param any) {
 		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint64_t(param.(uint64))
 	case uint:
 		valueType = UInt64
-		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint64_t(param.(uint64))
+		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint64_t(param.(uint))
 	case uintptr:
 		valueType = Pointer
 		*(*C.intptr_t)(unsafe.Pointer(v)) = C.intptr_t(param.(uintptr))
@@ -352,17 +352,32 @@ func ConstructVectorDouble(data []float64) PlgVector {
 }
 
 func ConstructVectorString(data []string) PlgVector {
-	//return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
-	cArray := C.malloc(C.size_t(len(data)) * C.size_t(unsafe.Sizeof(C.GoString_{})))
-	defer C.free(cArray)
-	arr := ([]C.GoString_)(unsafe.Slice((*C.GoString_)(cArray), len(data)))
-
-	for i, s := range data {
-		arr[i].p = (*C.char)(unsafe.Pointer(&[]byte(s)[0]))
-		arr[i].n = C.ptrdiff_t(len(s))
+	n := len(data)
+	if n == 0 {
+		return C.Plugify_ConstructVectorString(nil, 0)
 	}
-
-	return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(data)))
+	elemSize := C.size_t(unsafe.Sizeof(C.GoString_{}))
+	cArr := C.malloc(elemSize * C.size_t(n))
+	defer C.free(cArr)
+	bufs := make([]unsafe.Pointer, n)
+	defer func() {
+		for _, p := range bufs {
+			if p != nil {
+				C.free(p)
+			}
+		}
+	}()
+	view := unsafe.Slice((*C.GoString_)(cArr), n)
+	for i, s := range data {
+		var p unsafe.Pointer
+		if len(s) > 0 {
+			p = C.CBytes([]byte(s)) // malloc + memcpy, чисто native
+		}
+		bufs[i] = p
+		view[i].p = (*C.char)(p)
+		view[i].n = C.ptrdiff_t(len(s))
+	}
+	return C.Plugify_ConstructVectorString((*string)(cArr), C.ptrdiff_t(n))
 }
 
 func ConstructVectorVariant(arr []any) PlgVector {
@@ -1133,17 +1148,33 @@ func AssignVectorDouble(v *PlgVector, data []float64) {
 }
 
 func AssignVectorString(v *PlgVector, data []string) {
-	//C.Plugify_AssignVectorString(v, (*string)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
-	cArray := C.malloc(C.size_t(len(data)) * C.size_t(unsafe.Sizeof(C.GoString_{})))
-	defer C.free(cArray)
-	arr := ([]C.GoString_)(unsafe.Slice((*C.GoString_)(cArray), len(data)))
-
-	for i, s := range data {
-		arr[i].p = (*C.char)(unsafe.Pointer(&[]byte(s)[0]))
-		arr[i].n = C.ptrdiff_t(len(s))
+	n := len(data)
+	if n == 0 {
+		C.Plugify_AssignVectorString(v, nil, 0)
+		return
 	}
-
-	C.Plugify_AssignVectorString(v, (*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(data)))
+	elemSize := C.size_t(unsafe.Sizeof(C.GoString_{}))
+	cArr := C.malloc(elemSize * C.size_t(n))
+	defer C.free(cArr)
+	bufs := make([]unsafe.Pointer, n)
+	defer func() {
+		for _, p := range bufs {
+			if p != nil {
+				C.free(p)
+			}
+		}
+	}()
+	view := unsafe.Slice((*C.GoString_)(cArr), n)
+	for i, s := range data {
+		var p unsafe.Pointer
+		if len(s) > 0 {
+			p = C.CBytes([]byte(s))
+		}
+		bufs[i] = p
+		view[i].p = (*C.char)(p)
+		view[i].n = C.ptrdiff_t(len(s))
+	}
+	C.Plugify_AssignVectorString(v, (*string)(cArr), C.ptrdiff_t(n))
 }
 
 func AssignVectorVariant(v *PlgVector, data []any) {
