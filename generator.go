@@ -1500,8 +1500,8 @@ typedef unsigned short char16_t;
 extern "C" {
 #endif
 
-typedef struct String { char* data; size_t size; size_t cap; } String;
-typedef struct Vector { void* begin; void* end; void* capacity; } Vector;
+typedef struct String { uintptr_t data; size_t size; size_t cap; } String;
+typedef struct Vector { uintptr_t begin; uintptr_t end; uintptr_t capacity; } Vector;
 typedef struct Vector2 { float x, y; } Vector2;
 typedef struct Vector3 { float x, y, z; } Vector3;
 typedef struct Vector4 { float x, y, z, w; } Vector4;
