@@ -84,6 +84,8 @@ typedef struct PluginContext {
 typedef void* PluginHandle;
 extern PluginHandle pluginHandle;
 
+typedef uint64_t ZoneHandle;
+
 // Extern declarations for Plugify_ functions
 extern String Plugify_GetBaseDir();
 extern String Plugify_GetExtensionsDir();
@@ -91,9 +93,12 @@ extern String Plugify_GetConfigsDir();
 extern String Plugify_GetDataDir();
 extern String Plugify_GetLogsDir();
 extern String Plugify_GetCacheDir();
-extern bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint);
+extern bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint);
 extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module);
-extern Severity Plugify_GetSeverity();
+extern bool Plugify_IsLogging();
+extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ function);
+extern void Plugify_EndZone(ZoneHandle handle);
+extern bool Plugify_IsProfiling();
 
 extern ptrdiff_t Plugify_GetPluginId();
 extern String Plugify_GetPluginName();
@@ -248,9 +253,12 @@ extern void Plugify_SetGetConfigsDir(void* ptr);
 extern void Plugify_SetGetDataDir(void* ptr);
 extern void Plugify_SetGetLogsDir(void* ptr);
 extern void Plugify_SetGetCacheDir(void* ptr);
-extern void Plugify_SetIsExtensionLoaded(void* ptr);
+extern void Plugify_SetIsLoaded(void* ptr);
 extern void Plugify_SetLog(void* ptr);
-extern void Plugify_SetGetSeverity(void* ptr);
+extern void Plugify_SetIsLogging(void* ptr);
+extern void Plugify_SetBeginZone(void* ptr);
+extern void Plugify_SetEndZone(void* ptr);
+extern void Plugify_SetIsProfiling(void* ptr);
 extern void Plugify_SetGetPluginId(void* ptr);
 extern void Plugify_SetGetPluginName(void* ptr);
 extern void Plugify_SetGetPluginDescription(void* ptr);

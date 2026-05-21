@@ -25,9 +25,12 @@ String (*GetConfigsDir)() = NULL;
 String (*GetDataDir)() = NULL;
 String (*GetLogsDir)() = NULL;
 String (*GetCacheDir)() = NULL;
-bool (*IsExtensionLoaded)(_GoString_, _GoString_) = NULL;
+bool (*IsLoaded)(_GoString_, _GoString_) = NULL;
 void (*Log)(_GoString_, Severity, ptrdiff_t, _GoString_, _GoString_, _GoString_) = NULL;
-Severity (*GetSeverity)() = NULL;
+bool (*IsLogging)() = NULL;
+ZoneHandle (*BeginZone)(_GoString_, ptrdiff_t, _GoString_, _GoString_) = NULL;
+void (*EndZone)(ZoneHandle) = NULL;
+bool (*IsProfiling)() = NULL;
 
 // Function pointers for PluginHandle functions
 ptrdiff_t (*GetPluginId)(PluginHandle) = NULL;
@@ -190,12 +193,18 @@ String Plugify_GetDataDir() { return GetDataDir(); }
 String Plugify_GetLogsDir() { return GetLogsDir(); }
 // Function to call GetCacheDir
 String Plugify_GetCacheDir() { return GetCacheDir(); }
-// Function to call IsExtensionLoaded
-bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint) { return IsExtensionLoaded(name, constraint); }
+// Function to call IsLoaded
+bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint) { return IsLoaded(name, constraint); }
 // Function to call Log
 void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module) { Log(message, severity, line, file, function, module); }
-// Function to call GetSeverity
-Severity Plugify_GetSeverity() { return GetSeverity(); }
+// Function to call IsLogging
+bool Plugify_IsLogging() { return IsLogging(); }
+// Function to call BeginZone
+ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ function) { return BeginZone(name, line, file, function); }
+// Function to call EndZone
+void Plugify_EndZone(ZoneHandle handle) { return EndZone(handle); }
+// Function to call IsProfiling
+bool Plugify_IsProfiling() { return IsProfiling(); }
 // Function to call GetPluginId
 ptrdiff_t Plugify_GetPluginId() { return GetPluginId(pluginHandle); }
 // Function to call GetPluginName
@@ -357,9 +366,12 @@ void Plugify_SetGetConfigsDir(void* ptr) { GetConfigsDir = (String (*)()) ptr; }
 void Plugify_SetGetDataDir(void* ptr) { GetDataDir = (String (*)()) ptr; }
 void Plugify_SetGetLogsDir(void* ptr) { GetLogsDir = (String (*)()) ptr; }
 void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (String (*)()) ptr; }
-void Plugify_SetIsExtensionLoaded(void* ptr) { IsExtensionLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
+void Plugify_SetIsLoaded(void* ptr) { IsLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
 void Plugify_SetLog(void* ptr) { Log = (void (*)(_GoString_, Severity, ptrdiff_t, _GoString_, _GoString_, _GoString_)) ptr; }
-void Plugify_SetGetSeverity(void* ptr) { GetSeverity = (Severity (*)()) ptr; }
+void Plugify_SetIsLogging(void* ptr) { IsLogging = (bool (*)()) ptr; }
+void Plugify_SetBeginZone(void* ptr) { BeginZone = (ZoneHandle (*)(_GoString_, ptrdiff_t, _GoString_, _GoString_)) ptr; }
+void Plugify_SetEndZone(void* ptr) { EndZone = (void (*)(ZoneHandle)) ptr; }
+void Plugify_SetIsProfiling(void* ptr) { IsProfiling = (bool (*)()) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (String (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginDescription(void* ptr) { GetPluginDescription = (String (*)(PluginHandle)) ptr; }

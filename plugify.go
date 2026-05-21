@@ -93,8 +93,27 @@ var DataDir = ""
 var LogsDir = ""
 var CacheDir = ""
 
-func IsExtensionLoaded(name string, constraint string) bool {
-	return bool(C.Plugify_IsExtensionLoaded(name, constraint))
+func IsLoaded(name string, constraint string) bool {
+	return bool(C.Plugify_IsLoaded(name, constraint))
+}
+
+type callInfo struct {
+	line     int
+	file     string
+	function string
+}
+
+func getCallInfo(skip int) callInfo {
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		return callInfo{}
+	}
+
+	return callInfo{
+		line:     line,
+		file:     filepath.Base(file),
+		function: runtime.FuncForPC(pc).Name(),
+	}
 }
 
 type Severity int
@@ -109,22 +128,42 @@ const (
 	Fatal
 )
 
-var minSeverity Severity
+func Log(msg string, sev Severity, skip int) {
+	info := getCallInfo(skip)
 
-func log(msg string, sev Severity, line int, file string, function string) {
-	C.Plugify_Log(msg, C.Severity(sev), C.ptrdiff_t(line), file, function, Plugin.Name)
+	C.Plugify_Log(
+		msg,
+		C.Severity(sev),
+		C.ptrdiff_t(info.line),
+		info.file,
+		info.function,
+		Plugin.Name,
+	)
 }
 
-func Log(msg string, sev Severity, skip int) {
-	if sev < minSeverity {
-		return
+var isProfiling, isLogging bool
+
+func Scope(name string, skip int) func() {
+	if !isProfiling && !isLogging {
+		return func() {}
 	}
 
-	pc, file, line, ok := runtime.Caller(skip)
-	if ok {
-		log(msg, sev, line, filepath.Base(file), runtime.FuncForPC(pc).Name())
-	} else {
-		log(msg, sev, 0, "", "")
+	info := getCallInfo(skip)
+
+	var handle C.ZoneHandle
+
+	if isProfiling {
+		handle = C.Plugify_BeginZone(name, C.ptrdiff_t(info.line), info.file, info.function, Plugin.Name)
+	}
+
+	if isLogging {
+		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(info.line), info.file, info.function, Plugin.Name)
+	}
+
+	return func() {
+		if handle != 0 {
+			C.Plugify_EndZone(handle)
+		}
 	}
 }
 
@@ -146,11 +185,17 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	i++
 	C.Plugify_SetGetCacheDir(api[i])
 	i++
-	C.Plugify_SetIsExtensionLoaded(api[i])
+	C.Plugify_SetIsLoaded(api[i])
 	i++
 	C.Plugify_SetLog(api[i])
 	i++
-	C.Plugify_SetGetSeverity(api[i])
+	C.Plugify_SetIsLogging(api[i])
+	i++
+	C.Plugify_SetBeginZone(api[i])
+	i++
+	C.Plugify_SetEndZone(api[i])
+	i++
+	C.Plugify_SetIsProfiling(api[i])
 	i++
 
 	C.Plugify_SetGetPluginId(api[i])
@@ -477,14 +522,15 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	Plugin.Dependencies = GetVectorDataString(&dependencies)
 	C.Plugify_DestroyVectorString(&dependencies)
 
-	minSeverity = Severity(C.Plugify_GetSeverity())
-
 	context = C.PluginContext{
 		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),
 		hasStart:  C.bool(Plugin.hasPluginStartCallback),
 		hasEnd:    C.bool(Plugin.hasPluginEndCallback),
 		hasPanic:  C.bool(Plugin.hasPluginPanicCallback),
 	}
+
+	isProfiling = bool(C.Plugify_IsProfiling())
+	isLogging = bool(C.Plugify_IsLogging())
 
 	return 0
 }
