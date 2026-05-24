@@ -29,16 +29,14 @@ type pluginInfo struct {
 	location     string
 	dependencies []string
 
-	loaded bool
-
 	fnPluginStartCallback   PluginStartCallback
 	fnPluginUpdateCallback  PluginUpdateCallback
 	fnPluginEndCallback     PluginEndCallback
-	fnPluginPanicCallback   PluginPanicCallback
 	hasPluginStartCallback  bool
 	hasPluginUpdateCallback bool
 	hasPluginEndCallback    bool
-	hasPluginPanicCallback  bool
+
+	loaded bool
 }
 
 var plugin = pluginInfo{
@@ -54,11 +52,9 @@ var plugin = pluginInfo{
 	fnPluginStartCallback:   func() error { return nil },
 	fnPluginUpdateCallback:  func(dt float32) error { return nil },
 	fnPluginEndCallback:     func() error { return nil },
-	fnPluginPanicCallback:   func() []byte { return []byte{} },
 	hasPluginStartCallback:  false,
 	hasPluginUpdateCallback: false,
 	hasPluginEndCallback:    false,
-	hasPluginPanicCallback:  false,
 
 	loaded: false,
 }
@@ -116,9 +112,4 @@ func OnPluginUpdate(fn PluginUpdateCallback) {
 func OnPluginEnd(fn PluginEndCallback) {
 	plugin.fnPluginEndCallback = fn
 	plugin.hasPluginEndCallback = true
-}
-
-func OnPluginPanic(fn PluginPanicCallback) {
-	plugin.fnPluginPanicCallback = fn
-	plugin.hasPluginPanicCallback = true
 }

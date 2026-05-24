@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"unsafe"
 )
 
@@ -453,7 +454,7 @@ func plugify_PluginContext() *C.PluginContext {
 
 func stacktrace(err any) {
 	msg := fmt.Sprintf("%v", err)
-	stack := plugin.fnPluginPanicCallback()
+	stack := debug.Stack()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}

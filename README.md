@@ -22,24 +22,22 @@ package main
 import (
 	"fmt"
 	"github.com/untrustedmodders/go-plugify"
-	"runtime/debug"
 )
 
 func init() {
-	plugify.OnPluginStart(func() {
+	plugify.OnPluginStart(func() error {
 		fmt.Println("OnPluginStart")
+		return nil
 	})
 
-	plugify.OnPluginUpdate(func(dt float32) {
+	plugify.OnPluginUpdate(func(dt float32) error {
 		fmt.Println("OnPluginUpdate")
+		return nil
 	})
 
-	plugify.OnPluginEnd(func() {
+	plugify.OnPluginEnd(func() error {
 		fmt.Println("OnPluginEnd")
-	})
-
-	plugify.OnPluginPanic(func() []byte {
-		return debug.Stack() // workaround for could not import runtime/debug inside plugify package
+		return nil
 	})
 }
 
