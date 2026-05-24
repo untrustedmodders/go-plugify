@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.2](https://github.com/untrustedmodders/go-plugify/compare/v1.8.1...v1.8.2) (2026-05-24)
+
+
+### Bug Fixes
+
+* remove panic from context ([d4a0214](https://github.com/untrustedmodders/go-plugify/commit/d4a0214185ff6bf33edb23f187ee5066ae5c185c))
+
 ## [1.8.1](https://github.com/untrustedmodders/go-plugify/compare/v1.8.0...v1.8.1) (2026-05-24)
 
 
