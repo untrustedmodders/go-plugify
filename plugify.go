@@ -400,7 +400,7 @@ func plugify_PluginStart() C.PluginResult {
 	return result(err)
 }
 
-//export plugify_Update
+//export plugify_PluginUpdate
 func plugify_PluginUpdate(dt float32) C.PluginResult {
 	var err error
 	Block{
