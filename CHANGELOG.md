@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.4](https://github.com/untrustedmodders/go-plugify/compare/v1.8.3...v1.8.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* remove unused param ([a6092cd](https://github.com/untrustedmodders/go-plugify/commit/a6092cda1fd9c68d0f1f15e86bde105bfe5ae517))
+
 ## [1.8.3](https://github.com/untrustedmodders/go-plugify/compare/v1.8.2...v1.8.3) (2026-05-24)
 
 
