@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/untrustedmodders/go-plugify/compare/v1.7.0...v1.8.0) (2026-05-24)
+
+
+### Features
+
+* add error handling, add plugin interface ([91bc0b0](https://github.com/untrustedmodders/go-plugify/commit/91bc0b096d492596f7885bc515fbd9b7486447fb))
+
+
+### Bug Fixes
+
+* add profiler ([1607c76](https://github.com/untrustedmodders/go-plugify/commit/1607c7628217b8ca959e35a4ae3c2228a190dc17))
+
 ## [1.7.0](https://github.com/untrustedmodders/go-plugify/compare/v1.6.2...v1.7.0) (2026-04-03)
 
 
