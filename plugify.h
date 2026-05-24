@@ -88,7 +88,6 @@ typedef struct PluginContext {
 	bool hasUpdate;
 	bool hasStart;
 	bool hasEnd;
-	bool hasPanic;
 } PluginContext;
 
 typedef void* PluginHandle;

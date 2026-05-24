@@ -17,7 +17,7 @@ _Static_assert(sizeof(Parameters) == 8, "Unsupported Parameters size");
 _Static_assert(sizeof(Return) == 16, "Unsupported Return size");
 
 _Static_assert(sizeof(PluginResult) == sizeof(void*) * 4, "Unsupported PluginResult size");
-_Static_assert(sizeof(PluginContext) == 4, "Unsupported PluginContext size");
+_Static_assert(sizeof(PluginContext) == 3, "Unsupported PluginContext size");
 
 PluginHandle pluginHandle = NULL;
 

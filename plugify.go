@@ -380,7 +380,6 @@ func plugify_PluginInit(api []unsafe.Pointer, version int32, handle C.PluginHand
 		hasUpdate: C.bool(plugin.hasPluginUpdateCallback),
 		hasStart:  C.bool(plugin.hasPluginStartCallback),
 		hasEnd:    C.bool(plugin.hasPluginEndCallback),
-		hasPanic:  C.bool(plugin.hasPluginPanicCallback),
 	}
 
 	return 0
