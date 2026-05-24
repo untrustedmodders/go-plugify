@@ -12,163 +12,12 @@ import (
 	"unsafe"
 )
 
-const kApiVersion = 1
-
-type PluginStartCallback func()
-type PluginUpdateCallback func(dt float32)
-type PluginEndCallback func()
-type PluginPanicCallback func() []byte
-
-type PluginInfo struct {
-	Id           int64
-	Name         string
-	Description  string
-	Version      string
-	Author       string
-	Website      string
-	License      string
-	Location     string
-	Dependencies []string
-
-	fnPluginStartCallback   PluginStartCallback
-	fnPluginUpdateCallback  PluginUpdateCallback
-	fnPluginEndCallback     PluginEndCallback
-	fnPluginPanicCallback   PluginPanicCallback
-	hasPluginStartCallback  bool
-	hasPluginUpdateCallback bool
-	hasPluginEndCallback    bool
-	hasPluginPanicCallback  bool
-
-	Loaded bool
-}
-
-var Plugin = PluginInfo{
-	Id:           -1,
-	Name:         "",
-	Description:  "",
-	Version:      "",
-	Author:       "",
-	Website:      "",
-	License:      "",
-	Dependencies: []string{},
-
-	fnPluginStartCallback:   func() {},
-	fnPluginUpdateCallback:  func(dt float32) {},
-	fnPluginEndCallback:     func() {},
-	fnPluginPanicCallback:   func() []byte { return []byte{} },
-	hasPluginStartCallback:  false,
-	hasPluginUpdateCallback: false,
-	hasPluginEndCallback:    false,
-	hasPluginPanicCallback:  false,
-
-	Loaded: false,
-}
+const kApiVersion = 3
 
 var context C.PluginContext
 
-func OnPluginStart(fn PluginStartCallback) {
-	Plugin.fnPluginStartCallback = fn
-	Plugin.hasPluginStartCallback = true
-}
-
-func OnPluginUpdate(fn PluginUpdateCallback) {
-	Plugin.fnPluginUpdateCallback = fn
-	Plugin.hasPluginUpdateCallback = true
-}
-
-func OnPluginEnd(fn PluginEndCallback) {
-	Plugin.fnPluginEndCallback = fn
-	Plugin.hasPluginEndCallback = true
-}
-
-func OnPluginPanic(fn PluginPanicCallback) {
-	Plugin.fnPluginPanicCallback = fn
-	Plugin.hasPluginPanicCallback = true
-}
-
-var BaseDir = ""
-var ExtensionsDir = ""
-var ConfigsDir = ""
-var DataDir = ""
-var LogsDir = ""
-var CacheDir = ""
-
-func IsLoaded(name string, constraint string) bool {
-	return bool(C.Plugify_IsLoaded(name, constraint))
-}
-
-type callInfo struct {
-	line     int
-	file     string
-	function string
-}
-
-func getCallInfo(skip int) callInfo {
-	pc, file, line, ok := runtime.Caller(skip)
-	if !ok {
-		return callInfo{}
-	}
-
-	return callInfo{
-		line:     line,
-		file:     filepath.Base(file),
-		function: runtime.FuncForPC(pc).Name(),
-	}
-}
-
-type Severity int
-
-const (
-	Unknown Severity = iota
-	Trace
-	Debug
-	Info
-	Warning
-	Error
-	Fatal
-)
-
-func Log(msg string, sev Severity, skip int) {
-	info := getCallInfo(skip)
-
-	C.Plugify_Log(
-		msg,
-		C.Severity(sev),
-		C.ptrdiff_t(info.line),
-		info.file,
-		info.function,
-		Plugin.Name,
-	)
-}
-
-var isProfiling, isLogging bool
-
-func Scope(name string, skip int) func() {
-	if !isProfiling && !isLogging {
-		return func() {}
-	}
-
-	info := getCallInfo(skip)
-
-	var handle C.ZoneHandle
-
-	if isProfiling {
-		handle = C.Plugify_BeginZone(name, C.ptrdiff_t(info.line), info.file, info.function, Plugin.Name)
-	}
-
-	if isLogging {
-		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(info.line), info.file, info.function, Plugin.Name)
-	}
-
-	return func() {
-		if handle != 0 {
-			C.Plugify_EndZone(handle)
-		}
-	}
-}
-
-//export plugify_Init
-func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
+//export plugify_PluginInit
+func plugify_PluginInit(api []unsafe.Pointer, version int32, handle C.PluginHandle) int32 {
 	if version < kApiVersion {
 		return kApiVersion
 	}
@@ -463,110 +312,138 @@ func plugify_Init(api []unsafe.Pointer, version int32, handle C.PluginHandle) in
 	C.Plugify_SetGetMethodEnum(api[i])
 	i++
 
-	baseDir := C.Plugify_GetBaseDir()
-	BaseDir = GetStringData(&baseDir)
-	C.Plugify_DestroyString(&baseDir)
+	baseStr := C.Plugify_GetBaseDir()
+	baseDir = GetStringData(&baseStr)
+	C.Plugify_DestroyString(&baseStr)
 
-	extensionsDir := C.Plugify_GetExtensionsDir()
-	ExtensionsDir = GetStringData(&extensionsDir)
-	C.Plugify_DestroyString(&extensionsDir)
+	extensionsStr := C.Plugify_GetExtensionsDir()
+	extensionsDir = GetStringData(&extensionsStr)
+	C.Plugify_DestroyString(&extensionsStr)
 
-	configsDir := C.Plugify_GetConfigsDir()
-	ConfigsDir = GetStringData(&configsDir)
-	C.Plugify_DestroyString(&configsDir)
+	configsStr := C.Plugify_GetConfigsDir()
+	configsDir = GetStringData(&configsStr)
+	C.Plugify_DestroyString(&configsStr)
 
-	dataDir := C.Plugify_GetDataDir()
-	DataDir = GetStringData(&dataDir)
-	C.Plugify_DestroyString(&dataDir)
+	dataStr := C.Plugify_GetDataDir()
+	dataDir = GetStringData(&dataStr)
+	C.Plugify_DestroyString(&dataStr)
 
-	logsDir := C.Plugify_GetLogsDir()
-	LogsDir = GetStringData(&logsDir)
-	C.Plugify_DestroyString(&logsDir)
+	logsStr := C.Plugify_GetLogsDir()
+	logsDir = GetStringData(&logsStr)
+	C.Plugify_DestroyString(&logsStr)
 
-	cacheDir := C.Plugify_GetCacheDir()
-	CacheDir = GetStringData(&cacheDir)
-	C.Plugify_DestroyString(&cacheDir)
+	cacheStr := C.Plugify_GetCacheDir()
+	cacheDir = GetStringData(&cacheStr)
+	C.Plugify_DestroyString(&cacheStr)
 
 	C.pluginHandle = handle
 
-	Plugin.Id = int64(C.Plugify_GetPluginId())
+	plugin.id = int64(C.Plugify_GetPluginId())
+
 	name := C.Plugify_GetPluginName()
-	Plugin.Name = GetStringData(&name)
+	plugin.name = GetStringData(&name)
 	C.Plugify_DestroyString(&name)
 
 	description := C.Plugify_GetPluginDescription()
-	Plugin.Description = GetStringData(&description)
+	plugin.description = GetStringData(&description)
 	C.Plugify_DestroyString(&description)
 
 	versions := C.Plugify_GetPluginVersion()
-	Plugin.Version = GetStringData(&versions)
+	plugin.version = GetStringData(&versions)
 	C.Plugify_DestroyString(&versions)
 
 	author := C.Plugify_GetPluginAuthor()
-	Plugin.Author = GetStringData(&author)
+	plugin.author = GetStringData(&author)
 	C.Plugify_DestroyString(&author)
 
 	website := C.Plugify_GetPluginWebsite()
-	Plugin.Website = GetStringData(&website)
+	plugin.website = GetStringData(&website)
 	C.Plugify_DestroyString(&website)
 
 	license := C.Plugify_GetPluginLicense()
-	Plugin.License = GetStringData(&license)
+	plugin.license = GetStringData(&license)
 	C.Plugify_DestroyString(&license)
 
 	location := C.Plugify_GetPluginLocation()
-	Plugin.Location = GetStringData(&location)
+	plugin.location = GetStringData(&location)
 	C.Plugify_DestroyString(&location)
 
 	dependencies := C.Plugify_GetPluginDependencies()
-	Plugin.Dependencies = GetVectorDataString(&dependencies)
+	plugin.dependencies = GetVectorDataString(&dependencies)
 	C.Plugify_DestroyVectorString(&dependencies)
-
-	context = C.PluginContext{
-		hasUpdate: C.bool(Plugin.hasPluginUpdateCallback),
-		hasStart:  C.bool(Plugin.hasPluginStartCallback),
-		hasEnd:    C.bool(Plugin.hasPluginEndCallback),
-		hasPanic:  C.bool(Plugin.hasPluginPanicCallback),
-	}
 
 	isProfiling = bool(C.Plugify_IsProfiling())
 	isLogging = bool(C.Plugify_IsLogging())
+
+	context = C.PluginContext{
+		hasUpdate: C.bool(plugin.hasPluginUpdateCallback),
+		hasStart:  C.bool(plugin.hasPluginStartCallback),
+		hasEnd:    C.bool(plugin.hasPluginEndCallback),
+		hasPanic:  C.bool(plugin.hasPluginPanicCallback),
+	}
 
 	return 0
 }
 
 //export plugify_PluginStart
-func plugify_PluginStart() {
-	Plugin.Loaded = true
-
-	Plugin.fnPluginStartCallback()
+func plugify_PluginStart() C.PluginResult {
+	plugin.loaded = true
+	var err error
+	Block{
+		Try: func() {
+			err = plugin.fnPluginStartCallback()
+		},
+		Catch: func(exc Exception) {
+			err = fmt.Errorf("%v", exc)
+		},
+	}.Do()
+	return result(err)
 }
 
-//export plugify_PluginUpdate
-func plugify_PluginUpdate(dt float32) {
-	Plugin.fnPluginUpdateCallback(dt)
+//export plugify_Update
+func plugify_PluginUpdate(dt float32) C.PluginResult {
+	var err error
+	Block{
+		Try: func() {
+			err = plugin.fnPluginUpdateCallback(dt)
+		},
+		Catch: func(exc Exception) {
+			err = fmt.Errorf("%v", exc)
+		},
+	}.Do()
+	return result(err)
 }
 
 //export plugify_PluginEnd
-func plugify_PluginEnd() {
-	Plugin.fnPluginEndCallback()
+func plugify_PluginEnd() C.PluginResult {
+	var err error
+	Block{
+		Try: func() {
+			err = plugin.fnPluginEndCallback()
+		},
+		Catch: func(exc Exception) {
+			err = fmt.Errorf("%v", exc)
+		},
+		Finally: func() {
+			clear(functionMap)
 
-	clear(functionMap)
+			for _, v := range calls {
+				C.Plugify_DeleteCall(v)
+			}
+			clear(calls)
 
-	for _, v := range calls {
-		C.Plugify_DeleteCall(v)
-	}
-	clear(calls)
+			for _, v := range callbacks {
+				C.Plugify_DeleteCallback(v)
+			}
+			clear(callbacks)
 
-	for _, v := range callbacks {
-		C.Plugify_DeleteCallback(v)
-	}
-	clear(callbacks)
+			runtime.GC()
+			runtime.Gosched()
 
-	runtime.GC()
-	runtime.Gosched()
-
-	Plugin.Loaded = false
+			plugin.loaded = false
+		},
+	}.Do()
+	return result(err)
 }
 
 //export plugify_PluginContext
@@ -576,7 +453,7 @@ func plugify_PluginContext() *C.PluginContext {
 
 func stacktrace(err any) {
 	msg := fmt.Sprintf("%v", err)
-	stack := Plugin.fnPluginPanicCallback()
+	stack := plugin.fnPluginPanicCallback()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
@@ -586,4 +463,26 @@ func stacktrace(err any) {
 func panicker(err any) {
 	stacktrace(err)
 	panic(err)
+}
+
+func caller(skip int) (line int, file string, funk string) {
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		return
+	}
+	return line, filepath.Base(file), runtime.FuncForPC(pc).Name()
+}
+
+func result(err error) C.PluginResult {
+	if err != nil {
+		return C.PluginResult{
+			code:    C.Failed,
+			message: ConstructString(err.Error()),
+		}
+	}
+
+	return C.PluginResult{
+		code:    C.Ok,
+		message: ConstructString(""),
+	}
 }

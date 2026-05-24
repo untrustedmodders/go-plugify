@@ -2,7 +2,6 @@ package plugify
 
 /*
 #include "plugify.h"
-
 */
 import "C"
 import (

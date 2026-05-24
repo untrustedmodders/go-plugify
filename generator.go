@@ -1132,7 +1132,7 @@ import (
 
 var _ = reflect.TypeOf(0)
 var _ = unsafe.Sizeof(0)
-var _ = plugify.Plugin.Loaded
+var _ = plugify.Plugin()
 
 // Exported methods
 `, target)}

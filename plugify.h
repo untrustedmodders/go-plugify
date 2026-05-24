@@ -74,6 +74,16 @@ typedef enum Severity {
     Fatal
 } Severity;
 
+typedef enum PluginCode {
+    Ok,
+    Failed
+} PluginCode;
+
+typedef struct PluginResult {
+	PluginCode code;
+	String message;
+} PluginResult;
+
 typedef struct PluginContext {
 	bool hasUpdate;
 	bool hasStart;
