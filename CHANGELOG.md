@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.1](https://github.com/untrustedmodders/go-plugify/compare/v1.8.0...v1.8.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* **cgo:** type String/Vector pointer fields as uintptr_t to stop GC false-positive "pointer to free object" ([7a40c95](https://github.com/untrustedmodders/go-plugify/commit/7a40c95c020fa5a1d1bfc3bd030a0459abcfa70d))
+* remove panic ([ad7cc88](https://github.com/untrustedmodders/go-plugify/commit/ad7cc8884908195a1446c6810e5f1c530bc0010a))
+
 ## [1.8.0](https://github.com/untrustedmodders/go-plugify/compare/v1.7.0...v1.8.0) (2026-05-24)
 
 
