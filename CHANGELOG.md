@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.3](https://github.com/untrustedmodders/go-plugify/compare/v1.8.2...v1.8.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* export typo ([70b5927](https://github.com/untrustedmodders/go-plugify/commit/70b5927476596d9a6447b0eef2d7f80aed627e99))
+
 ## [1.8.2](https://github.com/untrustedmodders/go-plugify/compare/v1.8.1...v1.8.2) (2026-05-24)
 
 
