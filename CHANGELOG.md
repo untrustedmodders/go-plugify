@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.5](https://github.com/untrustedmodders/go-plugify/compare/v1.8.4...v1.8.5) (2026-05-28)
+
+
+### Bug Fixes
+
+* add location getter ([1d1ce7f](https://github.com/untrustedmodders/go-plugify/commit/1d1ce7f0305e4154afab92b94b4da6ebce988394))
+
 ## [1.8.4](https://github.com/untrustedmodders/go-plugify/compare/v1.8.3...v1.8.4) (2026-05-24)
 
 
