@@ -8,6 +8,7 @@ type PluginInfo interface {
 	Author() string
 	Website() string
 	License() string
+	Location() string
 	Dependencies() []string
 
 	Loaded() bool
@@ -85,6 +86,10 @@ func (p *pluginInfo) Website() string {
 
 func (p *pluginInfo) License() string {
 	return p.license
+}
+
+func (p *pluginInfo) Location() string {
+	return p.location
 }
 
 func (p *pluginInfo) Dependencies() []string {
