@@ -571,7 +571,7 @@ func GetVectorDataChar16(v *PlgVector) []uint16 {
 	arr := make([]uint16, size)
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_wchar_t)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 	return arr
 }
@@ -770,7 +770,7 @@ func GetVectorDataChar16T[T ~uint16](v *PlgVector) []T {
 	arr := make([]T, size)
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_wchar_t)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 	return arr
 }
@@ -884,7 +884,7 @@ func GetVectorDataChar16To[T ~uint16](v *PlgVector, arr *[]T) {
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(&(*arr)[0]), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_wchar_t)
+		C.memcpy(unsafe.Pointer(&(*arr)[0]), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 }
 
