@@ -1,5 +1,86 @@
 # Changelog
 
+## [1.8.5](https://github.com/untrustedmodders/go-plugify/compare/v1.8.4...v1.8.5) (2026-05-28)
+
+
+### Bug Fixes
+
+* add location getter ([1d1ce7f](https://github.com/untrustedmodders/go-plugify/commit/1d1ce7f0305e4154afab92b94b4da6ebce988394))
+
+## [1.8.4](https://github.com/untrustedmodders/go-plugify/compare/v1.8.3...v1.8.4) (2026-05-24)
+
+
+### Bug Fixes
+
+* remove unused param ([a6092cd](https://github.com/untrustedmodders/go-plugify/commit/a6092cda1fd9c68d0f1f15e86bde105bfe5ae517))
+
+## [1.8.3](https://github.com/untrustedmodders/go-plugify/compare/v1.8.2...v1.8.3) (2026-05-24)
+
+
+### Bug Fixes
+
+* export typo ([70b5927](https://github.com/untrustedmodders/go-plugify/commit/70b5927476596d9a6447b0eef2d7f80aed627e99))
+
+## [1.8.2](https://github.com/untrustedmodders/go-plugify/compare/v1.8.1...v1.8.2) (2026-05-24)
+
+
+### Bug Fixes
+
+* remove panic from context ([d4a0214](https://github.com/untrustedmodders/go-plugify/commit/d4a0214185ff6bf33edb23f187ee5066ae5c185c))
+
+## [1.8.1](https://github.com/untrustedmodders/go-plugify/compare/v1.8.0...v1.8.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* **cgo:** type String/Vector pointer fields as uintptr_t to stop GC false-positive "pointer to free object" ([7a40c95](https://github.com/untrustedmodders/go-plugify/commit/7a40c95c020fa5a1d1bfc3bd030a0459abcfa70d))
+* remove panic ([ad7cc88](https://github.com/untrustedmodders/go-plugify/commit/ad7cc8884908195a1446c6810e5f1c530bc0010a))
+
+## [1.8.0](https://github.com/untrustedmodders/go-plugify/compare/v1.7.0...v1.8.0) (2026-05-24)
+
+
+### Features
+
+* add error handling, add plugin interface ([91bc0b0](https://github.com/untrustedmodders/go-plugify/commit/91bc0b096d492596f7885bc515fbd9b7486447fb))
+
+
+### Bug Fixes
+
+* add profiler ([1607c76](https://github.com/untrustedmodders/go-plugify/commit/1607c7628217b8ca959e35a4ae3c2228a190dc17))
+
+## [1.7.0](https://github.com/untrustedmodders/go-plugify/compare/v1.6.2...v1.7.0) (2026-04-03)
+
+
+### Features
+
+* changed ToString method to String for Vector2/3/4/Matrix4x4 to honor fmt.Stinger interface. ([05b8696](https://github.com/untrustedmodders/go-plugify/commit/05b869646cddc45c7c83a80060586dd64c98c1d6))
+
+
+### Bug Fixes
+
+* prevent calling log if severity is low ([b53c163](https://github.com/untrustedmodders/go-plugify/commit/b53c163c74e38aa08c9c6848465fad6c6ff1dd5b))
+
+## [1.6.2](https://github.com/untrustedmodders/go-plugify/compare/v1.6.1...v1.6.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* rework logger ([1de3940](https://github.com/untrustedmodders/go-plugify/commit/1de394099f99b603d8b2eb1776f2b3d1e0800096))
+
+## [1.6.1](https://github.com/untrustedmodders/go-plugify/compare/v1.6.0...v1.6.1) (2026-03-10)
+
+
+### Bug Fixes
+
+* rename verbose to trace ([0243ab1](https://github.com/untrustedmodders/go-plugify/commit/0243ab1a04f53843432ae8566354df82376bccbe))
+
+## [1.6.0](https://github.com/untrustedmodders/go-plugify/compare/v1.5.0...v1.6.0) (2026-03-10)
+
+
+### Features
+
+* add logger ([a8d97e3](https://github.com/untrustedmodders/go-plugify/commit/a8d97e300d0ce0cfcedb78b6c83dd3d5c38926bb))
+
 ## [1.5.0](https://github.com/untrustedmodders/go-plugify/compare/v1.4.9...v1.5.0) (2026-01-07)
 
 

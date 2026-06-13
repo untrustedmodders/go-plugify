@@ -1226,8 +1226,8 @@ func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 				}
 			}
 		},
-		Catch: func(e Exception) {
-			PrintStacktrace(e)
+		Catch: func(exc Exception) {
+			stacktrace(exc)
 		},
 	}.Do()
 }
@@ -1295,7 +1295,7 @@ func normalizePkgName(t reflect.Type) (string, error) {
 		return "", fmt.Errorf("no package path for type %v", t)
 	}
 	if path == "main" {
-		return Plugin.Name, nil
+		return plugin.Name(), nil
 	}
 
 	parts := splitModulePath(path)

@@ -34,8 +34,8 @@ typedef uint64_t uint_t;
 #endif
 
 typedef struct GoString_ { const char* p; ptrdiff_t n; } GoString_;
-typedef struct String { char* data; size_t size; size_t cap; } String;
-typedef struct Vector { void* begin; void* end; void* capacity; } Vector;
+typedef struct String { uintptr_t data; size_t size; size_t cap; } String;
+typedef struct Vector { uintptr_t begin; uintptr_t end; uintptr_t capacity; } Vector;
 typedef struct Vector2 { float x, y; } Vector2;
 typedef struct Vector3 { float x, y, z; } Vector3;
 typedef struct Vector4 { float x, y, z, w; } Vector4;
@@ -81,15 +81,36 @@ typedef struct Return {
 	uint64_t ret[2];
 } Return;
 
+typedef enum Severity {
+    Unknown,
+    Trace,
+    Debug,
+    Info,
+    Warning,
+    Error,
+    Fatal
+} Severity;
+
+typedef enum PluginCode {
+    Ok,
+    Failed
+} PluginCode;
+
+typedef struct PluginResult {
+	PluginCode code;
+	String message;
+} PluginResult;
+
 typedef struct PluginContext {
 	bool hasUpdate;
 	bool hasStart;
 	bool hasEnd;
-	bool hasPanic;
 } PluginContext;
 
 typedef void* PluginHandle;
 extern PluginHandle pluginHandle;
+
+typedef uint64_t ZoneHandle;
 
 // Extern declarations for Plugify_ functions
 extern String Plugify_GetBaseDir();
@@ -98,8 +119,12 @@ extern String Plugify_GetConfigsDir();
 extern String Plugify_GetDataDir();
 extern String Plugify_GetLogsDir();
 extern String Plugify_GetCacheDir();
-extern bool Plugify_IsExtensionLoaded(_GoString_ name, _GoString_ constraint);
-extern void Plugify_PrintException(_GoString_ message);
+extern bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint);
+extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module);
+extern bool Plugify_IsLogging();
+extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ function);
+extern void Plugify_EndZone(ZoneHandle handle);
+extern bool Plugify_IsProfiling();
 
 extern ptrdiff_t Plugify_GetPluginId();
 extern String Plugify_GetPluginName();
@@ -254,8 +279,12 @@ extern void Plugify_SetGetConfigsDir(void* ptr);
 extern void Plugify_SetGetDataDir(void* ptr);
 extern void Plugify_SetGetLogsDir(void* ptr);
 extern void Plugify_SetGetCacheDir(void* ptr);
-extern void Plugify_SetIsExtensionLoaded(void* ptr);
-extern void Plugify_SetPrintException(void* ptr);
+extern void Plugify_SetIsLoaded(void* ptr);
+extern void Plugify_SetLog(void* ptr);
+extern void Plugify_SetIsLogging(void* ptr);
+extern void Plugify_SetBeginZone(void* ptr);
+extern void Plugify_SetEndZone(void* ptr);
+extern void Plugify_SetIsProfiling(void* ptr);
 extern void Plugify_SetGetPluginId(void* ptr);
 extern void Plugify_SetGetPluginName(void* ptr);
 extern void Plugify_SetGetPluginDescription(void* ptr);

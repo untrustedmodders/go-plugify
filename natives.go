@@ -2,7 +2,6 @@ package plugify
 
 /*
 #include "plugify.h"
-
 */
 import "C"
 import (
@@ -643,7 +642,7 @@ func GetVectorSizeMatrix4x4(v *PlgVector) C.ptrdiff_t {
 	return C.Plugify_GetVectorSizeMatrix4x4(v)
 }
 
-func VGetVectorDataBool(v *PlgVector, s reflect.Value) {
+func getVectorDataBoolToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeBool(v))
 	sliceSize(s, size)
 
@@ -653,7 +652,7 @@ func VGetVectorDataBool(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataChar8(v *PlgVector, s reflect.Value) {
+func getVectorDataChar8ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeChar8(v))
 	sliceSize(s, size)
 
@@ -663,17 +662,17 @@ func VGetVectorDataChar8(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataChar16(v *PlgVector, s reflect.Value) {
+func getVectorDataChar16ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeChar16(v))
 	sliceSize(s, size)
 
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 }
 
-func VGetVectorDataInt8(v *PlgVector, s reflect.Value) {
+func getVectorDataInt8ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeInt8(v))
 	sliceSize(s, size)
 
@@ -683,7 +682,7 @@ func VGetVectorDataInt8(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataInt16(v *PlgVector, s reflect.Value) {
+func getVectorDataInt16ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeInt16(v))
 	sliceSize(s, size)
 
@@ -693,7 +692,7 @@ func VGetVectorDataInt16(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataInt32(v *PlgVector, s reflect.Value) {
+func getVectorDataInt32ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeInt32(v))
 	sliceSize(s, size)
 
@@ -947,7 +946,7 @@ func getVectorDataMatrix4x4Return(v *PlgVector, out reflect.Type) reflect.Value 
 	return slice
 }
 
-func VGetVectorDataInt64(v *PlgVector, s reflect.Value) {
+func getVectorDataInt64ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeInt64(v))
 	sliceSize(s, size)
 
@@ -1200,31 +1199,7 @@ func getVectorDataMatrix4x4Reflect(v *PlgVector, t reflect.Type) reflect.Value {
 	return slice
 }
 
-/* func TGetVectorDataInt(v *PlgVector, t reflect.Type) reflect.Value {
-	if is32bit {
-		size := int(C.Plugify_GetVectorSizeInt32(v))
-		slice := reflect.MakeSlice(t, size, size)
-
-		if size > 0 {
-			dataPtr := C.Plugify_GetVectorDataInt32(v)
-			C.memcpy(slice.UnsafePointer(), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int32_t)
-		}
-
-		return slice
-	} else {
-		size := int(C.Plugify_GetVectorSizeInt64(v))
-		slice := reflect.MakeSlice(t, size, size)
-
-		if size > 0 {
-			dataPtr := C.Plugify_GetVectorDataInt64(v)
-			C.memcpy(slice.UnsafePointer(), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int64_t)
-		}
-
-		return slice
-	}
-} */
-
-func VGetVectorDataUInt8(v *PlgVector, s reflect.Value) {
+func getVectorDataUInt8ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeUInt8(v))
 	sliceSize(s, size)
 
@@ -1234,7 +1209,7 @@ func VGetVectorDataUInt8(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataUInt16(v *PlgVector, s reflect.Value) {
+func getVectorDataUInt16ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeUInt16(v))
 	sliceSize(s, size)
 
@@ -1244,7 +1219,7 @@ func VGetVectorDataUInt16(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataUInt32(v *PlgVector, s reflect.Value) {
+func getVectorDataUInt32ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeUInt32(v))
 	sliceSize(s, size)
 
@@ -1254,7 +1229,7 @@ func VGetVectorDataUInt32(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataUInt64(v *PlgVector, s reflect.Value) {
+func getVectorDataUInt64ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeUInt64(v))
 	sliceSize(s, size)
 
@@ -1264,31 +1239,7 @@ func VGetVectorDataUInt64(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func TGetVectorDataUInt(v *PlgVector, t reflect.Type) reflect.Value {
-	if is32bit {
-		size := int(C.Plugify_GetVectorSizeUInt32(v))
-		slice := reflect.MakeSlice(t, size, size)
-
-		if size > 0 {
-			dataPtr := C.Plugify_GetVectorDataUInt32(v)
-			C.memcpy(slice.UnsafePointer(), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint32_t)
-		}
-
-		return slice
-	} else {
-		size := int(C.Plugify_GetVectorSizeUInt64(v))
-		slice := reflect.MakeSlice(t, size, size)
-
-		if size > 0 {
-			dataPtr := C.Plugify_GetVectorDataUInt64(v)
-			C.memcpy(slice.UnsafePointer(), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint64_t)
-		}
-
-		return slice
-	}
-}
-
-func VGetVectorDataPointer(v *PlgVector, s reflect.Value) {
+func getVectorDataPointerToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizePointer(v))
 	sliceSize(s, size)
 
@@ -1298,7 +1249,7 @@ func VGetVectorDataPointer(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataFloat(v *PlgVector, s reflect.Value) {
+func getVectorDataFloatToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeFloat(v))
 	sliceSize(s, size)
 
@@ -1308,7 +1259,7 @@ func VGetVectorDataFloat(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataDouble(v *PlgVector, s reflect.Value) {
+func getVectorDataDoubleToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeDouble(v))
 	sliceSize(s, size)
 
@@ -1318,7 +1269,7 @@ func VGetVectorDataDouble(v *PlgVector, s reflect.Value) {
 	}
 }
 
-func VGetVectorDataString(v *PlgVector, s reflect.Value) {
+func getVectorDataStringToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeString(v))
 	sliceSize(s, size)
 
@@ -1361,7 +1312,7 @@ func GetVectorDataVariant[V any, T ~[]V](v *PlgVector) T {
 	return arr
 }
 
-func VGetVectorDataVariant(v *PlgVector, s reflect.Value) {
+func getVectorDataVariantToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeVariant(v))
 	sliceSize(s, size)
 
@@ -1385,7 +1336,7 @@ func GetVectorDataVector2[T ~struct{ X, Y float32 }](v *PlgVector) []T {
 	return arr
 }
 
-func VGetVectorDataVector2(v *PlgVector, s reflect.Value) {
+func getVectorDataVector2ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeVector2(v))
 	sliceSize(s, size)
 
@@ -1405,7 +1356,7 @@ func GetVectorDataVector3[T ~struct{ X, Y, Z float32 }](v *PlgVector) []T {
 	return arr
 }
 
-func VGetVectorDataVector3(v *PlgVector, s reflect.Value) {
+func getVectorDataVector3ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeVector3(v))
 	sliceSize(s, size)
 
@@ -1425,7 +1376,7 @@ func GetVectorDataVector4[T ~struct{ X, Y, Z, W float32 }](v *PlgVector) []T {
 	return arr
 }
 
-func VGetVectorDataVector4(v *PlgVector, s reflect.Value) {
+func getVectorDataVector4ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeVector4(v))
 	sliceSize(s, size)
 
@@ -1445,7 +1396,7 @@ func GetVectorDataMatrix4x4[T ~struct{ M [4][4]float32 }](v *PlgVector) []T {
 	return arr
 }
 
-func VGetVectorDataMatrix4x4(v *PlgVector, s reflect.Value) {
+func getVectorDataMatrix4x4ToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
 	sliceSize(s, size)
 
@@ -1480,7 +1431,7 @@ func GetVectorDataChar16[T ~uint16](v *PlgVector) []T {
 	arr := make([]T, size)
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_wchar_t)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 	return arr
 }
@@ -1681,7 +1632,7 @@ func GetVectorDataChar16To[V ~uint16, T ~[]V](v *PlgVector, arr *T) {
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
-		C.memcpy(unsafe.Pointer(&(*arr)[0]), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_wchar_t)
+		C.memcpy(unsafe.Pointer(&(*arr)[0]), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_char16_t)
 	}
 }
 
