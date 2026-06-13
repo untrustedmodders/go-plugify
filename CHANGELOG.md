@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.9.0](https://github.com/untrustedmodders/go-plugify/compare/v1.8.5...v1.9.0) (2026-06-13)
+
+
+### Features
+
+* implemented type system & reworked generator ([a0d056c](https://github.com/untrustedmodders/go-plugify/commit/a0d056cb4c353321e2e6a03af9fee8fcd4657b30))
+
+
+### Bug Fixes
+
+* add casts for 32bit mode ([9d08351](https://github.com/untrustedmodders/go-plugify/commit/9d0835103446d2ac5d22aca1d14c91c8dbb1099f))
+* call start and update every time ([e1f0897](https://github.com/untrustedmodders/go-plugify/commit/e1f08972d688b267f10146cf44327e63e7827ea5))
+* fixed invalid function type ([02aea01](https://github.com/untrustedmodders/go-plugify/commit/02aea01e58b66be897e7fe8acb05b6b39fddba69))
+* removed unused code & made some methods private ([9c7a59a](https://github.com/untrustedmodders/go-plugify/commit/9c7a59a5bb26cde68ca438db288ac786190f0fc5))
+* renamed some functions ([c0bd8c5](https://github.com/untrustedmodders/go-plugify/commit/c0bd8c57372923d29bb947257f8462033db348e4))
+* size for char16 memcpy ([40cdf41](https://github.com/untrustedmodders/go-plugify/commit/40cdf417508e599f3349c96144b4460d84ad179f))
+
 ## [1.8.5](https://github.com/untrustedmodders/go-plugify/compare/v1.8.4...v1.8.5) (2026-05-28)
 
 
