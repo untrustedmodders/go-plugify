@@ -30,12 +30,9 @@ type pluginInfo struct {
 	location     string
 	dependencies []string
 
-	fnPluginStartCallback   PluginStartCallback
-	fnPluginUpdateCallback  PluginUpdateCallback
-	fnPluginEndCallback     PluginEndCallback
-	hasPluginStartCallback  bool
-	hasPluginUpdateCallback bool
-	hasPluginEndCallback    bool
+	fnPluginStartCallback  PluginStartCallback
+	fnPluginUpdateCallback PluginUpdateCallback
+	fnPluginEndCallback    PluginEndCallback
 
 	loaded bool
 }
@@ -50,12 +47,9 @@ var plugin = pluginInfo{
 	license:      "",
 	dependencies: []string{},
 
-	fnPluginStartCallback:   func() error { return nil },
-	fnPluginUpdateCallback:  func(dt float32) error { return nil },
-	fnPluginEndCallback:     func() error { return nil },
-	hasPluginStartCallback:  false,
-	hasPluginUpdateCallback: false,
-	hasPluginEndCallback:    false,
+	fnPluginStartCallback:  nil,
+	fnPluginUpdateCallback: nil,
+	fnPluginEndCallback:    nil,
 
 	loaded: false,
 }
@@ -106,15 +100,12 @@ func Plugin() PluginInfo {
 
 func OnPluginStart(fn PluginStartCallback) {
 	plugin.fnPluginStartCallback = fn
-	plugin.hasPluginStartCallback = true
 }
 
 func OnPluginUpdate(fn PluginUpdateCallback) {
 	plugin.fnPluginUpdateCallback = fn
-	plugin.hasPluginUpdateCallback = true
 }
 
 func OnPluginEnd(fn PluginEndCallback) {
 	plugin.fnPluginEndCallback = fn
-	plugin.hasPluginEndCallback = true
 }

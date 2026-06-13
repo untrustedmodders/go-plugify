@@ -377,9 +377,9 @@ func plugify_PluginInit(api []unsafe.Pointer, version int32, handle C.PluginHand
 	isLogging = bool(C.Plugify_IsLogging())
 
 	context = C.PluginContext{
-		hasUpdate: C.bool(plugin.hasPluginUpdateCallback),
-		hasStart:  C.bool(plugin.hasPluginStartCallback),
-		hasEnd:    C.bool(plugin.hasPluginEndCallback),
+		hasUpdate: C.bool(plugin.fnPluginUpdateCallback != nil),
+		hasStart:  C.bool(true), // always call start
+		hasEnd:    C.bool(true), // always call end
 	}
 
 	return 0
@@ -391,7 +391,9 @@ func plugify_PluginStart() C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			err = plugin.fnPluginStartCallback()
+			if plugin.fnPluginStartCallback != nil {
+				err = plugin.fnPluginStartCallback()
+			}
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
@@ -405,7 +407,9 @@ func plugify_PluginUpdate(dt float32) C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			err = plugin.fnPluginUpdateCallback(dt)
+			if plugin.fnPluginUpdateCallback != nil {
+				err = plugin.fnPluginUpdateCallback(dt)
+			}
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
@@ -419,7 +423,9 @@ func plugify_PluginEnd() C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			err = plugin.fnPluginEndCallback()
+			if plugin.fnPluginEndCallback != nil {
+				err = plugin.fnPluginEndCallback()
+			}
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
