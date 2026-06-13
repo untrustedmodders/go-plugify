@@ -433,7 +433,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 				case Int32:
 					ptrUnsafe = raw(int32(arg.Int()))
 				case Int64:
-					ptrUnsafe = raw(arg.Int())
+					ptrUnsafe = raw(int64(arg.Int()))
 				case UInt8:
 					ptrUnsafe = raw(uint8(arg.Uint()))
 				case Char16, UInt16:
@@ -441,7 +441,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 				case UInt32:
 					ptrUnsafe = raw(uint32(arg.Uint()))
 				case UInt64:
-					ptrUnsafe = raw(arg.Uint())
+					ptrUnsafe = raw(uint64(arg.Uint()))
 				case Pointer:
 					ptrUnsafe = raw(uintptr(arg.Uint()))
 				case Float:
@@ -536,7 +536,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", valueType))
 				}
 			}
-			params[index] = (uint64)((uintptr(ptrUnsafe)))
+			params[index] = (uint64)(uintptr(ptrUnsafe))
 			index++
 		}
 
