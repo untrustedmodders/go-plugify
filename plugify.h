@@ -16,6 +16,23 @@ typedef struct uint128_t {
 extern "C" {
 #endif
 
+#if INTPTR_MAX == INT32_MAX
+static const int8_t Int = 7;
+static const int8_t UInt = 11;
+static const int8_t ArrayInt = 24;
+static const int8_t ArrayUInt = 28;
+#else
+static const int8_t Int = 8;
+static const int8_t UInt = 12;
+static const int8_t ArrayInt = 25;
+static const int8_t ArrayUInt = 29;
+
+
+typedef int64_t int_t;
+typedef uint64_t uint_t;
+
+#endif
+
 typedef struct GoString_ { const char* p; ptrdiff_t n; } GoString_;
 typedef struct String { char* data; size_t size; size_t cap; } String;
 typedef struct Vector { void* begin; void* end; void* capacity; } Vector;

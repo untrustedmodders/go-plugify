@@ -1,4 +1,4 @@
-package plugify
+package manifest
 
 // Manifest represents the structure of the .pplugin file
 type Manifest struct {

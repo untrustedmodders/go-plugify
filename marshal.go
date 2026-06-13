@@ -18,9 +18,17 @@ var (
 	calls     []C.JitCall
 )
 
+type funcArg struct {
+	isRef bool
+	t     reflect.Type
+}
+
 type function struct {
 	fn   any
 	addr unsafe.Pointer
+
+	args []funcArg
+	ret  funcArg
 }
 
 var (
@@ -28,14 +36,20 @@ var (
 	functionMap = make(map[unsafe.Pointer]function)
 )
 
-func raw[T any](val T) uint64 {
-	return *(*uint64)(unsafe.Pointer(&val))
+func raw[T any](val T) unsafe.Pointer {
+	return unsafe.Pointer(uintptr(*(*uintptr)(unsafe.Pointer(&val))))
 }
 
-func pin[T any](val T, pool *arena, size int) uint64 {
+func pinT[T any](val T, pool *arena, size int) unsafe.Pointer {
 	tmp := (*T)(pool.Alloc(size))
 	*tmp = val
-	return uint64(uintptr(unsafe.Pointer(tmp)))
+	return unsafe.Pointer(tmp)
+}
+
+func pin(val unsafe.Pointer, pool *arena, size int) unsafe.Pointer {
+	tmp := pool.Alloc(size)
+	C.memcpy(tmp, val, C.size_t(size))
+	return tmp
 }
 
 func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) any {
@@ -85,6 +99,7 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 	}
 
 	wrapper := reflect.MakeFunc(fnType, func(args []reflect.Value) []reflect.Value {
+
 		var pool arena
 
 		params := unsafe.Slice((*uint64)(pool.Alloc(paramSize)), paramCount)
@@ -96,58 +111,58 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 		retType := returnType.valueType
 		if hasRet {
 			size := sizeOfValueType(retType)
-			ptr := uint64(uintptr(pool.Alloc(size)))
+			ptr := pool.Alloc(size)
 			switch retType {
 			case Vector2Type, Vector3Type, Vector4Type, Matrix4x4Type:
 				break
 			case String:
-				defer DestroyString((*PlgString)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyString((*PlgString)(ptr))
 			case Any:
-				defer DestroyVariant((*PlgVariant)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVariant((*PlgVariant)(ptr))
 			case ArrayBool:
-				defer DestroyVectorBool((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorBool((*PlgVector)(ptr))
 			case ArrayChar8:
-				defer DestroyVectorChar8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorChar8((*PlgVector)(ptr))
 			case ArrayChar16:
-				defer DestroyVectorChar16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorChar16((*PlgVector)(ptr))
 			case ArrayInt8:
-				defer DestroyVectorInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorInt8((*PlgVector)(ptr))
 			case ArrayInt16:
-				defer DestroyVectorInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorInt16((*PlgVector)(ptr))
 			case ArrayInt32:
-				defer DestroyVectorInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorInt32((*PlgVector)(ptr))
 			case ArrayInt64:
-				defer DestroyVectorInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorInt64((*PlgVector)(ptr))
 			case ArrayUInt8:
-				defer DestroyVectorUInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorUInt8((*PlgVector)(ptr))
 			case ArrayUInt16:
-				defer DestroyVectorUInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorUInt16((*PlgVector)(ptr))
 			case ArrayUInt32:
-				defer DestroyVectorUInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorUInt32((*PlgVector)(ptr))
 			case ArrayUInt64:
-				defer DestroyVectorUInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorUInt64((*PlgVector)(ptr))
 			case ArrayPointer:
-				defer DestroyVectorPointer((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorPointer((*PlgVector)(ptr))
 			case ArrayFloat:
-				defer DestroyVectorFloat((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorFloat((*PlgVector)(ptr))
 			case ArrayDouble:
-				defer DestroyVectorDouble((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorDouble((*PlgVector)(ptr))
 			case ArrayString:
-				defer DestroyVectorString((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorString((*PlgVector)(ptr))
 			case ArrayAny:
-				defer DestroyVectorVariant((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorVariant((*PlgVector)(ptr))
 			case ArrayVector2:
-				defer DestroyVectorVector2((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorVector2((*PlgVector)(ptr))
 			case ArrayVector3:
-				defer DestroyVectorVector3((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorVector3((*PlgVector)(ptr))
 			case ArrayVector4:
-				defer DestroyVectorVector4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorVector4((*PlgVector)(ptr))
 			case ArrayMatrix4x4:
-				defer DestroyVectorMatrix4x4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+				defer DestroyVectorMatrix4x4((*PlgVector)(ptr))
 			default:
-				panicker(fmt.Sprintf("GetDelegateForFunctionPointer return type not supported %v", retType))
+				panicker(fmt.Sprintf("GetDelegateForFunctionPointer defered return type not supported %v", retType))
 			}
-			params[index] = ptr
+			params[index] = uint64(uintptr(ptr))
 			index++
 		}
 
@@ -155,271 +170,254 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 			paramType := parameterTypes[i]
 			valueType := paramType.valueType
 			size := sizeOfValueType(valueType)
-			var ptr uint64
+			var ptrUnsafe unsafe.Pointer
 			if paramType.ref {
 				switch valueType {
 				case Bool:
-					val := arg.Interface().(*bool)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*bool)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetBool(*(*bool)(ptrUnsafe))
 					}()
 				case Char8:
-					val := arg.Interface().(*int8)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*int8)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetInt(int64(*(*int8)(ptrUnsafe)))
 					}()
 				case Char16:
-					val := arg.Interface().(*uint16)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uint16)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(uint64(*(*uint16)(ptrUnsafe)))
 					}()
 				case Int8:
-					val := arg.Interface().(*int8)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*int8)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetInt(int64(*(*int8)(ptrUnsafe)))
 					}()
 				case Int16:
-					val := arg.Interface().(*int16)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*int16)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetInt(int64(*(*int16)(ptrUnsafe)))
 					}()
 				case Int32:
-					val := arg.Interface().(*int32)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*int32)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetInt(int64(*(*int32)(ptrUnsafe)))
 					}()
 				case Int64:
-					val := arg.Interface().(*int64)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*int64)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetInt(*(*int64)(ptrUnsafe))
 					}()
 				case UInt8:
-					val := arg.Interface().(*uint8)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uint8)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(uint64(*(*uint8)(ptrUnsafe)))
 					}()
 				case UInt16:
-					val := arg.Interface().(*uint16)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uint16)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(uint64(*(*uint16)(ptrUnsafe)))
 					}()
 				case UInt32:
-					val := arg.Interface().(*uint32)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uint32)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(uint64(*(*uint32)(ptrUnsafe)))
 					}()
 				case UInt64:
-					val := arg.Interface().(*uint64)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uint64)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(*(*uint64)(ptrUnsafe))
 					}()
 				case Pointer:
-					val := arg.Interface().(*uintptr)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*uintptr)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetUint(uint64(*(*uintptr)(ptrUnsafe)))
 					}()
 				case Float:
-					val := arg.Interface().(*float32)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*float32)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetFloat(float64(*(*float32)(ptrUnsafe)))
 					}()
 				case Double:
-					val := arg.Interface().(*float64)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*float64)(unsafe.Pointer(uintptr(ptr)))
+						arg.Elem().SetFloat(*(*float64)(ptrUnsafe))
 					}()
 				case Vector2Type:
-					ptr = pin(*(arg.Interface().(*Vector2)), &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*(arg.Interface().(*Vector2)) = *(*Vector2)(unsafe.Pointer(uintptr(ptr)))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
 					}()
 				case Vector3Type:
-					val := arg.Interface().(*Vector3)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*Vector3)(unsafe.Pointer(uintptr(ptr)))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
 					}()
 				case Vector4Type:
-					val := arg.Interface().(*Vector4)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*Vector4)(unsafe.Pointer(uintptr(ptr)))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
 					}()
 				case Matrix4x4Type:
-					val := arg.Interface().(*Matrix4x4)
-					ptr = pin(*val, &pool, size)
+					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						*val = *(*Matrix4x4)(unsafe.Pointer(uintptr(ptr)))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
 					}()
 				case Function:
-					ptr = uint64(uintptr(GetFunctionPointerForDelegate(arg)))
+					ptrUnsafe = GetFunctionPointerForDelegate(arg)
 				case String:
-					val := arg.Interface().(*string)
-					ptr = pin(ConstructString(*val), &pool, size)
+					elem := arg.Elem()
+					ptrUnsafe = pinT(ConstructString(elem.String()), &pool, size)
 					defer func() {
-						*val = GetStringData((*PlgString)(unsafe.Pointer(uintptr(ptr))))
-						DestroyString((*PlgString)(unsafe.Pointer(uintptr(ptr))))
+						elem.SetString(GetStringData[string]((*PlgString)(ptrUnsafe)))
+						DestroyString((*PlgString)(ptrUnsafe))
 					}()
 				case Any:
 					val := arg.Interface().(*any)
-					ptr = pin(ConstructVariant(*val), &pool, size)
+					ptrUnsafe = pinT(ConstructVariant(*val), &pool, size)
 					defer func() {
-						*val = GetVariantData((*PlgVariant)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVariant((*PlgVariant)(unsafe.Pointer(uintptr(ptr))))
+						*val = GetVariantData((*PlgVariant)(ptrUnsafe))
+						DestroyVariant((*PlgVariant)(ptrUnsafe))
 					}()
 				case ArrayBool:
-					val := arg.Interface().(*[]bool)
-					ptr = pin(ConstructVectorBool(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorBool(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataBool((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorBool((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataBool((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorBool((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayChar8:
-					val := arg.Interface().(*[]int8)
-					ptr = pin(ConstructVectorChar8(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorChar8(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataChar8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorChar8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataChar8((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorChar8((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayChar16:
-					val := arg.Interface().(*[]uint16)
-					ptr = pin(ConstructVectorChar16(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorChar16(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataChar16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorChar16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataChar16((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorChar16((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayInt8:
-					val := arg.Interface().(*[]int8)
-					ptr = pin(ConstructVectorInt8(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorInt8(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataInt8((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorInt8((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayInt16:
-					val := arg.Interface().(*[]int16)
-					ptr = pin(ConstructVectorInt16(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorInt16(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataInt16((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorInt16((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayInt32:
-					val := arg.Interface().(*[]int32)
-					ptr = pin(ConstructVectorInt32(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorInt32(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataInt32((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorInt32((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayInt64:
-					val := arg.Interface().(*[]int64)
-					ptr = pin(ConstructVectorInt64(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorInt64(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataInt64((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorInt32((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayUInt8:
-					val := arg.Interface().(*[]uint8)
-					ptr = pin(ConstructVectorUInt8(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorUInt8(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataUInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorUInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataUInt8((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorUInt8((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayUInt16:
-					val := arg.Interface().(*[]uint16)
-					ptr = pin(ConstructVectorUInt16(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorUInt16(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataUInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorUInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataUInt16((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorUInt16((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayUInt32:
-					val := arg.Interface().(*[]uint32)
-					ptr = pin(ConstructVectorUInt32(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorUInt32(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataUInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorUInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataUInt32((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorUInt32((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayUInt64:
-					val := arg.Interface().(*[]uint64)
-					ptr = pin(ConstructVectorUInt64(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorUInt64(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataUInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorUInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataUInt64((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorUInt64((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayPointer:
-					val := arg.Interface().(*[]uintptr)
-					ptr = pin(ConstructVectorPointer(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorPointer(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataPointer((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorPointer((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataPointer((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorPointer((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayFloat:
-					val := arg.Interface().(*[]float32)
-					ptr = pin(ConstructVectorFloat(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorFloat(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataFloat((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorFloat((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataFloat((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorFloat((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayDouble:
-					val := arg.Interface().(*[]float64)
-					ptr = pin(ConstructVectorDouble(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorDouble(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataDouble((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorDouble((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataDouble((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorDouble((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayString:
-					val := arg.Interface().(*[]string)
-					ptr = pin(ConstructVectorString(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorString(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataString((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorString((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataString((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorString((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayAny:
-					val := arg.Interface().(*[]any)
-					ptr = pin(ConstructVectorVariant(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorVariant(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataVariant((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorVariant((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataVariant((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorVariant((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayVector2:
-					val := arg.Interface().(*[]Vector2)
-					ptr = pin(ConstructVectorVector2(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorVector2(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataVector2((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorVector2((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataVector2((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorVector2((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayVector3:
-					val := arg.Interface().(*[]Vector3)
-					ptr = pin(ConstructVectorVector3(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorVector3(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataVector3((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorVector3((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataVector3((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorVector3((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayVector4:
-					val := arg.Interface().(*[]Vector4)
-					ptr = pin(ConstructVectorVector4(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorVector4(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataVector4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorVector4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataVector4((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorVector4((*PlgVector)(ptrUnsafe))
 					}()
 				case ArrayMatrix4x4:
-					val := arg.Interface().(*[]Matrix4x4)
-					ptr = pin(ConstructVectorMatrix4x4(*val), &pool, size)
+					slice := arg.Elem()
+					ptrUnsafe = pinT(VConstructVectorMatrix4x4(slice), &pool, size)
 					defer func() {
-						*val = GetVectorDataMatrix4x4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
-						DestroyVectorMatrix4x4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+						VGetVectorDataMatrix4x4((*PlgVector)(ptrUnsafe), slice)
+						DestroyVectorMatrix4x4((*PlgVector)(ptrUnsafe))
 					}()
 				default:
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", retType))
@@ -427,114 +425,118 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 			} else {
 				switch valueType {
 				case Bool:
-					ptr = raw(arg.Interface().(bool))
-				case Char8:
-					ptr = raw(arg.Interface().(int8))
-				case Char16:
-					ptr = raw(arg.Interface().(uint16))
-				case Int8:
-					ptr = raw(arg.Interface().(int8))
+					ptrUnsafe = raw(arg.Bool())
+				case Char8, Int8:
+					ptrUnsafe = raw(int8(arg.Int()))
 				case Int16:
-					ptr = raw(arg.Interface().(int16))
+					ptrUnsafe = raw(int16(arg.Int()))
 				case Int32:
-					ptr = raw(arg.Interface().(int32))
+					ptrUnsafe = raw(int32(arg.Int()))
 				case Int64:
-					ptr = raw(arg.Interface().(int64))
+					ptrUnsafe = raw(arg.Int())
 				case UInt8:
-					ptr = raw(arg.Interface().(uint8))
-				case UInt16:
-					ptr = raw(arg.Interface().(uint16))
+					ptrUnsafe = raw(uint8(arg.Uint()))
+				case Char16, UInt16:
+					ptrUnsafe = raw(uint16(arg.Uint()))
 				case UInt32:
-					ptr = raw(arg.Interface().(uint32))
+					ptrUnsafe = raw(uint32(arg.Uint()))
 				case UInt64:
-					ptr = raw(arg.Interface().(uint64))
+					ptrUnsafe = raw(arg.Uint())
 				case Pointer:
-					ptr = raw(arg.Interface().(uintptr))
+					ptrUnsafe = raw(uintptr(arg.Uint()))
 				case Float:
-					ptr = raw(arg.Interface().(float32))
+					ptrUnsafe = raw(float32(arg.Float()))
 				case Double:
-					ptr = raw(arg.Interface().(float64))
+					ptrUnsafe = raw(arg.Float())
 				case Vector2Type:
-					ptr = pin(arg.Interface().(Vector2), &pool, size)
+					val := reflect.New(arg.Type())
+					val.Elem().Set(arg)
+					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
 				case Vector3Type:
-					ptr = pin(arg.Interface().(Vector3), &pool, size)
+					val := reflect.New(arg.Type())
+					val.Elem().Set(arg)
+					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
 				case Vector4Type:
-					ptr = pin(arg.Interface().(Vector4), &pool, size)
+					val := reflect.New(arg.Type())
+					val.Elem().Set(arg)
+					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
 				case Matrix4x4Type:
-					ptr = pin(arg.Interface().(Matrix4x4), &pool, size)
+					val := reflect.New(arg.Type())
+					val.Elem().Set(arg)
+					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
 				case Function:
-					ptr = uint64(uintptr(GetFunctionPointerForDelegate(arg)))
+					ptrUnsafe = GetFunctionPointerForDelegate(arg)
 				case String:
-					ptr = pin(ConstructString(arg.Interface().(string)), &pool, size)
-					defer DestroyString((*PlgString)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(ConstructString(arg.String()), &pool, size)
+					defer DestroyString((*PlgString)(ptrUnsafe))
 				case Any:
-					ptr = pin(ConstructVariant(arg.Interface().(any)), &pool, size)
-					defer DestroyVariant((*PlgVariant)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(ConstructVariant(arg.Interface()), &pool, size)
+					defer DestroyVariant((*PlgVariant)(ptrUnsafe))
 				case ArrayBool:
-					ptr = pin(ConstructVectorBool(arg.Interface().([]bool)), &pool, size)
-					defer DestroyVectorBool((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorBool(arg), &pool, size)
+					defer DestroyVectorBool((*PlgVector)(ptrUnsafe))
 				case ArrayChar8:
-					ptr = pin(ConstructVectorChar8(arg.Interface().([]int8)), &pool, size)
-					defer DestroyVectorChar8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorChar8(arg), &pool, size)
+					defer DestroyVectorChar8((*PlgVector)(ptrUnsafe))
 				case ArrayChar16:
-					ptr = pin(ConstructVectorChar16(arg.Interface().([]uint16)), &pool, size)
-					defer DestroyVectorChar16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					defer DestroyVectorChar16((*PlgVector)(ptrUnsafe))
+					ptrUnsafe = pinT(VConstructVectorChar16(arg), &pool, size)
 				case ArrayInt8:
-					ptr = pin(ConstructVectorInt8(arg.Interface().([]int8)), &pool, size)
-					defer DestroyVectorInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorInt8(arg), &pool, size)
+					defer DestroyVectorInt8((*PlgVector)(ptrUnsafe))
 				case ArrayInt16:
-					ptr = pin(ConstructVectorInt16(arg.Interface().([]int16)), &pool, size)
-					defer DestroyVectorInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorInt16(arg), &pool, size)
+					defer DestroyVectorInt16((*PlgVector)(ptrUnsafe))
 				case ArrayInt32:
-					ptr = pin(ConstructVectorInt32(arg.Interface().([]int32)), &pool, size)
-					defer DestroyVectorInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorInt32(arg), &pool, size)
+					defer DestroyVectorInt32((*PlgVector)(ptrUnsafe))
 				case ArrayInt64:
-					ptr = pin(ConstructVectorInt64(arg.Interface().([]int64)), &pool, size)
-					defer DestroyVectorInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorInt64(arg), &pool, size)
+					defer DestroyVectorInt64((*PlgVector)(ptrUnsafe))
 				case ArrayUInt8:
-					ptr = pin(ConstructVectorUInt8(arg.Interface().([]uint8)), &pool, size)
-					defer DestroyVectorUInt8((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorUInt8(arg), &pool, size)
+					defer DestroyVectorUInt8((*PlgVector)(ptrUnsafe))
 				case ArrayUInt16:
-					ptr = pin(ConstructVectorUInt16(arg.Interface().([]uint16)), &pool, size)
-					defer DestroyVectorUInt16((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorUInt16(arg), &pool, size)
+					defer DestroyVectorUInt16((*PlgVector)(ptrUnsafe))
 				case ArrayUInt32:
-					ptr = pin(ConstructVectorUInt32(arg.Interface().([]uint32)), &pool, size)
-					defer DestroyVectorUInt32((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorUInt32(arg), &pool, size)
+					defer DestroyVectorUInt32((*PlgVector)(ptrUnsafe))
 				case ArrayUInt64:
-					ptr = pin(ConstructVectorUInt64(arg.Interface().([]uint64)), &pool, size)
-					defer DestroyVectorUInt64((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorUInt64(arg), &pool, size)
+					defer DestroyVectorUInt64((*PlgVector)(ptrUnsafe))
 				case ArrayPointer:
-					ptr = pin(ConstructVectorPointer(arg.Interface().([]uintptr)), &pool, size)
-					defer DestroyVectorPointer((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorPointer(arg), &pool, size)
+					defer DestroyVectorPointer((*PlgVector)(ptrUnsafe))
 				case ArrayFloat:
-					ptr = pin(ConstructVectorFloat(arg.Interface().([]float32)), &pool, size)
-					defer DestroyVectorFloat((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorFloat(arg), &pool, size)
+					defer DestroyVectorFloat((*PlgVector)(ptrUnsafe))
 				case ArrayDouble:
-					ptr = pin(ConstructVectorDouble(arg.Interface().([]float64)), &pool, size)
-					defer DestroyVectorDouble((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorDouble(arg), &pool, size)
+					defer DestroyVectorDouble((*PlgVector)(ptrUnsafe))
 				case ArrayString:
-					ptr = pin(ConstructVectorString(arg.Interface().([]string)), &pool, size)
-					defer DestroyVectorString((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorString(arg), &pool, size)
+					defer DestroyVectorString((*PlgVector)(ptrUnsafe))
 				case ArrayAny:
-					ptr = pin(ConstructVectorVariant(arg.Interface().([]any)), &pool, size)
-					defer DestroyVectorVariant((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorVariant(arg), &pool, size)
+					defer DestroyVectorVariant((*PlgVector)(ptrUnsafe))
 				case ArrayVector2:
-					ptr = pin(ConstructVectorVector2(arg.Interface().([]Vector2)), &pool, size)
-					defer DestroyVectorVector2((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorVector2(arg), &pool, size)
+					defer DestroyVectorVector2((*PlgVector)(ptrUnsafe))
 				case ArrayVector3:
-					ptr = pin(ConstructVectorVector3(arg.Interface().([]Vector3)), &pool, size)
-					defer DestroyVectorVector3((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorVector3(arg), &pool, size)
+					defer DestroyVectorVector3((*PlgVector)(ptrUnsafe))
 				case ArrayVector4:
-					ptr = pin(ConstructVectorVector4(arg.Interface().([]Vector4)), &pool, size)
-					defer DestroyVectorVector4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorVector4(arg), &pool, size)
+					defer DestroyVectorVector4((*PlgVector)(ptrUnsafe))
 				case ArrayMatrix4x4:
-					ptr = pin(ConstructVectorMatrix4x4(arg.Interface().([]Matrix4x4)), &pool, size)
-					defer DestroyVectorMatrix4x4((*PlgVector)(unsafe.Pointer(uintptr(ptr))))
+					ptrUnsafe = pinT(VConstructVectorMatrix4x4(arg), &pool, size)
+					defer DestroyVectorMatrix4x4((*PlgVector)(ptrUnsafe))
 				default:
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", valueType))
 				}
 			}
-			params[index] = ptr
+			params[index] = (uint64)((uintptr(ptrUnsafe)))
 			index++
 		}
 
@@ -546,95 +548,135 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 		case Void:
 			// skip
 		case Bool:
-			results[0] = reflect.ValueOf(*(*bool)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetBool(*(*bool)(ret))
+			results[0] = val
 		case Char8:
-			results[0] = reflect.ValueOf(*(*int8)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetInt(int64(*(*int8)(ret)))
+			results[0] = val
 		case Char16:
-			results[0] = reflect.ValueOf(*(*uint16)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(uint64(*(*uint16)(ret)))
+			results[0] = val
 		case Int8:
-			results[0] = reflect.ValueOf(*(*int8)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetInt(int64(*(*int8)(ret)))
+			results[0] = val
 		case Int16:
-			results[0] = reflect.ValueOf(*(*int16)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetInt(int64(*(*int16)(ret)))
+			results[0] = val
 		case Int32:
-			results[0] = reflect.ValueOf(*(*int32)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetInt(int64(*(*int32)(ret)))
+			results[0] = val
 		case Int64:
-			results[0] = reflect.ValueOf(*(*int64)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetInt(*(*int64)(ret))
+			results[0] = val
 		case UInt8:
-			results[0] = reflect.ValueOf(*(*uint8)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(uint64(*(*uint8)(ret)))
+			results[0] = val
 		case UInt16:
-			results[0] = reflect.ValueOf(*(*uint16)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(uint64(*(*uint16)(ret)))
+			results[0] = val
 		case UInt32:
-			results[0] = reflect.ValueOf(*(*uint32)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(uint64(*(*uint32)(ret)))
+			results[0] = val
 		case UInt64:
-			results[0] = reflect.ValueOf(*(*uint64)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(*(*uint64)(ret))
+			results[0] = val
 		case Pointer:
-			results[0] = reflect.ValueOf(*(*uintptr)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetUint(uint64(*(*uintptr)(ret)))
+			results[0] = val
 		case Float:
-			results[0] = reflect.ValueOf(*(*float32)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetFloat(float64(*(*float32)(ret)))
+			results[0] = val
 		case Double:
-			results[0] = reflect.ValueOf(*(*float64)(ret))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetFloat(*(*float64)(ret))
+			results[0] = val
 		case Function:
-			results[0] = reflect.ValueOf(GetDelegateForFunctionPointer(*(*unsafe.Pointer)(ret), fnType.Out(0)))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.Set(reflect.ValueOf(GetDelegateForFunctionPointer(*(*unsafe.Pointer)(ret), fnType.Out(0))))
+			results[0] = val
 		case Vector2Type:
-			results[0] = reflect.ValueOf(*(*Vector2)(ret))
+			if hasRet {
+				results[0] = reflect.NewAt(fnType.Out(0), *(*unsafe.Pointer)(ret)).Elem()
+			} else {
+				results[0] = reflect.NewAt(fnType.Out(0), ret).Elem()
+			}
 		case Vector3Type:
 			if hasRet {
-				results[0] = reflect.ValueOf(*(*Vector3)(*(*unsafe.Pointer)(ret)))
+				results[0] = reflect.NewAt(fnType.Out(0), *(*unsafe.Pointer)(ret)).Elem()
 			} else {
-				results[0] = reflect.ValueOf(*(*Vector3)(ret))
+				results[0] = reflect.NewAt(fnType.Out(0), ret).Elem()
 			}
 		case Vector4Type:
 			if hasRet {
-				results[0] = reflect.ValueOf(*(*Vector4)(*(*unsafe.Pointer)(ret)))
+				results[0] = reflect.NewAt(fnType.Out(0), *(*unsafe.Pointer)(ret)).Elem()
 			} else {
-				results[0] = reflect.ValueOf(*(*Vector4)(ret))
+				results[0] = reflect.NewAt(fnType.Out(0), ret).Elem()
 			}
 		case Matrix4x4Type:
-			results[0] = reflect.ValueOf(*(*Matrix4x4)(*(*unsafe.Pointer)(ret)))
+			if hasRet {
+				results[0] = reflect.NewAt(fnType.Out(0), *(*unsafe.Pointer)(ret)).Elem()
+			} else {
+				results[0] = reflect.NewAt(fnType.Out(0), ret).Elem()
+			}
 		case String:
-			results[0] = reflect.ValueOf(GetStringData((*PlgString)(*(*unsafe.Pointer)(ret))))
+			val := reflect.New(fnType.Out(0)).Elem()
+			val.SetString(GetStringData[string]((*PlgString)(*(*unsafe.Pointer)(ret))))
+			results[0] = val
 		case Any:
 			results[0] = reflect.ValueOf(GetVariantData((*PlgVariant)(*(*unsafe.Pointer)(ret))))
 		case ArrayBool:
-			results[0] = reflect.ValueOf(GetVectorDataBool((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataBoolReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayChar8:
-			results[0] = reflect.ValueOf(GetVectorDataChar8((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataChar8Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayChar16:
-			results[0] = reflect.ValueOf(GetVectorDataChar16((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataChar16Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayInt8:
-			results[0] = reflect.ValueOf(GetVectorDataInt8((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataInt8Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayInt16:
-			results[0] = reflect.ValueOf(GetVectorDataInt16((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataInt16Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayInt32:
-			results[0] = reflect.ValueOf(GetVectorDataInt32((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataInt32Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayInt64:
-			results[0] = reflect.ValueOf(GetVectorDataInt64((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataInt64Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayUInt8:
-			results[0] = reflect.ValueOf(GetVectorDataUInt8((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataUInt8Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayUInt16:
-			results[0] = reflect.ValueOf(GetVectorDataUInt16((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataUInt16Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayUInt32:
-			results[0] = reflect.ValueOf(GetVectorDataUInt32((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataUInt32Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayUInt64:
-			results[0] = reflect.ValueOf(GetVectorDataUInt64((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataUInt64Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayPointer:
-			results[0] = reflect.ValueOf(GetVectorDataPointer((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataPointerReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayFloat:
-			results[0] = reflect.ValueOf(GetVectorDataFloat((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataFloatReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayDouble:
-			results[0] = reflect.ValueOf(GetVectorDataDouble((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataDoubleReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayString:
-			results[0] = reflect.ValueOf(GetVectorDataString((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataStringReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayAny:
-			results[0] = reflect.ValueOf(GetVectorDataVariant((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataAnyReturn((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayVector2:
-			results[0] = reflect.ValueOf(GetVectorDataVector2((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataVector2Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayVector3:
-			results[0] = reflect.ValueOf(GetVectorDataVector3((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataVector3Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayVector4:
-			results[0] = reflect.ValueOf(GetVectorDataVector4((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataVector4Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		case ArrayMatrix4x4:
-			results[0] = reflect.ValueOf(GetVectorDataMatrix4x4((*PlgVector)(*(*unsafe.Pointer)(ret))))
+			results[0] = getVectorDataMatrix4x4Return((*PlgVector)(*(*unsafe.Pointer)(ret)), fnType.Out(0))
 		default:
 			panicker(fmt.Sprintf("GetDelegateForFunctionPointer return type not supported %v", retType))
 		}
@@ -644,9 +686,45 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 
 	fn := wrapper.Interface()
 
-	functionMap[fnPtr] = function{fn, addr}
+	fnArgs, fnRet := getFuncData(fnType)
+	functionMap[fnPtr] = function{fn, addr, fnArgs, fnRet}
 
 	return fn
+}
+
+func getFuncData(fnType reflect.Type) ([]funcArg, funcArg) {
+	fnArgs := make([]funcArg, fnType.NumIn())
+	for i := range fnArgs {
+		argType := fnType.In(i)
+
+		isRef := argType.Kind() == reflect.Pointer
+
+		if isRef {
+			argType = argType.Elem()
+		}
+
+		fnArgs[i] = funcArg{
+			isRef: isRef,
+			t:     argType,
+		}
+	}
+
+	var fnRet funcArg
+	numOut := fnType.NumOut()
+	if numOut > 1 {
+		panicker("getFuncData only one returned value supported")
+	} else if numOut == 1 {
+		out := fnType.Out(0)
+
+		if out.Kind() == reflect.Pointer {
+			fnRet.isRef = true
+			out = out.Elem()
+		}
+
+		fnRet.t = out
+	}
+
+	return fnArgs, fnRet
 }
 
 func setArgument[T any](p *C.Parameters, idx C.size_t, val T) {
@@ -658,6 +736,18 @@ func getArgument[T any](p *C.Parameters, idx C.size_t) T {
 	return *(*T)(getArgumentPtr(p, idx))
 }
 
+func getNonRefArgument(p *C.Parameters, idx C.size_t, t reflect.Type) reflect.Value {
+	return reflect.NewAt(t, unsafe.Pointer((*uint64)(getArgumentPtr(p, idx)))).Elem()
+}
+
+func getNonRefVectorArgument(p *C.Parameters, idx C.size_t, t reflect.Type) reflect.Value {
+	return reflect.NewAt(t, unsafe.Pointer(*(**uint64)(getArgumentPtr(p, idx)))).Elem()
+}
+
+func getRefArgument(p *C.Parameters, idx C.size_t, t reflect.Type) reflect.Value {
+	return reflect.NewAt(t, unsafe.Pointer(*(**uint64)(getArgumentPtr(p, idx))))
+}
+
 func getArgumentPtr(p *C.Parameters, idx C.size_t) unsafe.Pointer {
 	return unsafe.Pointer(uintptr(unsafe.Pointer(&p.arguments)) + uintptr(idx)*unsafe.Sizeof(uint64(0)))
 }
@@ -667,192 +757,245 @@ func setReturn[T any](r *C.Return, val T) {
 	*(*T)(ptr) = val
 }
 
-func getReturn[T any](r *C.Return) T {
-	return *(*T)(getReturnPtr(r))
+func setReturnCopy(r *C.Return, val reflect.Value) {
+	ptr := reflect.New(val.Type())
+	ptr.Elem().Set(val)
+
+	C.memcpy(unsafe.Pointer(uintptr(unsafe.Pointer(&r.ret))), ptr.UnsafePointer(), C.size_t(val.Type().Size()))
 }
 
 func getReturnPtr(r *C.Return) unsafe.Pointer {
 	return unsafe.Pointer(&r.ret)
 }
 
-func heap[T any](v T) *T {
-	return &v
-}
-
-func paramRefToObject(vt valueType, p *C.Parameters, i C.size_t) reflect.Value {
+func paramRefToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) reflect.Value {
 	switch vt {
 	case Bool:
-		return reflect.ValueOf(getArgument[*bool](p, i))
+		return getRefArgument(p, i, t)
 	case Char8:
-		return reflect.ValueOf(getArgument[*int8](p, i))
+		return getRefArgument(p, i, t)
 	case Char16:
-		return reflect.ValueOf(getArgument[*uint16](p, i))
+		return getRefArgument(p, i, t)
 	case Int8:
-		return reflect.ValueOf(getArgument[*int8](p, i))
+		return getRefArgument(p, i, t)
 	case Int16:
-		return reflect.ValueOf(getArgument[*int16](p, i))
+		return getRefArgument(p, i, t)
 	case Int32:
-		return reflect.ValueOf(getArgument[*int32](p, i))
+		return getRefArgument(p, i, t)
 	case Int64:
-		return reflect.ValueOf(getArgument[*int64](p, i))
+		return getRefArgument(p, i, t)
 	case UInt8:
-		return reflect.ValueOf(getArgument[*uint8](p, i))
+		return getRefArgument(p, i, t)
 	case UInt16:
-		return reflect.ValueOf(getArgument[*uint16](p, i))
+		return getRefArgument(p, i, t)
 	case UInt32:
-		return reflect.ValueOf(getArgument[*uint32](p, i))
+		return getRefArgument(p, i, t)
 	case UInt64:
-		return reflect.ValueOf(getArgument[*uint64](p, i))
+		return getRefArgument(p, i, t)
 	case Pointer:
-		return reflect.ValueOf(getArgument[*uintptr](p, i))
+		return getRefArgument(p, i, t)
 	case Float:
-		return reflect.ValueOf(getArgument[*float32](p, i))
+		return getRefArgument(p, i, t)
 	case Double:
-		return reflect.ValueOf(getArgument[*float64](p, i))
+		return getRefArgument(p, i, t)
 	case String:
-		return reflect.ValueOf(heap[string](GetStringData(getArgument[*PlgString](p, i))))
+		val := reflect.New(t)
+		val.Elem().SetString(GetStringData[string](getArgument[*PlgString](p, i)))
+		return val
 	case Any:
-		return reflect.ValueOf(heap[any](GetVariantData(getArgument[*PlgVariant](p, i))))
+		val := reflect.New(t)
+		value := GetVariantData(getArgument[*PlgVariant](p, i))
+		if value != nil {
+			val.Elem().Set(reflect.ValueOf(GetVariantData(getArgument[*PlgVariant](p, i))))
+		}
+
+		return val
 	case ArrayBool:
-		return reflect.ValueOf(heap[[]bool](GetVectorDataBool(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataChar8Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayChar8:
-		return reflect.ValueOf(heap[[]int8](GetVectorDataChar8(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataChar8Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayChar16:
-		return reflect.ValueOf(heap[[]uint16](GetVectorDataChar16(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataChar16Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayInt8:
-		return reflect.ValueOf(heap[[]int8](GetVectorDataInt8(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataInt8Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayInt16:
-		return reflect.ValueOf(heap[[]int16](GetVectorDataInt16(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataInt16Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayInt32:
-		return reflect.ValueOf(heap[[]int32](GetVectorDataInt32(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataInt32Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayInt64:
-		return reflect.ValueOf(heap[[]int64](GetVectorDataInt64(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataInt64Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayUInt8:
-		return reflect.ValueOf(heap[[]uint8](GetVectorDataUInt8(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataUInt8Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayUInt16:
-		return reflect.ValueOf(heap[[]uint16](GetVectorDataUInt16(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataUInt16Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayUInt32:
-		return reflect.ValueOf(heap[[]uint32](GetVectorDataUInt32(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataUInt32Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayUInt64:
-		return reflect.ValueOf(heap[[]uint64](GetVectorDataUInt64(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataUInt64Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayPointer:
-		return reflect.ValueOf(heap[[]uintptr](GetVectorDataPointer(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataPointerReflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayFloat:
-		return reflect.ValueOf(heap[[]float32](GetVectorDataFloat(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataFloatReflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayDouble:
-		return reflect.ValueOf(heap[[]float64](GetVectorDataDouble(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataDoubleReflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayString:
-		return reflect.ValueOf(heap[[]string](GetVectorDataString(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataStringReflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayAny:
-		return reflect.ValueOf(heap[[]any](GetVectorDataVariant(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataAnyReflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayVector2:
-		return reflect.ValueOf(heap[[]Vector2](GetVectorDataVector2(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataVector2Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayVector3:
-		return reflect.ValueOf(heap[[]Vector3](GetVectorDataVector3(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataVector3Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayVector4:
-		return reflect.ValueOf(heap[[]Vector4](GetVectorDataVector4(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataVector4Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case ArrayMatrix4x4:
-		return reflect.ValueOf(heap[[]Matrix4x4](GetVectorDataMatrix4x4(getArgument[*PlgVector](p, i))))
+		ref := reflect.New(t)
+		ref.Elem().Set(getVectorDataMatrix4x4Reflect(getArgument[*PlgVector](p, i), t))
+		return ref
 	case Vector2Type:
-		return reflect.ValueOf(getArgument[*Vector2](p, i))
+		return getRefArgument(p, i, t)
 	case Vector3Type:
-		return reflect.ValueOf(getArgument[*Vector3](p, i))
+		return getRefArgument(p, i, t)
 	case Vector4Type:
-		return reflect.ValueOf(getArgument[*Vector4](p, i))
+		return getRefArgument(p, i, t)
 	case Matrix4x4Type:
-		return reflect.ValueOf(getArgument[*Matrix4x4](p, i))
+		return getRefArgument(p, i, t)
 	default:
 		panicker(fmt.Sprintf("paramRefToObject unsupported enum type %v", vt))
 		return reflect.ValueOf(nil)
 	}
 }
 
-func paramToObject(m C.MethodHandle, vt valueType, p *C.Parameters, i C.size_t) reflect.Value {
+func paramToObject(m C.MethodHandle, vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) reflect.Value {
 	switch vt {
 	case Bool:
-		return reflect.ValueOf(getArgument[bool](p, i))
+		return getNonRefArgument(p, i, t)
 	case Char8:
-		return reflect.ValueOf(getArgument[int8](p, i))
+		return getNonRefArgument(p, i, t)
 	case Char16:
-		return reflect.ValueOf(getArgument[uint16](p, i))
+		return getNonRefArgument(p, i, t)
 	case Int8:
-		return reflect.ValueOf(getArgument[int8](p, i))
+		return getNonRefArgument(p, i, t)
 	case Int16:
-		return reflect.ValueOf(getArgument[int16](p, i))
+		return getNonRefArgument(p, i, t)
 	case Int32:
-		return reflect.ValueOf(getArgument[int32](p, i))
+		return getNonRefArgument(p, i, t)
 	case Int64:
-		return reflect.ValueOf(getArgument[int64](p, i))
+		return getNonRefArgument(p, i, t)
 	case UInt8:
-		return reflect.ValueOf(getArgument[uint8](p, i))
+		return getNonRefArgument(p, i, t)
 	case UInt16:
-		return reflect.ValueOf(getArgument[uint16](p, i))
+		return getNonRefArgument(p, i, t)
 	case UInt32:
-		return reflect.ValueOf(getArgument[uint32](p, i))
+		return getNonRefArgument(p, i, t)
 	case UInt64:
-		return reflect.ValueOf(getArgument[uint64](p, i))
+		return getNonRefArgument(p, i, t)
 	case Pointer:
-		return reflect.ValueOf(getArgument[uintptr](p, i))
+		return getNonRefArgument(p, i, t)
 	case Float:
-		return reflect.ValueOf(getArgument[float32](p, i))
+		return getNonRefArgument(p, i, t)
 	case Double:
-		return reflect.ValueOf(getArgument[float64](p, i))
+		return getNonRefArgument(p, i, t)
 	case Function:
-		return reflect.ValueOf(GetDelegateForFunctionPointer(getArgument[unsafe.Pointer](p, i), createFunctionType(m)))
+		val := reflect.New(t)
+		val.Set(reflect.ValueOf(GetDelegateForFunctionPointer(getArgument[unsafe.Pointer](p, i), t)))
+		return val
 	case String:
-		return reflect.ValueOf(GetStringData(getArgument[*PlgString](p, i)))
+		val := reflect.New(t).Elem()
+		val.SetString(GetStringData[string](getArgument[*PlgString](p, i)))
+		return val
 	case Any:
-		return reflect.ValueOf(GetVariantData(getArgument[*PlgVariant](p, i)))
+		val := reflect.New(t)
+		val.Set(reflect.ValueOf(GetVariantData(getArgument[*PlgVariant](p, i))))
+		return val
 	case ArrayBool:
-		return reflect.ValueOf(GetVectorDataBool(getArgument[*PlgVector](p, i)))
+		return getVectorDataBoolReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayChar8:
-		return reflect.ValueOf(GetVectorDataChar8(getArgument[*PlgVector](p, i)))
+		return getVectorDataChar8Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayChar16:
-		return reflect.ValueOf(GetVectorDataChar16(getArgument[*PlgVector](p, i)))
+		return getVectorDataChar16Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayInt8:
-		return reflect.ValueOf(GetVectorDataInt8(getArgument[*PlgVector](p, i)))
+		return getVectorDataInt8Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayInt16:
-		return reflect.ValueOf(GetVectorDataInt16(getArgument[*PlgVector](p, i)))
+		return getVectorDataInt16Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayInt32:
-		return reflect.ValueOf(GetVectorDataInt32(getArgument[*PlgVector](p, i)))
+		return getVectorDataInt32Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayInt64:
-		return reflect.ValueOf(GetVectorDataInt64(getArgument[*PlgVector](p, i)))
+		return getVectorDataInt64Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayUInt8:
-		return reflect.ValueOf(GetVectorDataUInt8(getArgument[*PlgVector](p, i)))
+		return getVectorDataUInt8Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayUInt16:
-		return reflect.ValueOf(GetVectorDataUInt16(getArgument[*PlgVector](p, i)))
+		return getVectorDataUInt16Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayUInt32:
-		return reflect.ValueOf(GetVectorDataUInt32(getArgument[*PlgVector](p, i)))
+		return getVectorDataUInt32Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayUInt64:
-		return reflect.ValueOf(GetVectorDataUInt64(getArgument[*PlgVector](p, i)))
+		return getVectorDataUInt64Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayPointer:
-		return reflect.ValueOf(GetVectorDataPointer(getArgument[*PlgVector](p, i)))
+		return getVectorDataPointerReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayFloat:
-		return reflect.ValueOf(GetVectorDataFloat(getArgument[*PlgVector](p, i)))
+		return getVectorDataFloatReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayDouble:
-		return reflect.ValueOf(GetVectorDataDouble(getArgument[*PlgVector](p, i)))
+		return getVectorDataDoubleReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayString:
-		return reflect.ValueOf(GetVectorDataString(getArgument[*PlgVector](p, i)))
+		return getVectorDataStringReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayAny:
-		return reflect.ValueOf(GetVectorDataVariant(getArgument[*PlgVector](p, i)))
+		return getVectorDataAnyReflect(getArgument[*PlgVector](p, i), t)
 	case ArrayVector2:
-		return reflect.ValueOf(GetVectorDataVector2(getArgument[*PlgVector](p, i)))
+		return getVectorDataVector2Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayVector3:
-		return reflect.ValueOf(GetVectorDataVector3(getArgument[*PlgVector](p, i)))
+		return getVectorDataVector3Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayVector4:
-		return reflect.ValueOf(GetVectorDataVector4(getArgument[*PlgVector](p, i)))
+		return getVectorDataVector3Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayMatrix4x4:
-		return reflect.ValueOf(GetVectorDataMatrix4x4(getArgument[*PlgVector](p, i)))
+		return getVectorDataMatrix4x4Reflect(getArgument[*PlgVector](p, i), t)
 	case Vector2Type:
-		return reflect.ValueOf(*getArgument[*Vector2](p, i))
+		return getNonRefVectorArgument(p, i, t)
 	case Vector3Type:
-		return reflect.ValueOf(*getArgument[*Vector3](p, i))
+		return getNonRefVectorArgument(p, i, t)
 	case Vector4Type:
-		return reflect.ValueOf(*getArgument[*Vector4](p, i))
+		return getNonRefVectorArgument(p, i, t)
 	case Matrix4x4Type:
-		return reflect.ValueOf(*getArgument[*Matrix4x4](p, i))
+		return getNonRefVectorArgument(p, i, t)
 	default:
-		panicker(fmt.Sprintf("paramToObject unsupported enum type %v", vt))
+		panicker(fmt.Sprintf("paramToObject unsupported type %v", vt))
 	}
 	return reflect.ValueOf(nil)
 }
@@ -904,7 +1047,7 @@ func setRefParam(vt valueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 	case ArrayInt32:
 		AssignVectorInt32(getArgument[*PlgVector](p, i), *val.Interface().(*[]int32))
 	case ArrayInt64:
-		AssignVectorInt64(getArgument[*PlgVector](p, i), *val.Interface().(*[]int64))
+		VAssignVectorInt64(getArgument[*PlgVector](p, i), val.Elem())
 	case ArrayUInt8:
 		AssignVectorUInt8(getArgument[*PlgVector](p, i), *val.Interface().(*[]uint8))
 	case ArrayUInt16:
@@ -944,92 +1087,86 @@ func setRefParam(vt valueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 	}
 }
 
-func setObjReturn(vt valueType, r *C.Return, rets []reflect.Value) {
+func setObjReturn(vt valueType, r *C.Return, ret reflect.Value) {
 	switch vt {
 	case Void:
 		// Do nothing
 	case Bool:
-		setReturn(r, rets[0].Interface().(bool))
+		setReturn(r, ret.Bool())
 	case Char8:
-		setReturn(r, rets[0].Interface().(int8))
+		setReturn(r, int8(ret.Int()))
 	case Char16:
-		setReturn(r, rets[0].Interface().(uint16))
+		setReturn(r, uint16(ret.Uint()))
 	case Int8:
-		setReturn(r, rets[0].Interface().(int8))
+		setReturn(r, int8(ret.Int()))
 	case Int16:
-		setReturn(r, rets[0].Interface().(int16))
+		setReturn(r, int16(ret.Int()))
 	case Int32:
-		setReturn(r, rets[0].Interface().(int32))
+		setReturn(r, int32(ret.Int()))
 	case Int64:
-		setReturn(r, rets[0].Interface().(int64))
+		setReturn(r, int64(ret.Int()))
 	case UInt8:
-		setReturn(r, rets[0].Interface().(uint8))
+		setReturn(r, uint8(ret.Uint()))
 	case UInt16:
-		setReturn(r, rets[0].Interface().(uint16))
+		setReturn(r, uint16(ret.Uint()))
 	case UInt32:
-		setReturn(r, rets[0].Interface().(uint32))
+		setReturn(r, uint32(ret.Uint()))
 	case UInt64:
-		setReturn(r, rets[0].Interface().(uint64))
+		setReturn(r, uint64(ret.Uint()))
 	case Pointer:
-		setReturn(r, rets[0].Interface().(uintptr))
+		setReturn(r, uintptr(ret.Uint()))
 	case Float:
-		setReturn(r, rets[0].Interface().(float32))
+		setReturn(r, float32(ret.Float()))
 	case Double:
-		setReturn(r, rets[0].Interface().(float64))
+		setReturn(r, float64(ret.Float()))
 	case Function:
-		setReturn(r, GetFunctionPointerForDelegate(rets[0].Interface()))
+		setReturn(r, GetFunctionPointerForDelegate(ret.Interface()))
 	case String:
-		setReturn(r, ConstructString(rets[0].Interface().(string)))
+		setReturn(r, ConstructString(ret.String()))
 	case Any:
-		setReturn(r, ConstructVariant(rets[0].Interface().(any)))
+		setReturn(r, ConstructVariant(ret.Interface()))
 	case ArrayBool:
-		setReturn(r, ConstructVectorBool(rets[0].Interface().([]bool)))
+		setReturn(r, VConstructVectorBool(ret))
 	case ArrayChar8:
-		setReturn(r, ConstructVectorChar8(rets[0].Interface().([]int8)))
+		setReturn(r, VConstructVectorChar8(ret))
 	case ArrayChar16:
-		setReturn(r, ConstructVectorChar16(rets[0].Interface().([]uint16)))
+		setReturn(r, VConstructVectorChar16(ret))
 	case ArrayInt8:
-		setReturn(r, ConstructVectorInt8(rets[0].Interface().([]int8)))
+		setReturn(r, VConstructVectorInt8(ret))
 	case ArrayInt16:
-		setReturn(r, ConstructVectorInt16(rets[0].Interface().([]int16)))
+		setReturn(r, VConstructVectorInt16(ret))
 	case ArrayInt32:
-		setReturn(r, ConstructVectorInt32(rets[0].Interface().([]int32)))
+		setReturn(r, VConstructVectorInt32(ret))
 	case ArrayInt64:
-		setReturn(r, ConstructVectorInt64(rets[0].Interface().([]int64)))
+		setReturn(r, VConstructVectorInt64(ret))
 	case ArrayUInt8:
-		setReturn(r, ConstructVectorUInt8(rets[0].Interface().([]uint8)))
+		setReturn(r, VConstructVectorUInt8(ret))
 	case ArrayUInt16:
-		setReturn(r, ConstructVectorUInt16(rets[0].Interface().([]uint16)))
+		setReturn(r, VConstructVectorUInt16(ret))
 	case ArrayUInt32:
-		setReturn(r, ConstructVectorUInt32(rets[0].Interface().([]uint32)))
+		setReturn(r, VConstructVectorUInt32(ret))
 	case ArrayUInt64:
-		setReturn(r, ConstructVectorUInt64(rets[0].Interface().([]uint64)))
+		setReturn(r, VConstructVectorUInt64(ret))
 	case ArrayPointer:
-		setReturn(r, ConstructVectorPointer(rets[0].Interface().([]uintptr)))
+		setReturn(r, VConstructVectorPointer(ret))
 	case ArrayFloat:
-		setReturn(r, ConstructVectorFloat(rets[0].Interface().([]float32)))
+		setReturn(r, VConstructVectorFloat(ret))
 	case ArrayDouble:
-		setReturn(r, ConstructVectorDouble(rets[0].Interface().([]float64)))
+		setReturn(r, VConstructVectorDouble(ret))
 	case ArrayString:
-		setReturn(r, ConstructVectorString(rets[0].Interface().([]string)))
+		setReturn(r, VConstructVectorString(ret))
 	case ArrayAny:
-		setReturn(r, ConstructVectorVariant(rets[0].Interface().([]any)))
+		setReturn(r, ConstructVectorVariant(ret.Interface().([]any)))
 	case ArrayVector2:
-		setReturn(r, ConstructVectorVector2(rets[0].Interface().([]Vector2)))
+		setReturn(r, VConstructVectorVector2(ret))
 	case ArrayVector3:
-		setReturn(r, ConstructVectorVector3(rets[0].Interface().([]Vector3)))
+		setReturn(r, VConstructVectorVector3(ret))
 	case ArrayVector4:
-		setReturn(r, ConstructVectorVector4(rets[0].Interface().([]Vector4)))
+		setReturn(r, VConstructVectorVector4(ret))
 	case ArrayMatrix4x4:
-		setReturn(r, ConstructVectorMatrix4x4(rets[0].Interface().([]Matrix4x4)))
-	case Vector2Type:
-		setReturn(r, rets[0].Interface().(Vector2))
-	case Vector3Type:
-		setReturn(r, rets[0].Interface().(Vector3))
-	case Vector4Type:
-		setReturn(r, rets[0].Interface().(Vector4))
-	case Matrix4x4Type:
-		setReturn(r, rets[0].Interface().(Matrix4x4))
+		setReturn(r, VConstructVectorMatrix4x4(ret))
+	case Vector2Type, Vector3Type, Vector4Type, Matrix4x4Type:
+		setReturnCopy(r, ret)
 	default:
 		panicker(fmt.Sprintf("setReturn unsupported enum type %v", vt))
 	}
@@ -1048,13 +1185,27 @@ func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 
 			var args = make([]reflect.Value, int(count))
 
+			/* fnType := reflect.TypeOf(fn.fn)
+
+			numIn := fnType.NumIn()
+			if numIn != int(count) {
+				panicker(fmt.Sprintf("expected %d parameters, got %d", numIn, count))
+			} */
+
+			if len(fn.args) != int(count) {
+				panicker(fmt.Sprintf("expected %d parameters, got %d", len(fn.args), count))
+			}
+
 			for i := C.size_t(0); i < count; i++ {
 				mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
 				vt := valueType(mt.valueType)
+
+				argType := fn.args[i].t
+
 				if mt.ref {
-					args[i] = paramRefToObject(vt, p, i)
+					args[i] = paramRefToObject(vt, argType, p, i)
 				} else {
-					args[i] = paramToObject(m, vt, p, i)
+					args[i] = paramToObject(m, vt, argType, p, i)
 				}
 			}
 
@@ -1062,7 +1213,10 @@ func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 
 			mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(-1))
 			vt := valueType(mt.valueType)
-			setObjReturn(vt, r, rets)
+
+			if len(rets) > 0 {
+				setObjReturn(vt, r, rets[0])
+			}
 
 			for i := C.size_t(0); i < count; i++ {
 				mt = C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
@@ -1086,13 +1240,13 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 	mu.Lock()
 	defer mu.Unlock()
 
-	fnType := reflect.ValueOf(fn)
-	if fnType.Kind() != reflect.Func {
+	fnVal := reflect.ValueOf(fn)
+	if fnVal.Kind() != reflect.Func {
 		panicker("expected a function")
 	}
 
-	valueType := fnType.Type()
-	fnPtr := unsafe.Pointer(fnType.Pointer())
+	fnType := fnVal.Type()
+	fnPtr := unsafe.Pointer(fnVal.Pointer())
 
 	for _, v := range functionMap {
 		if unsafe.Pointer(reflect.ValueOf(v.fn).Pointer()) == fnPtr {
@@ -1100,7 +1254,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 		}
 	}
 
-	name, err := getFunctionName(valueType)
+	name, err := getFunctionName(fnType)
 	if err != nil {
 		panicker(err)
 	}
@@ -1114,10 +1268,11 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 
 	addr := C.Plugify_GetCallbackFunction(callback)
 	if addr == nil {
-		panicker(fmt.Sprintf("%s (jit error: %s)", name, string(C.GoString(C.Plugify_GetCallbackError(callback)))))
+		panicker(fmt.Sprintf("%s (jit error: %s)", name, C.GoString(C.Plugify_GetCallbackError(callback))))
 	}
 
-	functionMap[fnPtr] = function{fn, addr}
+	fnArgs, fnRet := getFuncData(fnType)
+	functionMap[fnPtr] = function{fn, addr, fnArgs, fnRet}
 
 	return addr
 }

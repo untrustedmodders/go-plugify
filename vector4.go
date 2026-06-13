@@ -52,7 +52,7 @@ func (v Vector4) DistanceTo(vector Vector4) float32 {
 }
 
 // Return a string representation
-func (v Vector4) ToString() string {
+func (v Vector4) String() string {
 	return fmt.Sprintf("Vector4(%f, %f, %f, %f)", v.X, v.Y, v.Z, v.W)
 }
 

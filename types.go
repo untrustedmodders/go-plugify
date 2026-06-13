@@ -117,8 +117,8 @@ func sizeOfValueType(vt valueType) int {
 		return C.sizeof_String
 	case Any:
 		return C.sizeof_Variant
-	case ArrayBool, ArrayChar8, ArrayChar16, ArrayInt8, ArrayInt16, ArrayInt32,
-		ArrayInt64, ArrayUInt8, ArrayUInt16, ArrayUInt32, ArrayUInt64, ArrayPointer,
+	case ArrayBool, ArrayChar8, ArrayChar16, ArrayInt8, ArrayInt16, ArrayInt32, ArrayInt64, /*  ArrayInt, */
+		ArrayUInt8, ArrayUInt16, ArrayUInt32, ArrayUInt64 /* ArrayUInt, */, ArrayPointer,
 		ArrayFloat, ArrayDouble, ArrayString, ArrayAny, ArrayVector2, ArrayVector3,
 		ArrayVector4, ArrayMatrix4x4:
 		return C.sizeof_Vector
@@ -135,123 +135,198 @@ func sizeOfValueType(vt valueType) int {
 	}
 }
 
-var valueTypeToReflect = map[valueType]reflect.Type{
-	Void:           reflect.TypeOf(nil),
-	Bool:           reflect.TypeOf(true),
-	Char8:          reflect.TypeOf(int8(0)),
-	Char16:         reflect.TypeOf(uint16(0)),
-	Int8:           reflect.TypeOf(int8(0)),
-	Int16:          reflect.TypeOf(int16(0)),
-	Int32:          reflect.TypeOf(int32(0)),
-	Int64:          reflect.TypeOf(int64(0)),
-	UInt8:          reflect.TypeOf(uint8(0)),
-	UInt16:         reflect.TypeOf(uint16(0)),
-	UInt32:         reflect.TypeOf(uint32(0)),
-	UInt64:         reflect.TypeOf(uint64(0)),
-	Pointer:        reflect.TypeOf(uintptr(0)),
-	Float:          reflect.TypeOf(float32(0)),
-	Double:         reflect.TypeOf(float64(0)),
-	String:         reflect.TypeOf(""),
-	ArrayBool:      reflect.TypeOf([]bool{}),
-	ArrayChar8:     reflect.TypeOf([]int8{}),
-	ArrayChar16:    reflect.TypeOf([]uint16{}),
-	ArrayInt8:      reflect.TypeOf([]int8{}),
-	ArrayInt16:     reflect.TypeOf([]int16{}),
-	ArrayInt32:     reflect.TypeOf([]int32{}),
-	ArrayInt64:     reflect.TypeOf([]int64{}),
-	ArrayUInt8:     reflect.TypeOf([]uint8{}),
-	ArrayUInt16:    reflect.TypeOf([]uint16{}),
-	ArrayUInt32:    reflect.TypeOf([]uint32{}),
-	ArrayUInt64:    reflect.TypeOf([]uint64{}),
-	ArrayPointer:   reflect.TypeOf([]uintptr{}),
-	ArrayFloat:     reflect.TypeOf([]float32{}),
-	ArrayDouble:    reflect.TypeOf([]float64{}),
-	ArrayString:    reflect.TypeOf([]string{}),
-	ArrayAny:       reflect.TypeOf([]any{}),
-	ArrayVector2:   reflect.TypeOf([]Vector2{}),
-	ArrayVector3:   reflect.TypeOf([]Vector3{}),
-	ArrayVector4:   reflect.TypeOf([]Vector4{}),
-	ArrayMatrix4x4: reflect.TypeOf([]Matrix4x4{}),
-	Vector2Type:    reflect.TypeOf(Vector2{}),
-	Vector3Type:    reflect.TypeOf(Vector3{}),
-	Vector4Type:    reflect.TypeOf(Vector4{}),
-	Matrix4x4Type:  reflect.TypeOf(Matrix4x4{}),
-}
-
 var reflectToValueType = map[reflect.Type]valueType{
-	reflect.TypeOf(nil):                 Void,
-	reflect.TypeOf(true):                Bool,
-	reflect.TypeOf(int8(0)):             Int8,
-	reflect.TypeOf(int16(0)):            Int16,
-	reflect.TypeOf(int32(0)):            Int32,
-	reflect.TypeOf(int64(0)):            Int64,
-	reflect.TypeOf(uint8(0)):            UInt8,
-	reflect.TypeOf(uint16(0)):           UInt16,
-	reflect.TypeOf(uint32(0)):           UInt32,
-	reflect.TypeOf(uint64(0)):           UInt64,
-	reflect.TypeOf(uintptr(0)):          Pointer,
-	reflect.TypeOf(float32(0)):          Float,
-	reflect.TypeOf(float64(0)):          Double,
-	reflect.TypeOf(""):                  String,
-	reflect.TypeOf([]bool{}):            ArrayBool,
-	reflect.TypeOf([]int8{}):            ArrayInt8,
-	reflect.TypeOf([]int16{}):           ArrayInt16,
-	reflect.TypeOf([]int32{}):           ArrayInt32,
-	reflect.TypeOf([]int64{}):           ArrayInt64,
-	reflect.TypeOf([]uint8{}):           ArrayUInt8,
-	reflect.TypeOf([]uint16{}):          ArrayUInt16,
-	reflect.TypeOf([]uint32{}):          ArrayUInt32,
-	reflect.TypeOf([]uint64{}):          ArrayUInt64,
-	reflect.TypeOf([]uintptr{}):         ArrayPointer,
-	reflect.TypeOf([]float32{}):         ArrayFloat,
-	reflect.TypeOf([]float64{}):         ArrayDouble,
-	reflect.TypeOf([]string{}):          ArrayString,
-	reflect.TypeOf([]any{}):             ArrayAny,
-	reflect.TypeOf([]Vector2{}):         ArrayVector2,
-	reflect.TypeOf([]Vector3{}):         ArrayVector3,
-	reflect.TypeOf([]Vector4{}):         ArrayVector4,
-	reflect.TypeOf([]Matrix4x4{}):       ArrayMatrix4x4,
-	reflect.TypeOf(Vector2{}):           Vector2Type,
-	reflect.TypeOf(Vector3{}):           Vector3Type,
-	reflect.TypeOf(Vector4{}):           Vector4Type,
-	reflect.TypeOf(Matrix4x4{}):         Matrix4x4Type,
+	reflect.TypeOf(nil):  Void,
+	reflect.TypeOf(true): Bool,
+
+	reflect.TypeOf(int8(0)):  Int8,
+	reflect.TypeOf(int16(0)): Int16,
+	reflect.TypeOf(int32(0)): Int32,
+	reflect.TypeOf(int64(0)): Int64,
+	reflect.TypeOf(int(0)):   C.Int,
+
+	reflect.TypeOf(uint8(0)):  UInt8,
+	reflect.TypeOf(uint16(0)): UInt16,
+	reflect.TypeOf(uint32(0)): UInt32,
+	reflect.TypeOf(uint64(0)): UInt64,
+	reflect.TypeOf(uint(0)):   C.UInt,
+
+	reflect.TypeOf(uintptr(0)): Pointer,
+	reflect.TypeOf(float32(0)): Float,
+	reflect.TypeOf(float64(0)): Double,
+	reflect.TypeOf(""):         String,
+
+	reflect.TypeOf([]bool{}): ArrayBool,
+
+	reflect.TypeOf([]int8{}):  ArrayInt8,
+	reflect.TypeOf([]int16{}): ArrayInt16,
+	reflect.TypeOf([]int32{}): ArrayInt32,
+	reflect.TypeOf([]int64{}): ArrayInt64,
+	reflect.TypeOf([]int{}):   C.ArrayInt,
+
+	reflect.TypeOf([]uint8{}):  ArrayUInt8,
+	reflect.TypeOf([]uint16{}): ArrayUInt16,
+	reflect.TypeOf([]uint32{}): ArrayUInt32,
+	reflect.TypeOf([]uint64{}): ArrayUInt64,
+	reflect.TypeOf([]uint{}):   C.ArrayUInt,
+
+	reflect.TypeOf([]uintptr{}):   ArrayPointer,
+	reflect.TypeOf([]float32{}):   ArrayFloat,
+	reflect.TypeOf([]float64{}):   ArrayDouble,
+	reflect.TypeOf([]string{}):    ArrayString,
+	reflect.TypeOf([]any{}):       ArrayAny,
+	reflect.TypeOf([]Vector2{}):   ArrayVector2,
+	reflect.TypeOf([]Vector3{}):   ArrayVector3,
+	reflect.TypeOf([]Vector4{}):   ArrayVector4,
+	reflect.TypeOf([]Matrix4x4{}): ArrayMatrix4x4,
+
+	reflect.TypeOf(Vector2{}):   Vector2Type,
+	reflect.TypeOf(Vector3{}):   Vector3Type,
+	reflect.TypeOf(Vector4{}):   Vector4Type,
+	reflect.TypeOf(Matrix4x4{}): Matrix4x4Type,
+
 	reflect.TypeOf((*any)(nil)).Elem():  Any,
 	reflect.TypeOf(reflect.TypeOf(nil)): Pointer, // For function pointers
 }
 
-func convertToReflectType(m C.MethodHandle, i int) reflect.Type {
-	mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-
-	if mt.ref {
-		return reflect.TypeOf((*interface{})(nil)).Elem()
-	}
-
-	vt := valueType(mt.valueType)
-
-	if val, ok := valueTypeToReflect[vt]; ok {
-		return val
-	}
-
-	if vt == Function {
-		return createFunctionType(C.Plugify_GetMethodPrototype(m, C.ptrdiff_t(i)))
-	}
-
-	return reflect.TypeOf((*interface{})(nil)).Elem()
+var baseKindValueType = map[reflect.Kind]valueType{
+	reflect.Bool:      Bool,
+	reflect.Int8:      Int8,
+	reflect.Int16:     Int16,
+	reflect.Int32:     Int32,
+	reflect.Int64:     Int64,
+	reflect.Int:       C.Int,
+	reflect.Uint8:     UInt8,
+	reflect.Uint16:    UInt16,
+	reflect.Uint32:    UInt32,
+	reflect.Uint64:    UInt64,
+	reflect.Uint:      C.UInt,
+	reflect.Uintptr:   Pointer,
+	reflect.Float32:   Float,
+	reflect.Float64:   Double,
+	reflect.String:    String,
+	reflect.Interface: Any,
 }
 
-func createFunctionType(method C.MethodHandle) reflect.Type {
-	if method == nil {
-		panicker("expected a function")
+var reflectBaseSliceType = map[valueType]valueType{
+	Bool:  ArrayBool,
+	Int8:  ArrayInt8,
+	Int16: ArrayInt16,
+	Int32: ArrayInt32,
+	Int64: ArrayInt64,
+	UInt8:  ArrayUInt8,
+	UInt16: ArrayUInt16,
+	UInt32: ArrayUInt32,
+	UInt64: ArrayUInt64,
+	Pointer: ArrayPointer,
+	Float:   ArrayFloat,
+	Double:  ArrayDouble,
+	String:  ArrayString,
+
+	Any: ArrayAny,
+
+	Vector2Type:   ArrayVector2,
+	Vector3Type:   ArrayVector3,
+	Vector4Type:   ArrayVector4,
+	Matrix4x4Type: ArrayMatrix4x4,
+}
+
+func customTypeToManaged(t reflect.Type, ref bool) (managedType, bool) {
+	kind := t.Kind()
+
+	switch kind {
+	case reflect.Struct:
+		fieldNum := t.NumField()
+		switch fieldNum {
+		case 1:
+			if ref {
+				if t.ConvertibleTo(reflect.TypeOf(&Matrix4x4{})) {
+					return managedType{
+						valueType: Matrix4x4Type,
+						ref:       true,
+					}, true
+				}
+			} else {
+				if t.ConvertibleTo(reflect.TypeOf(Matrix4x4{})) {
+					return managedType{
+						valueType: Matrix4x4Type,
+					}, true
+				}
+			}
+		case 2:
+			if ref {
+				if t.ConvertibleTo(reflect.TypeOf(&Vector2{})) {
+					return managedType{
+						valueType: Vector2Type,
+						ref:       true,
+					}, true
+				}
+			} else {
+				if t.ConvertibleTo(reflect.TypeOf(Vector2{})) {
+					return managedType{
+						valueType: Vector2Type,
+					}, true
+				}
+			}
+		case 3:
+			if ref {
+				if t.ConvertibleTo(reflect.TypeOf(&Vector3{})) {
+					return managedType{
+						valueType: Vector3Type,
+						ref:       true,
+					}, true
+				}
+			} else {
+				if t.ConvertibleTo(reflect.TypeOf(Vector3{})) {
+					return managedType{
+						valueType: Vector3Type,
+					}, true
+				}
+			}
+		case 4:
+			if ref {
+				if t.ConvertibleTo(reflect.TypeOf(&Vector4{})) {
+					return managedType{
+						valueType: Vector4Type,
+						ref:       true,
+					}, true
+				}
+			} else {
+				if t.ConvertibleTo(reflect.TypeOf(Vector4{})) {
+					return managedType{
+						valueType: Vector4Type,
+					}, true
+				}
+			}
+		}
+
+	case reflect.Slice:
+		elem := t.Elem()
+		//isPtr := elem.Kind() == reflect.Pointer
+
+		mType, ok := customTypeToManaged(elem, false)
+		if !ok {
+			return managedType{}, false
+		}
+
+		return managedType{
+			valueType: reflectBaseSliceType[mType.valueType],
+			ref:       ref,
+		}, true
+	default:
+
+		baseValueType, ok := baseKindValueType[kind]
+		if !ok {
+			return managedType{}, false
+		}
+
+		return managedType{
+			valueType: baseValueType,
+			ref:       ref,
+		}, true
 	}
 
-	count := int(C.Plugify_GetMethodParamCount(method))
-	in := make([]reflect.Type, count)
-	for i := range in {
-		in[i] = convertToReflectType(method, i)
-	}
-	out := []reflect.Type{convertToReflectType(method, -1)}
-
-	return reflect.FuncOf(in, out, false)
+	return managedType{}, false
 }
 
 func createManagedType(t reflect.Type) (managedType, error) {
@@ -270,7 +345,12 @@ func createManagedType(t reflect.Type) (managedType, error) {
 		return managedType{val, ref}, nil
 	}
 
-	return managedType{}, fmt.Errorf("unsupported type: %v", t)
+	mType, ok := customTypeToManaged(baseType, ref)
+	if !ok {
+		return managedType{}, fmt.Errorf("unsupported type: %v", t)
+	}
+
+	return mType, nil
 }
 
 const isWindows bool = runtime.GOOS == "windows" && runtime.GOARCH != "arm64"

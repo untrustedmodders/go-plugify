@@ -1,6 +1,7 @@
 *
 !*.go
 !*/
+!go.sum
 !go.mod
 !*.pplugin
 !.gitignore
