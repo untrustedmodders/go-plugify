@@ -935,7 +935,7 @@ func paramToObject(m C.MethodHandle, vt valueType, t reflect.Type, p *C.Paramete
 	case Double:
 		return getNonRefArgument(p, i, t)
 	case Function:
-		val := reflect.New(t)
+		val := reflect.New(t).Elem()
 		val.Set(reflect.ValueOf(GetDelegateForFunctionPointer(getArgument[unsafe.Pointer](p, i), t)))
 		return val
 	case String:
