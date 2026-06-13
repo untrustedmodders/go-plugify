@@ -282,7 +282,7 @@ func ConstructVectorBool[T ~bool](data []T) PlgVector {
 	return C.Plugify_ConstructVectorBool((*C.bool)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorBool(v reflect.Value) PlgVector {
+func constructVectorBoolToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorBool((*C.bool)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -290,7 +290,7 @@ func ConstructVectorChar8[T ~int8](data []T) PlgVector {
 	return C.Plugify_ConstructVectorChar8((*C.char)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorChar8(v reflect.Value) PlgVector {
+func constructVectorChar8ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorChar8((*C.char)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -298,7 +298,7 @@ func ConstructVectorChar16[T ~uint16](data []T) PlgVector {
 	return C.Plugify_ConstructVectorChar16((*C.char16_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorChar16(v reflect.Value) PlgVector {
+func constructVectorChar16ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorChar16((*C.char16_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -306,7 +306,7 @@ func ConstructVectorInt8[T ~int8](data []T) PlgVector {
 	return C.Plugify_ConstructVectorInt8((*C.int8_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorInt8(v reflect.Value) PlgVector {
+func constructVectorInt8ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorInt8((*C.int8_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -314,7 +314,7 @@ func ConstructVectorInt16[T ~int16](data []T) PlgVector {
 	return C.Plugify_ConstructVectorInt16((*C.int16_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorInt16(v reflect.Value) PlgVector {
+func constructVectorInt16ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorInt16((*C.int16_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -322,7 +322,7 @@ func ConstructVectorInt32[T ~int32](data []T) PlgVector {
 	return C.Plugify_ConstructVectorInt32((*C.int32_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorInt32(v reflect.Value) PlgVector {
+func constructVectorInt32ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorInt32((*C.int32_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -330,7 +330,7 @@ func ConstructVectorInt64[T ~int | ~int64](data []T) PlgVector {
 	return C.Plugify_ConstructVectorInt64((*C.int64_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorInt64(v reflect.Value) PlgVector {
+func constructVectorInt64ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorInt64((*C.int64_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -346,7 +346,7 @@ func ConstructVectorUInt8[T ~uint8](data []T) PlgVector {
 	return C.Plugify_ConstructVectorUInt8((*C.uint8_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorUInt8(v reflect.Value) PlgVector {
+func constructVectorUInt8ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorUInt8((*C.uint8_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -354,7 +354,7 @@ func ConstructVectorUInt16[T ~uint16](data []T) PlgVector {
 	return C.Plugify_ConstructVectorUInt16((*C.uint16_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorUInt16(v reflect.Value) PlgVector {
+func constructVectorUInt16ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorUInt16((*C.uint16_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -362,7 +362,7 @@ func ConstructVectorUInt32[T ~uint32](data []T) PlgVector {
 	return C.Plugify_ConstructVectorUInt32((*C.uint32_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorUInt32(v reflect.Value) PlgVector {
+func constructVectorUInt32ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorUInt32((*C.uint32_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -370,7 +370,7 @@ func ConstructVectorUInt64[T ~uint64](data []T) PlgVector {
 	return C.Plugify_ConstructVectorUInt64((*C.uint64_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorUInt64(v reflect.Value) PlgVector {
+func constructVectorUInt64ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorUInt64((*C.uint64_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -386,7 +386,7 @@ func ConstructVectorPointer[T ~uintptr](data []T) PlgVector {
 	return C.Plugify_ConstructVectorPointer((*C.uintptr_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorPointer(v reflect.Value) PlgVector {
+func constructVectorPointerToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorPointer((*C.uintptr_t)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -394,7 +394,7 @@ func ConstructVectorFloat[T ~float32](data []T) PlgVector {
 	return C.Plugify_ConstructVectorFloat((*C.float)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorFloat(v reflect.Value) PlgVector {
+func constructVectorFloatToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorFloat((*C.float)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -402,7 +402,7 @@ func ConstructVectorDouble[T ~float64](data []T) PlgVector {
 	return C.Plugify_ConstructVectorDouble((*C.double)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorDouble(v reflect.Value) PlgVector {
+func constructVectorDoubleToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorDouble((*C.double)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -420,7 +420,7 @@ func ConstructVectorString[T ~string](data []T) PlgVector {
 	return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorString(v reflect.Value) PlgVector {
+func constructVectorStringToSlice(v reflect.Value) PlgVector {
 	lenght := v.Len()
 	cArray := C.malloc(C.size_t(lenght) * C.size_t(unsafe.Sizeof(C.GoString_{})))
 	defer C.free(cArray)
@@ -444,7 +444,7 @@ func ConstructVectorVariant[T any](arr []T) PlgVector {
 	return vec
 }
 
-func VConstructVectorVariant(v reflect.Value) PlgVector {
+func constructVectorVariantToSlice(v reflect.Value) PlgVector {
 	vec := C.Plugify_ConstructVectorVariant(C.ptrdiff_t(v.Len()))
 	reflectAssignVectorVariant(&vec, v)
 	return vec
@@ -454,7 +454,7 @@ func ConstructVectorVector2[S ~struct{ X, Y float32 }, T ~[]S](data T) PlgVector
 	return C.Plugify_ConstructVectorVector2((*PlgVector2)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorVector2(v reflect.Value) PlgVector {
+func constructVectorVector2ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorVector2((*PlgVector2)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -462,7 +462,7 @@ func ConstructVectorVector3[S ~struct{ X, Y, Z float32 }, T ~[]S](data T) PlgVec
 	return C.Plugify_ConstructVectorVector3((*PlgVector3)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorVector3(v reflect.Value) PlgVector {
+func constructVectorVector3ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorVector3((*PlgVector3)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -470,7 +470,7 @@ func ConstructVectorVector4[S ~struct{ X, Y, Z, W float32 }, T ~[]S](data T) Plg
 	return C.Plugify_ConstructVectorVector4((*PlgVector4)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorVector4(v reflect.Value) PlgVector {
+func constructVectorVector4ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorVector4((*PlgVector4)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
@@ -478,7 +478,7 @@ func ConstructVectorMatrix4x4[S ~struct{ M [4][4]float32 }, T ~[]S](data T) PlgV
 	return C.Plugify_ConstructVectorMatrix4x4((*PlgMatrix4x4)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VConstructVectorMatrix4x4(v reflect.Value) PlgVector {
+func constructVectorMatrix4x4ToSlice(v reflect.Value) PlgVector {
 	return C.Plugify_ConstructVectorMatrix4x4((*PlgMatrix4x4)(v.UnsafePointer()), C.ptrdiff_t(v.Len()))
 }
 
