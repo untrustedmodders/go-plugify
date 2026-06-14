@@ -34,15 +34,15 @@ func convertParamType(p ParamInfo, ignoreRef bool) manifest.Property {
 		// Function parameter with prototype
 		return manifest.Property{
 			Type: "function",
-			//Name:        param.Name,
-			//Description: param.Description,
+			Name:        p.Name,
+			Description: p.Description,
 			Ref: t.IsRef && !ignoreRef,
 			Prototype: &manifest.Method{
 				Name:        t.FuncSig.Name,
 				Description: t.FuncSig.Description,
 				FuncName:    "_",
 				ParamTypes:  convertParams(t.FuncSig.Params),
-				RetType:     convertReturnType(ParamInfo{"", t.FuncSig.Return, t.FuncSig.Description}),
+				RetType:     convertReturnType(ParamInfo{"", t.FuncSig.Return, t.FuncSig.Return.Description}),
 			},
 		}
 	}
