@@ -40,11 +40,12 @@ type TypeInfo struct {
 	IsAlias    bool
 	IsArray    bool
 
-	EnumTypeName string
-	EnumValues   []EnumValue
-	ElemType     *TypeInfo
-	FuncSig      *FuncSignature
-	Description  string
+	AliasTypeName string
+	EnumTypeName  string
+	EnumValues    []EnumValue
+	ElemType      *TypeInfo
+	FuncSig       *FuncSignature
+	Description   string
 
 	packageImport packageImport
 }
@@ -271,7 +272,6 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, typeName string, info
 
 			typeInfo.IsAlias = true
 		}
-		typeInfo.packageImport = g.prepareImport(obj)
 
 		return typeInfo, mappedType, nil
 	case *types.Named:
