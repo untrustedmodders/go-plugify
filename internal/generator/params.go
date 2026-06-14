@@ -16,7 +16,7 @@ type ExportedFunction struct {
 	Description string
 
 	originalFuncName string
-	packageImport   packageImport
+	packageImport    packageImport
 }
 
 type ParamInfo struct {
@@ -151,6 +151,7 @@ func (g *Package) extractReturnType(results *types.Tuple, info *types.Info, pkg 
 	res := results.At(0)
 	return g.mapTypeInfo(res, res.Type(), info, pkg, false)
 }
+
 func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg *packages.Package, isRef bool) (TypeInfo, mappedType, *paramError) {
 	switch t := bt.(type) {
 

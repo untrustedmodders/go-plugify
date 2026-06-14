@@ -1456,6 +1456,23 @@ func GetVectorDataInt16[T ~int16](v *PlgVector) []T {
 	return arr
 }
 
+func GetVectorDataIntT[T ~int](v *PlgVector) []T {
+	size := int(C.Plugify_GetVectorSizeInt32(v))
+	arr := make([]T, size)
+
+	if size > 0 {
+		if is32bit {
+			dataPtr := C.Plugify_GetVectorDataInt32(v)
+			C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int32_t)
+		} else {
+			dataPtr := C.Plugify_GetVectorDataInt64(v)
+			C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int64_t)
+		}
+	}
+
+	return arr
+}
+
 func GetVectorDataInt32[T ~int32](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeInt32(v))
 	arr := make([]T, size)
@@ -1552,6 +1569,36 @@ func GetVectorDataString[T ~string](v *PlgVector) []T {
 	dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
 	for i := range arr {
 		arr[i] = T(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))))
+	}
+	return arr
+}
+
+func GetVectorDataVector2T[T any](v *PlgVector) []T {
+	size := int(C.Plugify_GetVectorSizeVector2(v))
+	arr := make([]T, size)
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector2(v)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector2)
+	}
+	return arr
+}
+
+func GetVectorDataVector3T[T any](v *PlgVector) []T {
+	size := int(C.Plugify_GetVectorSizeVector3(v))
+	arr := make([]T, size)
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector3(v)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector3)
+	}
+	return arr
+}
+
+func GetVectorDataVector4T[T any](v *PlgVector) []T {
+	size := int(C.Plugify_GetVectorSizeVector4(v))
+	arr := make([]T, size)
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector4(v)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector4)
 	}
 	return arr
 }
@@ -1823,6 +1870,14 @@ func AssignVectorInt16[T ~int16](v *PlgVector, data []T) {
 func AssignVectorInt32[T ~int32 | ~int](v *PlgVector, data []T) {
 	C.Plugify_AssignVectorInt32(v, (*C.int32_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
+
+/* func AssignVectorInt[T ~int](v *PlgVector, data []T) {
+	if is32bit {
+		C.Plugify_AssignVectorInt32(v, (*C.int32_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
+	} else {
+		C.Plugify_AssignVectorInt64(v, (*C.int64_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
+	}
+} */
 
 func AssignVectorInt64[T ~int64 | ~int](v *PlgVector, data []T) {
 	C.Plugify_AssignVectorInt64(v, (*C.int64_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))

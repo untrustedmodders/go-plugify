@@ -904,7 +904,7 @@ func paramRefToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t)
 	}
 }
 
-func paramToObject(m C.MethodHandle, vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) reflect.Value {
+func paramToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) reflect.Value {
 	switch vt {
 	case Bool:
 		return getNonRefArgument(p, i, t)
@@ -1205,7 +1205,7 @@ func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters
 				if mt.ref {
 					args[i] = paramRefToObject(vt, argType, p, i)
 				} else {
-					args[i] = paramToObject(m, vt, argType, p, i)
+					args[i] = paramToObject(vt, argType, p, i)
 				}
 			}
 
