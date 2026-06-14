@@ -269,8 +269,7 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, typeName string, info
 				typeInfo.Description = findTypeComment(pkg, typeInfo.EnumTypeName)
 			}
 
-			typeInfo.IsEnum = true
-			typeInfo.EnumValues = findEnumValues(pkg, t.Obj())
+			typeInfo.IsAlias = true
 		}
 		typeInfo.packageImport = g.prepareImport(obj)
 
