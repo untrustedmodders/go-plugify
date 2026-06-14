@@ -37,6 +37,7 @@ type TypeInfo struct {
 	IsRef      bool
 	IsFunc     bool
 	IsEnum     bool
+	IsAlias    bool
 	IsArray    bool
 
 	EnumTypeName string
@@ -103,7 +104,6 @@ func (p *paramError) Add(err string) *paramError {
 	p.err = fmt.Errorf("%s: %w", err, p.err)
 	return p
 }
-
 func (g *Package) checkExportedType(v *types.Var, tn *types.TypeName) *paramError {
 	pkg := tn.Pkg()
 	if pkg == nil || pkg.Name() == "main" {
@@ -129,7 +129,7 @@ func (g *Package) extractParams(sig *types.Signature, info *types.Info, pkg *pac
 	for i := 0; i < params.Len(); i++ {
 		param := params.At(i)
 
-		t, _, err := g.mapTypeInfo(param, param.Type(), info, pkg, false)
+		t, _, err := g.mapTypeInfo(param, param.Type(), "", info, pkg, false)
 		if err != nil {
 			return nil, err
 		}
@@ -149,15 +149,14 @@ func (g *Package) extractReturnType(results *types.Tuple, info *types.Info, pkg 
 	}
 
 	res := results.At(0)
-	return g.mapTypeInfo(res, res.Type(), info, pkg, false)
+	return g.mapTypeInfo(res, res.Type(), "", info, pkg, false)
 }
-
-func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg *packages.Package, isRef bool) (TypeInfo, mappedType, *paramError) {
+func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, typeName string, info *types.Info, pkg *packages.Package, isRef bool) (TypeInfo, mappedType, *paramError) {
 	switch t := bt.(type) {
 
 	// Handle pointer types - set isRef and unwrap
 	case *types.Pointer:
-		typeInfo, _, err := g.mapTypeInfo(v, t.Elem(), info, pkg, true)
+		typeInfo, _, err := g.mapTypeInfo(v, t.Elem(), "", info, pkg, true)
 		if err != nil {
 			return TypeInfo{}, mappedTypeInvalid, err.Add("failed to map pointer type:")
 		}
@@ -185,7 +184,7 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg
 	// Handle slices/arrays
 	case *types.Slice:
 		// check is it ref?
-		elemType, _, err := g.mapTypeInfo(v, t.Elem(), info, pkg, false)
+		elemType, _, err := g.mapTypeInfo(v, t.Elem(), "", info, pkg, false)
 		if err != nil {
 			return TypeInfo{}, mappedTypeInvalid, err.Add("failed to map slice type:")
 		}
@@ -212,7 +211,10 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg
 		// Get type-level documentation for delegate with doxygen parsing
 		var delegateDoc DocComment
 		if pkg != nil {
-			delegateDoc = findTypeDelegateDoc(pkg, t.String())
+			if typeName == "" {
+				typeName = t.String()
+			}
+			delegateDoc = findTypeDelegateDoc(pkg, typeName)
 		}
 
 		// Apply parameter descriptions from delegate documentation
@@ -249,18 +251,19 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg
 			return TypeInfo{}, mappedTypeInvalid, err
 		}
 
+		aliasName := obj.Name()
 		baseType := t.Rhs()
 
-		typeInfo, mappedType, err := g.mapTypeInfo(v, baseType, info, pkg, isRef)
+		typeInfo, mappedType, err := g.mapTypeInfo(v, baseType, aliasName, info, pkg, isRef)
 		if err != nil {
 			return TypeInfo{}, mappedTypeInvalid, err.Add("failed to map alias type")
 		}
 
 		switch mappedType {
 		case mappedTypeFunc:
-			typeInfo.FuncSig.Name = obj.Name()
+			typeInfo.FuncSig.Name = aliasName
 		case mappedTypeBasic, mappedTypeSlice:
-			typeInfo.EnumTypeName = obj.Name()
+			typeInfo.EnumTypeName = aliasName
 
 			if pkg != nil {
 				typeInfo.Description = findTypeComment(pkg, typeInfo.EnumTypeName)
@@ -279,18 +282,19 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, info *types.Info, pkg
 			return TypeInfo{}, mappedTypeInvalid, err
 		}
 
+		typeName := obj.Name()
 		baseType := t.Underlying()
 
-		typeInfo, mappedType, err := g.mapTypeInfo(v, baseType, info, pkg, isRef)
+		typeInfo, mappedType, err := g.mapTypeInfo(v, baseType, typeName, info, pkg, isRef)
 		if err != nil {
 			return TypeInfo{}, mappedTypeInvalid, err.Add("failed to map named type")
 		}
 
 		switch mappedType {
 		case mappedTypeFunc:
-			typeInfo.FuncSig.Name = obj.Name()
+			typeInfo.FuncSig.Name = typeName
 		case mappedTypeBasic, mappedTypeSlice, mappedTypeInterface:
-			typeInfo.EnumTypeName = obj.Name()
+			typeInfo.EnumTypeName = typeName
 
 			if pkg != nil {
 				typeInfo.Description = findTypeComment(pkg, typeInfo.EnumTypeName)

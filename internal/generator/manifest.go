@@ -12,7 +12,7 @@ func ConvertToManifestMethods(funcs []ExportedFunction) []manifest.Method {
 			FuncName:    f.FuncName,
 			Description: f.Description,
 			ParamTypes:  convertParams(f.Params),
-			RetType:     convertReturnType(f.ReturnType),
+			RetType:     convertReturnType(ParamInfo{"", f.ReturnType, f.Description}),
 		}
 	}
 
@@ -22,12 +22,14 @@ func ConvertToManifestMethods(funcs []ExportedFunction) []manifest.Method {
 func convertParams(params []ParamInfo) []manifest.Property {
 	result := make([]manifest.Property, len(params))
 	for i, p := range params {
-		result[i] = convertParamType(p.Type, false)
+		result[i] = convertParamType(p, false)
 	}
 	return result
 }
 
-func convertParamType(t TypeInfo, ignoreRef bool) manifest.Property {
+func convertParamType(p ParamInfo, ignoreRef bool) manifest.Property {
+	t := p.Type
+
 	if t.IsFunc {
 		// Function parameter with prototype
 		return manifest.Property{
@@ -40,7 +42,7 @@ func convertParamType(t TypeInfo, ignoreRef bool) manifest.Property {
 				FuncName:    "_",
 				Description: t.FuncSig.Description,
 				ParamTypes:  convertParams(t.FuncSig.Params),
-				RetType:     convertReturnType(t.FuncSig.Return),
+				RetType:     convertReturnType(ParamInfo{"", t.FuncSig.Return, t.FuncSig.Description}),
 			},
 		}
 	}
@@ -48,11 +50,14 @@ func convertParamType(t TypeInfo, ignoreRef bool) manifest.Property {
 	if t.IsArray && t.ElemType != nil && t.ElemType.IsEnum {
 		// Array of enum parameter
 
-		prop := convertParamType(*t.ElemType, ignoreRef)
+		prop := convertParamType(ParamInfo{p.Name, *p.Type.ElemType, p.Description}, ignoreRef)
+
 		return manifest.Property{
-			Type:       t.TypeString,
-			Ref:        t.IsRef && !ignoreRef,
-			Enumerator: prop.Enumerator,
+			Name:        p.Name,
+			Description: p.Description,
+			Type:        t.TypeString,
+			Ref:         t.IsRef && !ignoreRef,
+			Enumerator:  prop.Enumerator,
 		}
 	}
 
@@ -79,11 +84,13 @@ func convertParamType(t TypeInfo, ignoreRef bool) manifest.Property {
 	}
 
 	return manifest.Property{
-		Type: t.TypeString,
-		Ref:  t.IsRef,
+		Name:        p.Name,
+		Description: p.Description,
+		Type:        t.TypeString,
+		Ref:         t.IsRef,
 	}
 }
 
-func convertReturnType(t TypeInfo) manifest.Property {
-	return convertParamType(t, true)
+func convertReturnType(p ParamInfo) manifest.Property {
+	return convertParamType(p, true)
 }

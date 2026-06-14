@@ -20,7 +20,7 @@ func (g *Package) generateAutoExports(path string) error {
 	"reflect"
 	"unsafe"
 
-	//"github.com/untrustedmodders/go-plugify"`)
+	"github.com/untrustedmodders/go-plugify"`)
 
 	for _, imp := range g.imports {
 
