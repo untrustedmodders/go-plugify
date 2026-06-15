@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.1](https://github.com/untrustedmodders/go-plugify/compare/v1.9.0...v1.9.1) (2026-06-15)
+
+
+### Bug Fixes
+
+* callback param name and description not generated & plugify not exported at autoexports.go ([121b3a8](https://github.com/untrustedmodders/go-plugify/commit/121b3a866aed636098ca2b8067d060388ffb5bc2))
+* fixed slice's element types import paths ([68ef2ed](https://github.com/untrustedmodders/go-plugify/commit/68ef2edaf6391e207b85e30fb88b66a930655b02))
+* missing name and description in enums/aliases ([c48281a](https://github.com/untrustedmodders/go-plugify/commit/c48281abdefd570887cc0f30597a4554c8be5c7b))
+* pplugin callback name and description missing ([9b8b91f](https://github.com/untrustedmodders/go-plugify/commit/9b8b91f7a42c9c1332c6753dc6586c271a3e86b7))
+* removed redundant alias import ([914d906](https://github.com/untrustedmodders/go-plugify/commit/914d9064dfe556fa05d17eebe9e19bcdd14e695b))
+* removed unnecessary functions ([7f17d9c](https://github.com/untrustedmodders/go-plugify/commit/7f17d9c056b9550647ce4be485a17204cf83d86d))
+
 ## [1.9.0](https://github.com/untrustedmodders/go-plugify/compare/v1.8.5...v1.9.0) (2026-06-13)
 
 
