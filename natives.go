@@ -407,35 +407,15 @@ func constructVectorDoubleToSlice(v reflect.Value) PlgVector {
 }
 
 func ConstructVectorString[T ~string](data []T) PlgVector {
-	//return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
-	cArray := C.malloc(C.size_t(len(data)) * C.size_t(unsafe.Sizeof(C.GoString_{})))
-	defer C.free(cArray)
-	arr := ([]C.GoString_)(unsafe.Slice((*C.GoString_)(cArray), len(data)))
-
-	for i, s := range data {
-		arr[i].p = (*C.char)(unsafe.Pointer(&[]byte(s)[0]))
-		arr[i].n = C.ptrdiff_t(len(s))
-	}
-
-	return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(data)))
+	vec := C.Plugify_ConstructVectorString(C.ptrdiff_t(len(data)))
+	AssignVectorString(&vec, data)
+	return vec
 }
 
 func constructVectorStringToSlice(v reflect.Value) PlgVector {
-	lenght := v.Len()
-	cArray := C.malloc(C.size_t(lenght) * C.size_t(unsafe.Sizeof(C.GoString_{})))
-	defer C.free(cArray)
-	arr := ([]C.GoString_)(unsafe.Slice((*C.GoString_)(cArray), lenght))
-
-	for i := 0; i < lenght; i++ {
-		str := v.Index(i).String()
-
-		arr[i] = C.GoString_{
-			p: (*C.char)(unsafe.Pointer(&[]byte(str)[0])),
-			n: C.ptrdiff_t(len(str)),
-		}
-	}
-
-	return C.Plugify_ConstructVectorString((*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(lenght))
+	vec := C.Plugify_ConstructVectorString(C.ptrdiff_t(v.Len()))
+	reflectAssignVectorString(&vec, v)
+	return vec
 }
 
 func ConstructVectorVariant[T any](arr []T) PlgVector {
@@ -867,9 +847,9 @@ func getVectorDataStringReturn(v *PlgVector, out reflect.Type) reflect.Value {
 	} */
 
 	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
 		for i := range size {
-			slice.Index(i).SetString(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))))
+			str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+			slice.Index(i).SetString(GetStringData[string](str))
 		}
 	}
 
@@ -1129,10 +1109,9 @@ func getVectorDataStringReflect(v *PlgVector, t reflect.Type) reflect.Value {
 	slice := reflect.MakeSlice(t, size, size)
 
 	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-
 		for i := range size {
-			slice.Index(i).SetString(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))))
+			str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+			slice.Index(i).SetString(GetStringData[string](str))
 		}
 	}
 
@@ -1273,16 +1252,16 @@ func getVectorDataStringToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeString(v))
 	sliceSize(s, size)
 
-	dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-	for i := 0; i < size; i++ {
-		s.Index(i).SetString(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))))
+	for i := range size {
+		str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+		s.Index(i).SetString(GetStringData[string](str))
 	}
 }
 
 func GetVectorDataVariant[V any, T ~[]V](v *PlgVector) T {
 	size := int(C.Plugify_GetVectorSizeVariant(v))
 	arr := make(T, size)
-	/* for i := 0; i < size; i++ {
+	/* for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
 		//reflect.ValueOf(arr[i]).Set(reflect.ValueOf(GetVariantData(variant)))
 	} */
@@ -1290,7 +1269,7 @@ func GetVectorDataVariant[V any, T ~[]V](v *PlgVector) T {
 	//slice := reflect.ValueOf(arr)
 	//slicePtr := slice.UnsafePointer()
 
-	for i := C.size_t(0); i < C.size_t(size); i++ {
+	for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
 		data := GetVariantData(variant)
 
@@ -1316,12 +1295,12 @@ func getVectorDataVariantToSlice(v *PlgVector, s reflect.Value) {
 	size := int(C.Plugify_GetVectorSizeVariant(v))
 	sliceSize(s, size)
 
-	for i := C.size_t(0); i < C.size_t(size); i++ {
+	for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
 		data := GetVariantData(variant)
 
 		if data != nil {
-			s.Index(int(i)).Set(reflect.ValueOf(data))
+			s.Index(i).Set(reflect.ValueOf(data))
 		}
 	}
 }
@@ -1566,9 +1545,9 @@ func GetVectorDataDouble[T ~float64](v *PlgVector) []T {
 func GetVectorDataString[T ~string](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeString(v))
 	arr := make([]T, size)
-	dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-	for i := range arr {
-		arr[i] = T(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))))
+	for i := range size {
+		str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+		arr[i] = GetStringData[T](str)
 	}
 	return arr
 }
@@ -1782,9 +1761,9 @@ func GetVectorDataStringTo[V ~string, T ~[]V](v *PlgVector, arr *T) {
 	if len(*arr) < size {
 		*arr = make(T, size)
 	}
-	dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-	for i := range *arr {
-		(*arr)[i] = GetStringData[V]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String)))
+	for i := range size {
+		str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+		(*arr)[i] = GetStringData[V](str)
 	}
 }
 
@@ -1795,7 +1774,7 @@ func GetVectorDataVariantTo[V any, T ~[]V](v *PlgVector, arr *T) {
 		*arr = make(T, size)
 	}
 
-	for i := C.size_t(0); i < C.size_t(size); i++ {
+	for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
 		data := GetVariantData(variant)
 
@@ -1916,22 +1895,26 @@ func AssignVectorDouble[T ~float64](v *PlgVector, data []T) {
 }
 
 func AssignVectorString[T ~string](v *PlgVector, data []T) {
-	cArray := C.malloc(C.size_t(len(data)) * C.size_t(unsafe.Sizeof(C.GoString_{})))
-	defer C.free(cArray)
-	arr := ([]C.GoString_)(unsafe.Slice((*C.GoString_)(cArray), len(data)))
-
-	for i, s := range data {
-		arr[i].p = (*C.char)(unsafe.Pointer(&[]byte(s)[0]))
-		arr[i].n = C.ptrdiff_t(len(s))
+	size := len(data)
+	C.Plugify_AssignVectorString(v, C.ptrdiff_t(size))
+	for i := range size {
+		str := C.Plugify_GetVectorDataString(v, C.ptrdiff_t(i))
+		AssignString(str, data[i])
 	}
-
-	C.Plugify_AssignVectorString(v, (*string)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(data)))
 }
 
+func reflectAssignVectorString(vec *PlgVector, v reflect.Value) {
+	size := v.Len()
+	C.Plugify_AssignVectorString(vec, C.ptrdiff_t(size))
+	for i := range size {
+		str := C.Plugify_GetVectorDataString(vec, C.ptrdiff_t(i))
+		AssignString(str, v.Index(i).String())
+	}
+}
 func AssignVectorVariant[T any](v *PlgVector, data []T) {
 	size := len(data)
 	C.Plugify_AssignVectorVariant(v, C.ptrdiff_t(size))
-	for i := 0; i < size; i++ {
+	for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
 		AssignVariant(variant, data[i])
 	}
@@ -1940,7 +1923,7 @@ func AssignVectorVariant[T any](v *PlgVector, data []T) {
 func reflectAssignVectorVariant(vec *PlgVector, v reflect.Value) {
 	size := v.Len()
 	C.Plugify_AssignVectorVariant(vec, C.ptrdiff_t(size))
-	for i := 0; i < size; i++ {
+	for i := range size {
 		variant := C.Plugify_GetVectorDataVariant(vec, C.ptrdiff_t(i))
 		AssignVariant(variant, v.Index(i).Interface())
 	}

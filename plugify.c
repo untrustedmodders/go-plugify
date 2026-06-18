@@ -71,7 +71,7 @@ Vector (*ConstructVectorUInt64)(uint64_t*, ptrdiff_t) = NULL;
 Vector (*ConstructVectorPointer)(uintptr_t*, ptrdiff_t) = NULL;
 Vector (*ConstructVectorFloat)(float*, ptrdiff_t) = NULL;
 Vector (*ConstructVectorDouble)(double*, ptrdiff_t) = NULL;
-Vector (*ConstructVectorString)(_GoString_*, ptrdiff_t) = NULL;
+Vector (*ConstructVectorString)(ptrdiff_t) = NULL;
 Vector (*ConstructVectorVariant)(ptrdiff_t) = NULL;
 Vector (*ConstructVectorVector2)(Vector2*, ptrdiff_t) = NULL;
 Vector (*ConstructVectorVector3)(Vector3*, ptrdiff_t) = NULL;
@@ -137,7 +137,7 @@ uint64_t* (*GetVectorDataUInt64)(Vector*) = NULL;
 uintptr_t* (*GetVectorDataPointer)(Vector*) = NULL;
 float* (*GetVectorDataFloat)(Vector*) = NULL;
 double* (*GetVectorDataDouble)(Vector*) = NULL;
-String* (*GetVectorDataString)(Vector*) = NULL;
+String* (*GetVectorDataString)(Vector*, ptrdiff_t) = NULL;
 Variant* (*GetVectorDataVariant)(Vector*, ptrdiff_t) = NULL;
 Vector2* (*GetVectorDataVector2)(Vector*) = NULL;
 Vector3* (*GetVectorDataVector3)(Vector*) = NULL;
@@ -159,7 +159,7 @@ void (*AssignVectorUInt64)(Vector*, uint64_t*, ptrdiff_t) = NULL;
 void (*AssignVectorPointer)(Vector*, uintptr_t*, ptrdiff_t) = NULL;
 void (*AssignVectorFloat)(Vector*, float*, ptrdiff_t) = NULL;
 void (*AssignVectorDouble)(Vector*, double*, ptrdiff_t) = NULL;
-void (*AssignVectorString)(Vector*, _GoString_*, ptrdiff_t) = NULL;
+void (*AssignVectorString)(Vector*, ptrdiff_t) = NULL;
 void (*AssignVectorVariant)(Vector*, ptrdiff_t) = NULL;
 void (*AssignVectorVector2)(Vector*, Vector2*, ptrdiff_t) = NULL;
 void (*AssignVectorVector3)(Vector*, Vector3*, ptrdiff_t) = NULL;
@@ -253,7 +253,7 @@ Vector Plugify_ConstructVectorUInt64(uint64_t* data, ptrdiff_t size) { return Co
 Vector Plugify_ConstructVectorPointer(uintptr_t* data, ptrdiff_t size) { return ConstructVectorPointer(data, size); }
 Vector Plugify_ConstructVectorFloat(float* data, ptrdiff_t size) { return ConstructVectorFloat(data, size); }
 Vector Plugify_ConstructVectorDouble(double* data, ptrdiff_t size) { return ConstructVectorDouble(data, size); }
-Vector Plugify_ConstructVectorString(_GoString_* data, ptrdiff_t size) { return ConstructVectorString(data, size); }
+Vector Plugify_ConstructVectorString(ptrdiff_t size) { return ConstructVectorString(size); }
 Vector Plugify_ConstructVectorVariant(ptrdiff_t size) { return ConstructVectorVariant(size); }
 Vector Plugify_ConstructVectorVector2(Vector2* data, ptrdiff_t size) { return ConstructVectorVector2(data, size); }
 Vector Plugify_ConstructVectorVector3(Vector3* data, ptrdiff_t size) { return ConstructVectorVector3(data, size); }
@@ -316,7 +316,7 @@ uint64_t* Plugify_GetVectorDataUInt64(Vector* vec) { return GetVectorDataUInt64(
 uintptr_t* Plugify_GetVectorDataPointer(Vector* vec) { return GetVectorDataPointer(vec); }
 float* Plugify_GetVectorDataFloat(Vector* vec) { return GetVectorDataFloat(vec); }
 double* Plugify_GetVectorDataDouble(Vector* vec) { return GetVectorDataDouble(vec); }
-String* Plugify_GetVectorDataString(Vector* vec) { return GetVectorDataString(vec); }
+String* Plugify_GetVectorDataString(Vector* vec, ptrdiff_t index) { return GetVectorDataString(vec, index); }
 Variant* Plugify_GetVectorDataVariant(Vector* vec, ptrdiff_t index) { return GetVectorDataVariant(vec, index); }
 Vector2* Plugify_GetVectorDataVector2(Vector* vec) { return GetVectorDataVector2(vec); }
 Vector3* Plugify_GetVectorDataVector3(Vector* vec) { return GetVectorDataVector3(vec); }
@@ -337,7 +337,7 @@ void Plugify_AssignVectorUInt64(Vector* vec, uint64_t* data, ptrdiff_t size) { A
 void Plugify_AssignVectorPointer(Vector* vec, uintptr_t* data, ptrdiff_t size) { AssignVectorPointer(vec, data, size); }
 void Plugify_AssignVectorFloat(Vector* vec, float* data, ptrdiff_t size) { AssignVectorFloat(vec, data, size); }
 void Plugify_AssignVectorDouble(Vector* vec, double* data, ptrdiff_t size) { AssignVectorDouble(vec, data, size); }
-void Plugify_AssignVectorString(Vector* vec, _GoString_* data, ptrdiff_t size) { AssignVectorString(vec, data, size); }
+void Plugify_AssignVectorString(Vector* vec, ptrdiff_t size) { AssignVectorString(vec, size); }
 void Plugify_AssignVectorVariant(Vector* vec, ptrdiff_t size) { AssignVectorVariant(vec, size); }
 void Plugify_AssignVectorVector2(Vector* vec, Vector2* data, ptrdiff_t size) { AssignVectorVector2(vec, data, size); }
 void Plugify_AssignVectorVector3(Vector* vec, Vector3* data, ptrdiff_t size) { AssignVectorVector3(vec, data, size); }
@@ -404,7 +404,7 @@ void Plugify_SetConstructVectorUInt64(void* ptr) { ConstructVectorUInt64 = (Vect
 void Plugify_SetConstructVectorPointer(void* ptr) { ConstructVectorPointer = (Vector (*)(uintptr_t*, ptrdiff_t)) ptr; }
 void Plugify_SetConstructVectorFloat(void* ptr) { ConstructVectorFloat = (Vector (*)(float*, ptrdiff_t)) ptr; }
 void Plugify_SetConstructVectorDouble(void* ptr) { ConstructVectorDouble = (Vector (*)(double*, ptrdiff_t)) ptr; }
-void Plugify_SetConstructVectorString(void* ptr) { ConstructVectorString = (Vector (*)(_GoString_*, ptrdiff_t)) ptr; }
+void Plugify_SetConstructVectorString(void* ptr) { ConstructVectorString = (Vector (*)(ptrdiff_t)) ptr; }
 void Plugify_SetConstructVectorVariant(void* ptr) { ConstructVectorVariant = (Vector (*)(ptrdiff_t)) ptr; }
 void Plugify_SetConstructVectorVector2(void* ptr) { ConstructVectorVector2 = (Vector (*)(Vector2*, ptrdiff_t)) ptr; }
 void Plugify_SetConstructVectorVector3(void* ptr) { ConstructVectorVector3 = (Vector (*)(Vector3*, ptrdiff_t)) ptr; }
@@ -464,7 +464,7 @@ void Plugify_SetGetVectorDataUInt64(void* ptr) { GetVectorDataUInt64 = (uint64_t
 void Plugify_SetGetVectorDataPointer(void* ptr) { GetVectorDataPointer = (uintptr_t* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataFloat(void* ptr) { GetVectorDataFloat = (float* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataDouble(void* ptr) { GetVectorDataDouble = (double* (*)(Vector*)) ptr; }
-void Plugify_SetGetVectorDataString(void* ptr) { GetVectorDataString = (String* (*)(Vector*)) ptr; }
+void Plugify_SetGetVectorDataString(void* ptr) { GetVectorDataString = (String* (*)(Vector*, ptrdiff_t)) ptr; }
 void Plugify_SetGetVectorDataVariant(void* ptr) { GetVectorDataVariant = (Variant* (*)(Vector*, ptrdiff_t)) ptr; }
 void Plugify_SetGetVectorDataVector2(void* ptr) { GetVectorDataVector2 = (Vector2* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataVector3(void* ptr) { GetVectorDataVector3 = (Vector3* (*)(Vector*)) ptr; }
@@ -484,7 +484,7 @@ void Plugify_SetAssignVectorUInt64(void* ptr) { AssignVectorUInt64 = (void (*)(V
 void Plugify_SetAssignVectorPointer(void* ptr) { AssignVectorPointer = (void (*)(Vector*, uintptr_t*, ptrdiff_t)) ptr; }
 void Plugify_SetAssignVectorFloat(void* ptr) { AssignVectorFloat = (void (*)(Vector*, float*, ptrdiff_t)) ptr; }
 void Plugify_SetAssignVectorDouble(void* ptr) { AssignVectorDouble = (void (*)(Vector*, double*, ptrdiff_t)) ptr; }
-void Plugify_SetAssignVectorString(void* ptr) { AssignVectorString = (void (*)(Vector*, _GoString_*, ptrdiff_t)) ptr; }
+void Plugify_SetAssignVectorString(void* ptr) { AssignVectorString = (void (*)(Vector*, ptrdiff_t)) ptr; }
 void Plugify_SetAssignVectorVariant(void* ptr) { AssignVectorVariant = (void (*)(Vector*, ptrdiff_t)) ptr; }
 void Plugify_SetAssignVectorVector2(void* ptr) { AssignVectorVector2 = (void (*)(Vector*, Vector2*, ptrdiff_t)) ptr; }
 void Plugify_SetAssignVectorVector3(void* ptr) { AssignVectorVector3 = (void (*)(Vector*, Vector3*, ptrdiff_t)) ptr; }

@@ -33,7 +33,6 @@ typedef uint64_t uint_t;
 
 #endif
 
-typedef struct GoString_ { const char* p; ptrdiff_t n; } GoString_;
 typedef struct String { uintptr_t data; size_t size; size_t cap; } String;
 typedef struct Vector { uintptr_t begin; uintptr_t end; uintptr_t capacity; } Vector;
 typedef struct Vector2 { float x, y; } Vector2;
@@ -158,7 +157,7 @@ extern Vector Plugify_ConstructVectorUInt64(uint64_t* data, ptrdiff_t size);
 extern Vector Plugify_ConstructVectorPointer(uintptr_t* data, ptrdiff_t size);
 extern Vector Plugify_ConstructVectorFloat(float* data, ptrdiff_t size);
 extern Vector Plugify_ConstructVectorDouble(double* data, ptrdiff_t size);
-extern Vector Plugify_ConstructVectorString(_GoString_* data, ptrdiff_t size);
+extern Vector Plugify_ConstructVectorString(ptrdiff_t size);
 extern Vector Plugify_ConstructVectorVariant(ptrdiff_t size);
 extern Vector Plugify_ConstructVectorVector2(Vector2* data, ptrdiff_t size);
 extern Vector Plugify_ConstructVectorVector3(Vector3* data, ptrdiff_t size);
@@ -221,7 +220,7 @@ extern uint64_t* Plugify_GetVectorDataUInt64(Vector* vec);
 extern uintptr_t* Plugify_GetVectorDataPointer(Vector* vec);
 extern float* Plugify_GetVectorDataFloat(Vector* vec);
 extern double* Plugify_GetVectorDataDouble(Vector* vec);
-extern String* Plugify_GetVectorDataString(Vector* vec);
+extern String* Plugify_GetVectorDataString(Vector* vec, ptrdiff_t index);
 extern Variant* Plugify_GetVectorDataVariant(Vector* vec, ptrdiff_t index);
 extern Vector2* Plugify_GetVectorDataVector2(Vector* vec);
 extern Vector3* Plugify_GetVectorDataVector3(Vector* vec);
@@ -242,7 +241,7 @@ extern void Plugify_AssignVectorUInt64(Vector* vec, uint64_t* data, ptrdiff_t si
 extern void Plugify_AssignVectorPointer(Vector* vec, uintptr_t* data, ptrdiff_t size);
 extern void Plugify_AssignVectorFloat(Vector* vec, float* data, ptrdiff_t size);
 extern void Plugify_AssignVectorDouble(Vector* vec, double* data, ptrdiff_t size);
-extern void Plugify_AssignVectorString(Vector* vec, _GoString_* data, ptrdiff_t size);
+extern void Plugify_AssignVectorString(Vector* vec, ptrdiff_t size);
 extern void Plugify_AssignVectorVariant(Vector* vec, ptrdiff_t size);
 extern void Plugify_AssignVectorVector2(Vector* vec, Vector2* data, ptrdiff_t size);
 extern void Plugify_AssignVectorVector3(Vector* vec, Vector3* data, ptrdiff_t size);
