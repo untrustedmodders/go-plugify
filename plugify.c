@@ -137,8 +137,8 @@ uint64_t* (*GetVectorDataUInt64)(Vector*) = NULL;
 uintptr_t* (*GetVectorDataPointer)(Vector*) = NULL;
 float* (*GetVectorDataFloat)(Vector*) = NULL;
 double* (*GetVectorDataDouble)(Vector*) = NULL;
-String* (*GetVectorDataString)(Vector*, ptrdiff_t) = NULL;
-Variant* (*GetVectorDataVariant)(Vector*, ptrdiff_t) = NULL;
+String* (*GetVectorDataString)(Vector*) = NULL;
+Variant* (*GetVectorDataVariant)(Vector*) = NULL;
 Vector2* (*GetVectorDataVector2)(Vector*) = NULL;
 Vector3* (*GetVectorDataVector3)(Vector*) = NULL;
 Vector4* (*GetVectorDataVector4)(Vector*) = NULL;
@@ -316,8 +316,8 @@ uint64_t* Plugify_GetVectorDataUInt64(Vector* vec) { return GetVectorDataUInt64(
 uintptr_t* Plugify_GetVectorDataPointer(Vector* vec) { return GetVectorDataPointer(vec); }
 float* Plugify_GetVectorDataFloat(Vector* vec) { return GetVectorDataFloat(vec); }
 double* Plugify_GetVectorDataDouble(Vector* vec) { return GetVectorDataDouble(vec); }
-String* Plugify_GetVectorDataString(Vector* vec, ptrdiff_t index) { return GetVectorDataString(vec, index); }
-Variant* Plugify_GetVectorDataVariant(Vector* vec, ptrdiff_t index) { return GetVectorDataVariant(vec, index); }
+String* Plugify_GetVectorDataString(Vector* vec) { return GetVectorDataString(vec); }
+Variant* Plugify_GetVectorDataVariant(Vector* vec) { return GetVectorDataVariant(vec); }
 Vector2* Plugify_GetVectorDataVector2(Vector* vec) { return GetVectorDataVector2(vec); }
 Vector3* Plugify_GetVectorDataVector3(Vector* vec) { return GetVectorDataVector3(vec); }
 Vector4* Plugify_GetVectorDataVector4(Vector* vec) { return GetVectorDataVector4(vec); }
