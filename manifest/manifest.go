@@ -34,8 +34,8 @@ type EnumValue struct {
 	Value       int64  `json:"value"`
 }
 
-// EnumObject represents an enumeration
-type EnumObject struct {
+// Enum represents an enumeration
+type Enum struct {
 	Name        string      `json:"name"`
 	Description string      `json:"description,omitempty"`
 	Values      []EnumValue `json:"values"`
@@ -49,13 +49,13 @@ type Alias struct {
 
 // Property represents a parameter type
 type Property struct {
-	Type        string      `json:"type"`
-	Name        string      `json:"name,omitempty"`
-	Description string      `json:"description,omitempty"`
-	Ref         bool        `json:"ref,omitempty"`
-	Prototype   *Method     `json:"prototype,omitempty"`
-	Enumerator  *EnumObject `json:"enum,omitempty"`
-	Alias       *Alias      `json:"alias,omitempty"`
+	Type        string  `json:"type"`
+	Name        string  `json:"name,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Ref         bool    `json:"ref,omitempty"`
+	Prototype   *Method `json:"prototype,omitempty"`
+	Enum        *Enum   `json:"enum,omitempty"`
+	Alias       *Alias  `json:"alias,omitempty"`
 }
 
 // Dependency represents a plugin's dependency

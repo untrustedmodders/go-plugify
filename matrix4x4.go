@@ -16,37 +16,37 @@ func NewMatrix4x4(elements [4][4]float32) Matrix4x4 {
 
 // Add another matrix
 func (m Matrix4x4) Add(matrix Matrix4x4) Matrix4x4 {
-	var result [4][4]float32
+	var res [4][4]float32
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			result[i][j] = m.M[i][j] + matrix.M[i][j]
+			res[i][j] = m.M[i][j] + matrix.M[i][j]
 		}
 	}
-	return Matrix4x4{M: result}
+	return Matrix4x4{M: res}
 }
 
 // Subtract another matrix
 func (m Matrix4x4) Subtract(matrix Matrix4x4) Matrix4x4 {
-	var result [4][4]float32
+	var res [4][4]float32
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
-			result[i][j] = m.M[i][j] - matrix.M[i][j]
+			res[i][j] = m.M[i][j] - matrix.M[i][j]
 		}
 	}
-	return Matrix4x4{M: result}
+	return Matrix4x4{M: res}
 }
 
 // Multiply by another matrix
 func (m Matrix4x4) Multiply(matrix Matrix4x4) Matrix4x4 {
-	var result [4][4]float32
+	var res [4][4]float32
 	for i := 0; i < 4; i++ {
 		for j := 0; j < 4; j++ {
 			for k := 0; k < 4; k++ {
-				result[i][j] += m.M[i][k] * matrix.M[k][j]
+				res[i][j] += m.M[i][k] * matrix.M[k][j]
 			}
 		}
 	}
-	return Matrix4x4{M: result}
+	return Matrix4x4{M: res}
 }
 
 // Multiply by a vector (Vector4)

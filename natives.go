@@ -126,60 +126,60 @@ func GetVariantData(v *PlgVariant) any {
 }
 
 func SetVariantData(v *PlgVariant, param any) {
-	var valueType valueType
+	var vt valueType
 	switch val := param.(type) {
 	case nil:
-		valueType = Invalid
+		vt = Invalid
 	case bool:
-		valueType = Bool
+		vt = Bool
 		*(*C.bool)(unsafe.Pointer(v)) = C.bool(val)
 	/*case rune:
 	valueType = Char16
 	*(*C.uint16_t)(unsafe.Pointer(v)) = C.uint16_t(param.(rune))*/
 	case int8:
-		valueType = Int8
+		vt = Int8
 		*(*C.int8_t)(unsafe.Pointer(v)) = C.int8_t(val)
 	case int16:
-		valueType = Int16
+		vt = Int16
 		*(*C.int16_t)(unsafe.Pointer(v)) = C.int16_t(val)
 	case int32:
-		valueType = Int32
+		vt = Int32
 		*(*C.int32_t)(unsafe.Pointer(v)) = C.int32_t(val)
 	case int64:
-		valueType = Int64
+		vt = Int64
 		*(*C.int64_t)(unsafe.Pointer(v)) = C.int64_t(val)
 	case int:
-		valueType = C.Int
+		vt = C.Int
 		*(*C.int64_t)(unsafe.Pointer(v)) = C.int_t(val)
 	case uint8:
-		valueType = UInt8
+		vt = UInt8
 		*(*C.uint8_t)(unsafe.Pointer(v)) = C.uint8_t(val)
 	case uint16:
-		valueType = UInt16
+		vt = UInt16
 		*(*C.uint16_t)(unsafe.Pointer(v)) = C.uint16_t(val)
 	case uint32:
-		valueType = UInt32
+		vt = UInt32
 		*(*C.uint32_t)(unsafe.Pointer(v)) = C.uint32_t(val)
 	case uint64:
-		valueType = UInt64
+		vt = UInt64
 		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint64_t(val)
 	case uint:
-		valueType = C.UInt
+		vt = C.UInt
 		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint_t(val)
 	case uintptr:
-		valueType = Pointer
+		vt = Pointer
 		*(*C.intptr_t)(unsafe.Pointer(v)) = C.intptr_t(val)
 	case float32:
-		valueType = Float
+		vt = Float
 		*(*C.float)(unsafe.Pointer(v)) = C.float(val)
 	case float64:
-		valueType = Double
+		vt = Double
 		*(*C.double)(unsafe.Pointer(v)) = C.double(val)
 	case string:
-		valueType = String
+		vt = String
 		*(*PlgString)(unsafe.Pointer(v)) = C.Plugify_ConstructString(val)
 	case []bool:
-		valueType = ArrayBool
+		vt = ArrayBool
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorBool(val)
 	/*case []byte:
 		valueType = ArrayChar8
@@ -190,76 +190,76 @@ func SetVariantData(v *PlgVariant, param any) {
 		arr := param.([]rune)
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorChar16((*C.uint16_t)(unsafe.Pointer(unsafe.SliceData(arr))), C.ptrdiff_t(len(arr)))*/
 	case []int8:
-		valueType = ArrayInt8
+		vt = ArrayInt8
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorInt8(val)
 	case []int16:
-		valueType = ArrayInt16
+		vt = ArrayInt16
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorInt16(val)
 	case []int32:
-		valueType = ArrayInt32
+		vt = ArrayInt32
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorInt32(val)
 	case []int64:
-		valueType = ArrayInt64
+		vt = ArrayInt64
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorInt64(val)
 	case []int:
-		valueType = C.ArrayInt
+		vt = C.ArrayInt
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorInt(val)
 	case []uint8:
-		valueType = ArrayUInt8
+		vt = ArrayUInt8
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorUInt8(val)
 	case []uint16:
-		valueType = ArrayUInt16
+		vt = ArrayUInt16
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorUInt16(val)
 	case []uint32:
-		valueType = ArrayUInt32
+		vt = ArrayUInt32
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorUInt32(val)
 	case []uint64:
-		valueType = ArrayUInt64
+		vt = ArrayUInt64
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorUInt64(val)
 	case []uint:
-		valueType = C.ArrayUInt
+		vt = C.ArrayUInt
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorUInt(val)
 	case []uintptr:
-		valueType = ArrayPointer
+		vt = ArrayPointer
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorPointer(val)
 	case []float32:
-		valueType = ArrayFloat
+		vt = ArrayFloat
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorFloat(val)
 	case []float64:
-		valueType = ArrayDouble
+		vt = ArrayDouble
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorDouble(val)
 	case []string:
-		valueType = ArrayString
+		vt = ArrayString
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorString(val)
 	case []Vector2:
-		valueType = ArrayVector2
+		vt = ArrayVector2
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorVector2(val)
 	case []Vector3:
-		valueType = ArrayVector3
+		vt = ArrayVector3
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorVector3(val)
 	case []Vector4:
-		valueType = ArrayVector4
+		vt = ArrayVector4
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorVector4(val)
 	case []Matrix4x4:
-		valueType = ArrayMatrix4x4
+		vt = ArrayMatrix4x4
 		*(*PlgVector)(unsafe.Pointer(v)) = ConstructVectorMatrix4x4(val)
 	case Vector2:
-		valueType = Vector2Type
+		vt = Vector2Type
 		*(*PlgVector2)(unsafe.Pointer(v)) = *(*PlgVector2)(unsafe.Pointer(&val))
 	case Vector3:
-		valueType = Vector3Type
+		vt = Vector3Type
 		*(*PlgVector3)(unsafe.Pointer(v)) = *(*PlgVector3)(unsafe.Pointer(&val))
 	case Vector4:
-		valueType = Vector4Type
+		vt = Vector4Type
 		*(*PlgVector4)(unsafe.Pointer(v)) = *(*PlgVector4)(unsafe.Pointer(&val))
 	case Matrix4x4:
-		valueType = Matrix4x4Type
+		vt = Matrix4x4Type
 		*(*PlgMatrix4x4)(unsafe.Pointer(v)) = *(*PlgMatrix4x4)(unsafe.Pointer(&val))
 	default:
 		panicker(NewTypeNotFoundException(fmt.Sprintf("Type not found: %T", param)))
 	}
 
-	v.current = C.uint8_t(valueType)
+	v.current = C.uint8_t(vt)
 }
 
 func AssignVariant(v *PlgVariant, param any) {

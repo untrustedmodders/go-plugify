@@ -27,11 +27,12 @@ static const int8_t UInt = 12;
 static const int8_t ArrayInt = 25;
 static const int8_t ArrayUInt = 29;
 
-
 typedef int64_t int_t;
 typedef uint64_t uint_t;
-
 #endif
+
+typedef struct _gostring_ { uintptr_t p; ptrdiff_t n; } _gostring_;
+typedef struct _goslice_ { uintptr_t data; ptrdiff_t len; ptrdiff_t cap; } _goslice_;
 
 typedef struct String { uintptr_t data; size_t size; size_t cap; } String;
 typedef struct Vector { uintptr_t begin; uintptr_t end; uintptr_t capacity; } Vector;
@@ -81,18 +82,18 @@ typedef struct Return {
 } Return;
 
 typedef enum Severity {
-    Unknown,
-    Trace,
-    Debug,
-    Info,
-    Warning,
-    Error,
-    Fatal
+	Unknown,
+	Trace,
+	Debug,
+	Info,
+	Warning,
+	Error,
+	Fatal
 } Severity;
 
 typedef enum PluginCode {
-    Ok,
-    Failed
+	Ok,
+	Failed
 } PluginCode;
 
 typedef struct PluginResult {
@@ -107,8 +108,6 @@ typedef struct PluginContext {
 } PluginContext;
 
 typedef void* PluginHandle;
-extern PluginHandle pluginHandle;
-
 typedef uint64_t ZoneHandle;
 
 // Extern declarations for Plugify_ functions
@@ -119,21 +118,22 @@ extern String Plugify_GetDataDir();
 extern String Plugify_GetLogsDir();
 extern String Plugify_GetCacheDir();
 extern bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint);
-extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module);
+extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ func, _GoString_ module);
 extern bool Plugify_IsLogging();
-extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ function);
+extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func);
 extern void Plugify_EndZone(ZoneHandle handle);
 extern bool Plugify_IsProfiling();
 
-extern ptrdiff_t Plugify_GetPluginId();
-extern String Plugify_GetPluginName();
-extern String Plugify_GetPluginLicense();
-extern String Plugify_GetPluginDescription();
-extern String Plugify_GetPluginVersion();
-extern String Plugify_GetPluginAuthor();
-extern String Plugify_GetPluginWebsite();
-extern String Plugify_GetPluginLocation();
-extern Vector Plugify_GetPluginDependencies();
+extern PluginHandle Plugify_GetPlugin(_GoString_ name);
+extern ptrdiff_t Plugify_GetPluginId(PluginHandle handle);
+extern String Plugify_GetPluginName(PluginHandle handle);
+extern String Plugify_GetPluginLicense(PluginHandle handle);
+extern String Plugify_GetPluginDescription(PluginHandle handle);
+extern String Plugify_GetPluginVersion(PluginHandle handle);
+extern String Plugify_GetPluginAuthor(PluginHandle handle);
+extern String Plugify_GetPluginWebsite(PluginHandle handle);
+extern String Plugify_GetPluginLocation(PluginHandle handle);
+extern Vector Plugify_GetPluginDependencies(PluginHandle handle);
 
 extern String Plugify_ConstructString(_GoString_ source);
 extern void Plugify_DestroyString(String* string);
@@ -259,7 +259,7 @@ extern void Plugify_CallFunction(JitCall call, uint64_t* params, uint128_t* ret)
 
 typedef void* JitCallback;
 
-extern JitCallback Plugify_NewCallback(_GoString_ name, void* handle);
+extern JitCallback Plugify_NewCallback(PluginHandle handle, _GoString_ name, void* func);
 extern void Plugify_DeleteCallback(JitCallback callback);
 extern void* Plugify_GetCallbackFunction(JitCallback callback);
 extern const char* Plugify_GetCallbackError(JitCallback callback);
@@ -284,6 +284,7 @@ extern void Plugify_SetIsLogging(void* ptr);
 extern void Plugify_SetBeginZone(void* ptr);
 extern void Plugify_SetEndZone(void* ptr);
 extern void Plugify_SetIsProfiling(void* ptr);
+extern void Plugify_SetGetPlugin(void* ptr);
 extern void Plugify_SetGetPluginId(void* ptr);
 extern void Plugify_SetGetPluginName(void* ptr);
 extern void Plugify_SetGetPluginDescription(void* ptr);

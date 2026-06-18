@@ -19,8 +19,6 @@ _Static_assert(sizeof(Return) == 16, "Unsupported Return size");
 _Static_assert(sizeof(PluginResult) == sizeof(void*) * 4, "Unsupported PluginResult size");
 _Static_assert(sizeof(PluginContext) == 3, "Unsupported PluginContext size");
 
-PluginHandle pluginHandle = NULL;
-
 // Function pointers
 String (*GetBaseDir)() = NULL;
 String (*GetExtensionsDir)() = NULL;
@@ -36,6 +34,7 @@ void (*EndZone)(ZoneHandle) = NULL;
 bool (*IsProfiling)() = NULL;
 
 // Function pointers for PluginHandle functions
+PluginHandle (*GetPlugin)(_GoString_) = NULL;
 ptrdiff_t (*GetPluginId)(PluginHandle) = NULL;
 String (*GetPluginName)(PluginHandle) = NULL;
 String (*GetPluginDescription)(PluginHandle) = NULL;
@@ -199,33 +198,35 @@ String Plugify_GetCacheDir() { return GetCacheDir(); }
 // Function to call IsLoaded
 bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint) { return IsLoaded(name, constraint); }
 // Function to call Log
-void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ function, _GoString_ module) { Log(message, severity, line, file, function, module); }
+void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ func, _GoString_ module) { Log(message, severity, line, file, func, module); }
 // Function to call IsLogging
 bool Plugify_IsLogging() { return IsLogging(); }
 // Function to call BeginZone
-ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ function) { return BeginZone(name, line, file, function); }
+ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func) { return BeginZone(name, line, file, func); }
 // Function to call EndZone
 void Plugify_EndZone(ZoneHandle handle) { return EndZone(handle); }
 // Function to call IsProfiling
 bool Plugify_IsProfiling() { return IsProfiling(); }
+// Function to call GetPlugin
+PluginHandle Plugify_GetPlugin(_GoString_ name) { return GetPlugin(name); }
 // Function to call GetPluginId
-ptrdiff_t Plugify_GetPluginId() { return GetPluginId(pluginHandle); }
+ptrdiff_t Plugify_GetPluginId(PluginHandle handle) { return GetPluginId(handle); }
 // Function to call GetPluginName
-String Plugify_GetPluginName() { return GetPluginName(pluginHandle); }
+String Plugify_GetPluginName(PluginHandle handle) { return GetPluginName(handle); }
 // Function to call GetPluginDescription
-String Plugify_GetPluginDescription() { return GetPluginDescription(pluginHandle); }
+String Plugify_GetPluginDescription(PluginHandle handle) { return GetPluginDescription(handle); }
 // Function to call GetPluginVersion
-String Plugify_GetPluginVersion() { return GetPluginVersion(pluginHandle); }
+String Plugify_GetPluginVersion(PluginHandle handle) { return GetPluginVersion(handle); }
 // Function to call GetPluginAuthor
-String Plugify_GetPluginAuthor() { return GetPluginAuthor(pluginHandle); }
+String Plugify_GetPluginAuthor(PluginHandle handle) { return GetPluginAuthor(handle); }
 // Function to call GetPluginWebsite
-String Plugify_GetPluginWebsite() { return GetPluginWebsite(pluginHandle); }
+String Plugify_GetPluginWebsite(PluginHandle handle) { return GetPluginWebsite(handle); }
 // Function to call GetPluginLicense
-String Plugify_GetPluginLicense() { return GetPluginLicense(pluginHandle); }
+String Plugify_GetPluginLicense(PluginHandle handle) { return GetPluginLicense(handle); }
 // Function to call GetPluginLocation
-String Plugify_GetPluginLocation() { return GetPluginLocation(pluginHandle); }
+String Plugify_GetPluginLocation(PluginHandle handle) { return GetPluginLocation(handle); }
 // Function to call GetPluginDependencies
-Vector Plugify_GetPluginDependencies() { return GetPluginDependencies(pluginHandle); }
+Vector Plugify_GetPluginDependencies(PluginHandle handle) { return GetPluginDependencies(handle); }
 // Function to construct a string
 String Plugify_ConstructString(_GoString_ source) { return ConstructString(source); }
 // Function to destroy a string
@@ -353,7 +354,7 @@ void Plugify_CallFunction(JitCall call, uint64_t* params, uint128_t* ret) {
 	((void(*)(uint64_t*, uint128_t*))GetCallFunction(call))(params, ret);
 }
 
-JitCallback Plugify_NewCallback(_GoString_ name, void* handle) { return NewCallback(pluginHandle, name, handle); }
+JitCallback Plugify_NewCallback(PluginHandle handle, _GoString_ name, void* func) { return NewCallback(handle, name, func); }
 void Plugify_DeleteCallback(JitCallback callback) { return DeleteCallback(callback); }
 void* Plugify_GetCallbackFunction(JitCallback callback) { return GetCallbackFunction(callback); }
 const char* Plugify_GetCallbackError(JitCallback callback) { return GetCallbackError(callback); }
@@ -375,6 +376,7 @@ void Plugify_SetIsLogging(void* ptr) { IsLogging = (bool (*)()) ptr; }
 void Plugify_SetBeginZone(void* ptr) { BeginZone = (ZoneHandle (*)(_GoString_, ptrdiff_t, _GoString_, _GoString_)) ptr; }
 void Plugify_SetEndZone(void* ptr) { EndZone = (void (*)(ZoneHandle)) ptr; }
 void Plugify_SetIsProfiling(void* ptr) { IsProfiling = (bool (*)()) ptr; }
+void Plugify_SetGetPlugin(void* ptr) { GetPlugin = (PluginHandle (*)(_GoString_)) ptr; }
 void Plugify_SetGetPluginId(void* ptr) { GetPluginId = (ptrdiff_t (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginName(void* ptr) { GetPluginName = (String (*)(PluginHandle)) ptr; }
 void Plugify_SetGetPluginDescription(void* ptr) { GetPluginDescription = (String (*)(PluginHandle)) ptr; }
@@ -464,8 +466,8 @@ void Plugify_SetGetVectorDataUInt64(void* ptr) { GetVectorDataUInt64 = (uint64_t
 void Plugify_SetGetVectorDataPointer(void* ptr) { GetVectorDataPointer = (uintptr_t* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataFloat(void* ptr) { GetVectorDataFloat = (float* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataDouble(void* ptr) { GetVectorDataDouble = (double* (*)(Vector*)) ptr; }
-void Plugify_SetGetVectorDataString(void* ptr) { GetVectorDataString = (String* (*)(Vector*, ptrdiff_t)) ptr; }
-void Plugify_SetGetVectorDataVariant(void* ptr) { GetVectorDataVariant = (Variant* (*)(Vector*, ptrdiff_t)) ptr; }
+void Plugify_SetGetVectorDataString(void* ptr) { GetVectorDataString = (String* (*)(Vector*)) ptr; }
+void Plugify_SetGetVectorDataVariant(void* ptr) { GetVectorDataVariant = (Variant* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataVector2(void* ptr) { GetVectorDataVector2 = (Vector2* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataVector3(void* ptr) { GetVectorDataVector3 = (Vector3* (*)(Vector*)) ptr; }
 void Plugify_SetGetVectorDataVector4(void* ptr) { GetVectorDataVector4 = (Vector4* (*)(Vector*)) ptr; }

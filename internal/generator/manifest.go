@@ -33,10 +33,10 @@ func convertParamType(p ParamInfo, ignoreRef bool) manifest.Property {
 	if t.IsFunc {
 		// Function parameter with prototype
 		return manifest.Property{
-			Type: "function",
+			Type:        "function",
 			Name:        p.Name,
 			Description: p.Description,
-			Ref: t.IsRef && !ignoreRef,
+			Ref:         t.IsRef && !ignoreRef,
 			Prototype: &manifest.Method{
 				Name:        t.FuncSig.Name,
 				Description: t.FuncSig.Description,
@@ -57,7 +57,7 @@ func convertParamType(p ParamInfo, ignoreRef bool) manifest.Property {
 			Description: p.Description,
 			Type:        t.TypeString,
 			Ref:         t.IsRef && !ignoreRef,
-			Enumerator:  prop.Enumerator,
+			Enum:        prop.Enum,
 		}
 	}
 
@@ -77,7 +77,7 @@ func convertParamType(p ParamInfo, ignoreRef bool) manifest.Property {
 			Description: p.Description,
 			Type:        t.TypeString,
 			Ref:         t.IsRef,
-			Enumerator: &manifest.EnumObject{
+			Enum: &manifest.Enum{
 				Name:        t.EnumTypeName,
 				Description: t.Description,
 				Values:      enumValues,

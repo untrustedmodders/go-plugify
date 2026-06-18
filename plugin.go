@@ -1,9 +1,17 @@
 package plugify
 
-import "context"
+/*
+#include "plugify.h"
+*/
+import "C"
+import (
+	"context"
+	"runtime/debug"
+	"sync"
+)
 
 type PluginInfo interface {
-	ID() int64
+	ID() int
 	Name() string
 	Description() string
 	Version() string
@@ -13,16 +21,30 @@ type PluginInfo interface {
 	Location() string
 	Dependencies() []string
 
+	Starting() bool
+	Updating() bool
+	Ending() bool
 	Loaded() bool
+	Context() context.Context
 }
 
-type PluginStartCallback func() error
-type PluginUpdateCallback func(dt float32) error
-type PluginEndCallback func() error
-type PluginPanicCallback func() []byte
+type PluginStart func() error
+type PluginUpdate func(dt float32) error
+type PluginEnd func() error
 
 type pluginInfo struct {
-	id           int64
+	info *debug.BuildInfo
+
+	start  PluginStart
+	update PluginUpdate
+	end    PluginEnd
+
+	loaded bool
+	once   sync.Once
+	ctx    context.Context
+	cancel context.CancelFunc
+
+	id           int
 	name         string
 	description  string
 	version      string
@@ -31,34 +53,51 @@ type pluginInfo struct {
 	license      string
 	location     string
 	dependencies []string
-
-	fnPluginStartCallback  PluginStartCallback
-	fnPluginUpdateCallback PluginUpdateCallback
-	fnPluginEndCallback    PluginEndCallback
-
-	loaded bool
-	ctx    context.Context
-	cancel context.CancelFunc
 }
 
-var plugin = pluginInfo{
-	id:           -1,
-	name:         "",
-	description:  "",
-	version:      "",
-	author:       "",
-	website:      "",
-	license:      "",
-	dependencies: []string{},
+var pluginMap = make(map[string]*pluginInfo)
 
-	fnPluginStartCallback:  nil,
-	fnPluginUpdateCallback: nil,
-	fnPluginEndCallback:    nil,
+func (p *pluginInfo) init() {
+	p.once.Do(func() {
+		handle := C.Plugify_GetPlugin(p.info.Main.Path)
 
-	loaded: false,
+		p.id = int(C.Plugify_GetPluginId(handle))
+
+		nameStr := C.Plugify_GetPluginName(handle)
+		p.name = GetStringData[string](&nameStr)
+		C.Plugify_DestroyString(&nameStr)
+
+		descriptionStr := C.Plugify_GetPluginDescription(handle)
+		p.description = GetStringData[string](&descriptionStr)
+		C.Plugify_DestroyString(&descriptionStr)
+
+		versionsStr := C.Plugify_GetPluginVersion(handle)
+		p.version = GetStringData[string](&versionsStr)
+		C.Plugify_DestroyString(&versionsStr)
+
+		authorStr := C.Plugify_GetPluginAuthor(handle)
+		p.author = GetStringData[string](&authorStr)
+		C.Plugify_DestroyString(&authorStr)
+
+		websiteStr := C.Plugify_GetPluginWebsite(handle)
+		p.website = GetStringData[string](&websiteStr)
+		C.Plugify_DestroyString(&websiteStr)
+
+		licenseStr := C.Plugify_GetPluginLicense(handle)
+		p.license = GetStringData[string](&licenseStr)
+		C.Plugify_DestroyString(&licenseStr)
+
+		locationStr := C.Plugify_GetPluginLocation(handle)
+		p.location = GetStringData[string](&locationStr)
+		C.Plugify_DestroyString(&locationStr)
+
+		dependenciesStr := C.Plugify_GetPluginDependencies(handle)
+		p.dependencies = GetVectorDataString[string](&dependenciesStr)
+		C.Plugify_DestroyVectorString(&dependenciesStr)
+	})
 }
 
-func (p *pluginInfo) ID() int64 {
+func (p *pluginInfo) ID() int {
 	return p.id
 }
 
@@ -94,26 +133,41 @@ func (p *pluginInfo) Dependencies() []string {
 	return p.dependencies
 }
 
+func (p *pluginInfo) Starting() bool {
+	return p.start != nil
+}
+
+func (p *pluginInfo) Updating() bool {
+	return p.update != nil
+}
+
+func (p *pluginInfo) Ending() bool {
+	return p.end != nil
+}
+
 func (p *pluginInfo) Loaded() bool {
 	return p.loaded
 }
 
-func Plugin() PluginInfo {
-	return &plugin
+func (p *pluginInfo) Context() context.Context {
+	return p.ctx
 }
 
-func Context() context.Context {
-	return plugin.ctx
-}
+func NewPlugin(
+	info *debug.BuildInfo,
+	start PluginStart,
+	update PluginUpdate,
+	end PluginEnd,
+) PluginInfo {
 
-func OnPluginStart(fn PluginStartCallback) {
-	plugin.fnPluginStartCallback = fn
-}
+	p := &pluginInfo{
+		info:   info,
+		start:  start,
+		update: update,
+		end:    end,
+	}
 
-func OnPluginUpdate(fn PluginUpdateCallback) {
-	plugin.fnPluginUpdateCallback = fn
-}
+	pluginMap[info.Main.Path] = p
 
-func OnPluginEnd(fn PluginEndCallback) {
-	plugin.fnPluginEndCallback = fn
+	return p
 }

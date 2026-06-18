@@ -4,6 +4,11 @@ package plugify
 #include "plugify.h"
 */
 import "C"
+import (
+	"path/filepath"
+	"runtime"
+	"runtime/debug"
+)
 
 type Severity int
 
@@ -17,7 +22,7 @@ const (
 	Fatal
 )
 
-func Log(msg string, sev Severity, skip int) {
+func Log(msg string, sev Severity, info *debug.BuildInfo, skip int) {
 	line, file, funk := caller(skip)
 
 	C.Plugify_Log(
@@ -26,13 +31,13 @@ func Log(msg string, sev Severity, skip int) {
 		C.ptrdiff_t(line),
 		file,
 		funk,
-		plugin.name,
+		info.Main.Path,
 	)
 }
 
 var isProfiling, isLogging bool
 
-func Scope(name string, skip int) func() {
+func Scope(name string, info *debug.BuildInfo, skip int) func() {
 	if !isProfiling && !isLogging {
 		return func() {}
 	}
@@ -46,7 +51,7 @@ func Scope(name string, skip int) func() {
 	}
 
 	if isLogging {
-		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(line), file, funk, plugin.name)
+		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(line), file, funk, info.Main.Path)
 	}
 
 	return func() {
@@ -54,4 +59,12 @@ func Scope(name string, skip int) func() {
 			C.Plugify_EndZone(handle)
 		}
 	}
+}
+
+func caller(skip int) (line int, file string, funk string) {
+	pc, file, line, ok := runtime.Caller(skip)
+	if !ok {
+		return
+	}
+	return line, filepath.Base(file), runtime.FuncForPC(pc).Name()
 }

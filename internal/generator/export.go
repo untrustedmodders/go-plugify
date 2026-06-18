@@ -37,7 +37,7 @@ func (g *Package) generateAutoExports(path string) error {
 	buffer.WriteString(`
 var _ = reflect.TypeOf(0)
 var _ = unsafe.Sizeof(0)
-var _ = plugify.Plugin()
+var _ = plugify.ApiVersion
 `)
 
 	for _, fn := range g.Exports {

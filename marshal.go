@@ -1172,64 +1172,56 @@ func setObjReturn(vt valueType, r *C.Return, ret reflect.Value) {
 	}
 }
 
-//export plugify_InternalCall
-func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
-	Block{
-		Try: func() {
-			fn, ok := functionMap[data]
-			if !ok {
-				panicker(fmt.Sprintf("function %p not found", data))
-			}
+func internalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
+	fn, ok := functionMap[data]
+	if !ok {
+		panicker(fmt.Sprintf("function %p not found", data))
+	}
 
-			fnValue := reflect.ValueOf(fn.fn)
+	fnValue := reflect.ValueOf(fn.fn)
 
-			var args = make([]reflect.Value, int(count))
+	var args = make([]reflect.Value, int(count))
 
-			/* fnType := reflect.TypeOf(fn.fn)
+	/* fnType := reflect.TypeOf(fn.fn)
 
-			numIn := fnType.NumIn()
-			if numIn != int(count) {
-				panicker(fmt.Sprintf("expected %d parameters, got %d", numIn, count))
-			} */
+	numIn := fnType.NumIn()
+	if numIn != int(count) {
+		panicker(fmt.Sprintf("expected %d parameters, got %d", numIn, count))
+	} */
 
-			if len(fn.args) != int(count) {
-				panicker(fmt.Sprintf("expected %d parameters, got %d", len(fn.args), count))
-			}
+	if len(fn.args) != int(count) {
+		panicker(fmt.Sprintf("expected %d parameters, got %d", len(fn.args), int(count)))
+	}
 
-			for i := C.size_t(0); i < count; i++ {
-				mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-				vt := valueType(mt.valueType)
+	for i := C.size_t(0); i < count; i++ {
+		mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
+		vt := valueType(mt.valueType)
 
-				argType := fn.args[i].t
+		argType := fn.args[i].t
 
-				if mt.ref {
-					args[i] = paramRefToObject(vt, argType, p, i)
-				} else {
-					args[i] = paramToObject(vt, argType, p, i)
-				}
-			}
+		if mt.ref {
+			args[i] = paramRefToObject(vt, argType, p, i)
+		} else {
+			args[i] = paramToObject(vt, argType, p, i)
+		}
+	}
 
-			rets := fnValue.Call(args)
+	rets := fnValue.Call(args)
 
-			mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(-1))
-			vt := valueType(mt.valueType)
+	mt := C.Plugify_GetMethodParamType(m, C.ptrdiff_t(-1))
+	vt := valueType(mt.valueType)
 
-			if len(rets) > 0 {
-				setObjReturn(vt, r, rets[0])
-			}
+	if len(rets) > 0 {
+		setObjReturn(vt, r, rets[0])
+	}
 
-			for i := C.size_t(0); i < count; i++ {
-				mt = C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
-				vt = valueType(mt.valueType)
-				if mt.ref {
-					setRefParam(vt, p, i, args[i])
-				}
-			}
-		},
-		Catch: func(exc Exception) {
-			stacktrace(exc)
-		},
-	}.Do()
+	for i := C.size_t(0); i < count; i++ {
+		mt = C.Plugify_GetMethodParamType(m, C.ptrdiff_t(i))
+		vt = valueType(mt.valueType)
+		if mt.ref {
+			setRefParam(vt, p, i, args[i])
+		}
+	}
 }
 
 func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
@@ -1259,7 +1251,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 		panicker(err)
 	}
 
-	callback := C.Plugify_NewCallback(name, fnPtr)
+	callback := C.Plugify_NewCallback(pluginHandle, name, fnPtr)
 	if callback == nil {
 		panicker(fmt.Sprintf("%s (jit error: not found)", name))
 	}
@@ -1268,7 +1260,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 
 	addr := C.Plugify_GetCallbackFunction(callback)
 	if addr == nil {
-		panicker(fmt.Sprintf("%s (jit error: %s)", name, C.GoString(C.Plugify_GetCallbackError(callback))))
+		panicker(fmt.Sprintf("%s (jit error: %s)", name, string(C.GoString(C.Plugify_GetCallbackError(callback)))))
 	}
 
 	fnArgs, fnRet := getFuncData(fnType)
@@ -1295,7 +1287,7 @@ func normalizePkgName(t reflect.Type) (string, error) {
 		return "", fmt.Errorf("no package path for type %v", t)
 	}
 	if path == "main" {
-		return plugin.Name(), nil
+		return buildInfo.Main.Path, nil
 	}
 
 	parts := splitModulePath(path)
