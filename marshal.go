@@ -1251,7 +1251,7 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 		panicker(err)
 	}
 
-	callback := C.Plugify_NewCallback(pluginHandle, name, fnPtr)
+	callback := C.Plugify_NewCallback(C.PluginHandle(plugins[0].handle), name, fnPtr)
 	if callback == nil {
 		panicker(fmt.Sprintf("%s (jit error: not found)", name))
 	}
@@ -1287,7 +1287,7 @@ func normalizePkgName(t reflect.Type) (string, error) {
 		return "", fmt.Errorf("no package path for type %v", t)
 	}
 	if path == "main" {
-		return buildInfo.Main.Path, nil
+		return plugins[0].name, nil
 	}
 
 	parts := splitModulePath(path)

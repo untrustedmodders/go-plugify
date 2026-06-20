@@ -5,21 +5,14 @@ package plugify
 */
 import "C"
 import (
-	"context"
 	"fmt"
-	"runtime"
 	"unsafe"
 )
 
 const ApiVersion = 3
 
-var (
-	pluginHandle  C.PluginHandle
-	pluginContext C.PluginContext
-)
-
 //export plugify_PluginInit
-func plugify_PluginInit(api []unsafe.Pointer, version int, handle C.PluginHandle) int {
+func plugify_PluginInit(api []unsafe.Pointer, version int, handle unsafe.Pointer) int {
 	if version < ApiVersion {
 		return ApiVersion
 	}
@@ -343,125 +336,82 @@ func plugify_PluginInit(api []unsafe.Pointer, version int, handle C.PluginHandle
 	isProfiling = bool(C.Plugify_IsProfiling())
 	isLogging = bool(C.Plugify_IsLogging())
 
-	pluginHandle = handle
+	if handle != nil {
+		plugins[0].OnInit(handle)
+	}
 
 	return 0
 }
 
-//export plugify_PluginMain
-func plugify_PluginMain(name string) {
-	p, ok := pluginMap[name]
-	if ok {
-		pluginContext = C.PluginContext{
-			hasUpdate: C.bool(p.Updating()),
-			hasStart:  C.bool(true),
-			hasEnd:    C.bool(true),
-		}
-	}
-}
-
 //export plugify_PluginStart
-func plugify_PluginStart(name string) C.PluginResult {
+func plugify_PluginStart(id int) C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			p, ok := pluginMap[name]
-			if ok {
-				p.init()
-				p.loaded = true
-				p.ctx, p.cancel = context.WithCancel(context.Background())
-
-				if p.start != nil {
-					err = p.start()
-				}
-			}
+			err = plugins[0].OnStart()
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
 		},
 	}.Do()
-	return result(err)
+	return Result(err)
 }
 
 //export plugify_PluginUpdate
-func plugify_PluginUpdate(name string, dt float32) C.PluginResult {
+func plugify_PluginUpdate(id int, dt float32) C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			p, ok := pluginMap[name]
-			if ok {
-				if p.update != nil {
-					err = p.update(dt)
-				}
-			}
+			err = plugins[0].OnUpdate(dt)
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
 		},
 	}.Do()
-	return result(err)
+	return Result(err)
 }
 
 //export plugify_PluginEnd
-func plugify_PluginEnd(name string) C.PluginResult {
+func plugify_PluginEnd(id int) C.PluginResult {
 	var err error
 	Block{
 		Try: func() {
-			p, ok := pluginMap[name]
-			if ok {
-				defer func() {
-					p.cancel()
-					p.loaded = false
-				}()
-				if p.end != nil {
-					err = p.end()
-				}
-			}
+			err = plugins[0].OnEnd()
 		},
 		Catch: func(exc Exception) {
 			err = fmt.Errorf("%v", exc)
 		},
 	}.Do()
-	return result(err)
+	return Result(err)
 }
 
 //export plugify_PluginShutdown
-func plugify_PluginShutdown() {
-	clear(pluginMap)
-	clear(functionMap)
-
-	for _, v := range calls {
-		C.Plugify_DeleteCall(v)
-	}
-	clear(calls)
-
-	for _, v := range callbacks {
-		C.Plugify_DeleteCallback(v)
-	}
-	clear(callbacks)
-
-	runtime.GC()
-	runtime.Gosched()
+func plugify_PluginShutdown(id int) {
+	plugins[0].OnShutdown()
 }
 
 //export plugify_PluginContext
-func plugify_PluginContext() *C.PluginContext {
-	return &pluginContext
+func plugify_PluginContext(id int) C.PluginContext {
+	return C.PluginContext{
+		hasUpdate: C.bool(plugins[0].Updating()),
+		hasStart:  C.bool(true),
+		hasEnd:    C.bool(true),
+	}
 }
 
-//export plugify_InternalCall
-func plugify_InternalCall(m C.MethodHandle, data unsafe.Pointer, p *C.Parameters, count C.size_t, r *C.Return) {
+//export plugify_PluginCall
+func plugify_PluginCall(method C.MethodHandle, data *C.Data, params *C.Parameters, count C.size_t, ret *C.Return) {
 	Block{
 		Try: func() {
-			internalCall(m, data, p, count, r)
+			plugins[data.id].Call(unsafe.Pointer(method), data.ptr, unsafe.Pointer(params), int(count), unsafe.Pointer(ret))
 		},
 		Catch: func(exc Exception) {
-			stacktrace(exc)
+			Stacktrace(exc, plugins[data.id].info)
 		},
 	}.Do()
 }
 
-func result(err error) C.PluginResult {
+func Result(err error) C.PluginResult {
 	if err != nil {
 		return C.PluginResult{
 			code:    C.Failed,
@@ -474,12 +424,3 @@ func result(err error) C.PluginResult {
 		message: ConstructString(""),
 	}
 }
-
-/*func str(str string) string {
-	return unsafe.String((*byte)(unsafe.Pointer(uintptr(str.p))), int(str.n))
-}
-
-func arr[T any](arr C._goslice_) []T {
-	return unsafe.Slice((*T)(unsafe.Pointer(uintptr(arr.data))), int(arr.len))
-}
-*/

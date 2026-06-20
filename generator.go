@@ -95,7 +95,15 @@ func writeManifest(
 	output string,
 	pluginName string,
 	version string,
-	desc string, author string, website string, license string, platforms []string, pluginEntry string, dependencies []string, conflicts []string) error {
+	desc string,
+	author string,
+	website string,
+	license string,
+	platforms []string,
+	pluginEntry string,
+	dependencies []string,
+	conflicts []string,
+) error {
 	var pluginDependencies []manifest.Dependency
 	for _, dependency := range dependencies {
 		pluginDependencies = append(pluginDependencies, manifest.Dependency{Name: dependency})
@@ -106,7 +114,7 @@ func writeManifest(
 		pluginConflicts = append(pluginConflicts, manifest.Conflict{Name: conflict})
 	}
 
-	manifest := manifest.Manifest{
+	man := manifest.Manifest{
 		Schema:       "https://raw.githubusercontent.com/untrustedmodders/plugify/refs/heads/main/schemas/plugin.schema.json",
 		Name:         pluginName,
 		Version:      version,
@@ -123,7 +131,7 @@ func writeManifest(
 	}
 
 	// Write JSON
-	data, err := json.MarshalIndent(manifest, "", "  ")
+	data, err := json.MarshalIndent(man, "", "  ")
 	if err != nil {
 		return fmt.Errorf("error marshaling JSON: %w", err)
 	}
@@ -138,6 +146,6 @@ func writeManifest(
 		return fmt.Errorf("error writing manifest file %s: %w", outputFile, err)
 	}
 
-	fmt.Printf("Generated manifest: %s (%d methods)\n", outputFile, len(manifest.Methods))
+	fmt.Printf("Generated manifest: %s (%d methods)\n", outputFile, len(man.Methods))
 	return nil
 }

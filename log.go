@@ -5,10 +5,13 @@ package plugify
 */
 import "C"
 import (
+	"fmt"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
 )
+
+var isProfiling, isLogging bool
 
 type Severity int
 
@@ -35,8 +38,6 @@ func Log(msg string, sev Severity, info *debug.BuildInfo, skip int) {
 	)
 }
 
-var isProfiling, isLogging bool
-
 func Scope(name string, info *debug.BuildInfo, skip int) func() {
 	if !isProfiling && !isLogging {
 		return func() {}
@@ -61,10 +62,24 @@ func Scope(name string, info *debug.BuildInfo, skip int) func() {
 	}
 }
 
+func Stacktrace(err any, info *debug.BuildInfo) {
+	msg := fmt.Sprintf("%v", err)
+	stack := debug.Stack()
+	if len(stack) > 0 {
+		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
+	}
+	Log(msg, Error, info, 3)
+}
+
 func caller(skip int) (line int, file string, funk string) {
 	pc, file, line, ok := runtime.Caller(skip)
 	if !ok {
 		return
 	}
 	return line, filepath.Base(file), runtime.FuncForPC(pc).Name()
+}
+
+func panicker(err any) {
+	Stacktrace(err, plugins[0].info)
+	panic(err)
 }

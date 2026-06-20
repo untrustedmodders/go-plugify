@@ -21,7 +21,6 @@ static const int8_t Int = 7;
 static const int8_t UInt = 11;
 static const int8_t ArrayInt = 24;
 static const int8_t ArrayUInt = 28;
-
 typedef int32_t int_t;
 typedef uint32_t uint_t;
 #else
@@ -29,13 +28,9 @@ static const int8_t Int = 8;
 static const int8_t UInt = 12;
 static const int8_t ArrayInt = 25;
 static const int8_t ArrayUInt = 29;
-
 typedef int64_t int_t;
 typedef uint64_t uint_t;
 #endif
-
-typedef struct _gostring_ { uintptr_t p; ptrdiff_t n; } _gostring_;
-typedef struct _goslice_ { uintptr_t data; ptrdiff_t len; ptrdiff_t cap; } _goslice_;
 
 typedef struct String { uintptr_t data; size_t size; size_t cap; } String;
 typedef struct Vector { uintptr_t begin; uintptr_t end; uintptr_t capacity; } Vector;
@@ -83,6 +78,11 @@ typedef struct Parameters {
 typedef struct Return {
 	uint64_t ret[2];
 } Return;
+
+typedef struct Data {
+    void* ptr;
+    ptrdiff_t id;
+} Data;
 
 typedef enum Severity {
 	Unknown,
