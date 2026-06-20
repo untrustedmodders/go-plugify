@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.10.0](https://github.com/untrustedmodders/go-plugify/compare/v1.9.1...v1.10.0) (2026-06-20)
+
+
+### Features
+
+* rework for  plugin mode builds ([e8bb384](https://github.com/untrustedmodders/go-plugify/commit/e8bb384627b1dac17cd21747eb32bdc72d00442a))
+
+
+### Bug Fixes
+
+* improve string handling ([f1aa056](https://github.com/untrustedmodders/go-plugify/commit/f1aa05625957b54bd3e121355c003e1132f7b6d9))
+* improve string/variant pulling ([f47cf5f](https://github.com/untrustedmodders/go-plugify/commit/f47cf5f0760bd61eb745634f9907b92daa69078e))
+* int/uint on 32bit ([a25d642](https://github.com/untrustedmodders/go-plugify/commit/a25d642847f194414c10d57ddbdb382e2a78db12))
+
 ## [1.9.1](https://github.com/untrustedmodders/go-plugify/compare/v1.9.0...v1.9.1) (2026-06-15)
 
 
