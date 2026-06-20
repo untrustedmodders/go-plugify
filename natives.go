@@ -150,7 +150,7 @@ func SetVariantData(v *PlgVariant, param any) {
 		*(*C.int64_t)(unsafe.Pointer(v)) = C.int64_t(val)
 	case int:
 		vt = C.Int
-		*(*C.int64_t)(unsafe.Pointer(v)) = C.int_t(val)
+		*(*C.int_t)(unsafe.Pointer(v)) = C.int_t(val)
 	case uint8:
 		vt = UInt8
 		*(*C.uint8_t)(unsafe.Pointer(v)) = C.uint8_t(val)
@@ -165,7 +165,7 @@ func SetVariantData(v *PlgVariant, param any) {
 		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint64_t(val)
 	case uint:
 		vt = C.UInt
-		*(*C.uint64_t)(unsafe.Pointer(v)) = C.uint_t(val)
+		*(*C.uint_t)(unsafe.Pointer(v)) = C.uint_t(val)
 	case uintptr:
 		vt = Pointer
 		*(*C.intptr_t)(unsafe.Pointer(v)) = C.intptr_t(val)
@@ -1933,7 +1933,7 @@ func reflectAssignVectorString(vec *PlgVector, v reflect.Value) {
 	size := v.Len()
 	C.Plugify_AssignVectorString(vec, C.ptrdiff_t(size))
 	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(vec))
 		for i := range size {
 			str := (*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))
 			AssignString(str, v.Index(i).String())
@@ -1956,7 +1956,7 @@ func reflectAssignVectorVariant(vec *PlgVector, v reflect.Value) {
 	size := v.Len()
 	C.Plugify_AssignVectorVariant(vec, C.ptrdiff_t(size))
 	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(vec))
 		for i := range size {
 			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
 			AssignVariant(variant, v.Index(i).Interface())

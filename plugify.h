@@ -21,6 +21,9 @@ static const int8_t Int = 7;
 static const int8_t UInt = 11;
 static const int8_t ArrayInt = 24;
 static const int8_t ArrayUInt = 28;
+
+typedef int32_t int_t;
+typedef uint32_t uint_t;
 #else
 static const int8_t Int = 8;
 static const int8_t UInt = 12;
