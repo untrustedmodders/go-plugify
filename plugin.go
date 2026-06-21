@@ -12,7 +12,7 @@ import (
 	"unsafe"
 )
 
-type PluginInfo interface {
+type Plugin interface {
 	Info() *debug.BuildInfo
 
 	ID() int
@@ -45,7 +45,7 @@ type PluginStart func() error
 type PluginUpdate func(dt float32) error
 type PluginEnd func() error
 
-type pluginInfo struct {
+type plugin struct {
 	info   *debug.BuildInfo
 	start  PluginStart
 	update PluginUpdate
@@ -68,56 +68,52 @@ type pluginInfo struct {
 	dependencies []string
 }
 
-var plugins = []pluginInfo{}
+var plugins []plugin
 
-func (p *pluginInfo) Info() *debug.BuildInfo {
+func (p *plugin) Info() *debug.BuildInfo {
 	return p.info
 }
 
-func (p *pluginInfo) ID() int {
+func (p *plugin) ID() int {
 	return p.id
 }
 
-func (p *pluginInfo) Name() string {
+func (p *plugin) Name() string {
 	return p.name
 }
 
-func (p *pluginInfo) Description() string {
+func (p *plugin) Description() string {
 	return p.description
 }
 
-func (p *pluginInfo) Version() string {
+func (p *plugin) Version() string {
 	return p.version
 }
 
-func (p *pluginInfo) Author() string {
+func (p *plugin) Author() string {
 	return p.author
 }
 
-func (p *pluginInfo) Website() string {
+func (p *plugin) Website() string {
 	return p.website
 }
 
-func (p *pluginInfo) License() string {
+func (p *plugin) License() string {
 	return p.license
 }
 
-func (p *pluginInfo) Location() string {
+func (p *plugin) Location() string {
 	return p.location
 }
 
-func (p *pluginInfo) Dependencies() []string {
+func (p *plugin) Dependencies() []string {
 	return p.dependencies
 }
 
-func (p *pluginInfo) OnInit(handle unsafe.Pointer) {
-	if handle != nil {
-		p.handle = handle
-	} else {
-		p.handle = unsafe.Pointer(C.Plugify_GetPlugin(p.info.Main.Path))
-	}
-	h := C.PluginHandle(p.handle)
+func (p *plugin) OnInit(handle unsafe.Pointer) {
+	p.handle = handle
 
+	h := C.PluginHandle(p.handle)
 	p.id = int(C.Plugify_GetPluginId(h))
 
 	nameStr := C.Plugify_GetPluginName(h)
@@ -153,7 +149,7 @@ func (p *pluginInfo) OnInit(handle unsafe.Pointer) {
 	C.Plugify_DestroyVectorString(&dependenciesStr)
 }
 
-func (p *pluginInfo) OnStart() error {
+func (p *plugin) OnStart() error {
 	p.loaded = true
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 
@@ -163,14 +159,14 @@ func (p *pluginInfo) OnStart() error {
 	return nil
 }
 
-func (p *pluginInfo) OnUpdate(dt float32) error {
+func (p *plugin) OnUpdate(dt float32) error {
 	if p.update != nil {
 		return p.update(dt)
 	}
 	return nil
 }
 
-func (p *pluginInfo) OnEnd() error {
+func (p *plugin) OnEnd() error {
 	defer func() {
 		p.cancel()
 		p.loaded = false
@@ -181,7 +177,7 @@ func (p *pluginInfo) OnEnd() error {
 	return nil
 }
 
-func (p *pluginInfo) OnShutdown() {
+func (p *plugin) OnShutdown() {
 	clear(functionMap)
 
 	for _, v := range calls {
@@ -198,31 +194,31 @@ func (p *pluginInfo) OnShutdown() {
 	runtime.Gosched()
 }
 
-func (p *pluginInfo) Call(method unsafe.Pointer, data unsafe.Pointer, params unsafe.Pointer, count int, ret unsafe.Pointer) {
+func (p *plugin) Call(method unsafe.Pointer, data unsafe.Pointer, params unsafe.Pointer, count int, ret unsafe.Pointer) {
 	internalCall(C.MethodHandle(method), data, (*C.Parameters)(params), C.size_t(count), (*C.Return)(ret))
 }
 
-func (p *pluginInfo) Starting() bool {
+func (p *plugin) Starting() bool {
 	return p.start != nil
 }
 
-func (p *pluginInfo) Updating() bool {
+func (p *plugin) Updating() bool {
 	return p.update != nil
 }
 
-func (p *pluginInfo) Ending() bool {
+func (p *plugin) Ending() bool {
 	return p.end != nil
 }
 
-func (p *pluginInfo) Loaded() bool {
+func (p *plugin) Loaded() bool {
 	return p.loaded
 }
 
-func (p *pluginInfo) Context() context.Context {
+func (p *plugin) Context() context.Context {
 	return p.ctx
 }
 
-func (p *pluginInfo) Handle() unsafe.Pointer {
+func (p *plugin) Handle() unsafe.Pointer {
 	return p.handle
 }
 
@@ -231,9 +227,9 @@ func NewPlugin(
 	start PluginStart,
 	update PluginUpdate,
 	end PluginEnd,
-) PluginInfo {
+) Plugin {
 
-	plugins = append(plugins, pluginInfo{
+	plugins = append(plugins, plugin{
 		info:   info,
 		start:  start,
 		update: update,

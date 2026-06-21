@@ -403,10 +403,10 @@ func plugify_PluginContext(id int) C.PluginContext {
 func plugify_PluginCall(method C.MethodHandle, data *C.Data, params *C.Parameters, count C.size_t, ret *C.Return) {
 	Block{
 		Try: func() {
-			plugins[data.id].Call(unsafe.Pointer(method), data.ptr, unsafe.Pointer(params), int(count), unsafe.Pointer(ret))
+			plugins[0].Call(unsafe.Pointer(method), data.ptr, unsafe.Pointer(params), int(count), unsafe.Pointer(ret))
 		},
 		Catch: func(exc Exception) {
-			Stacktrace(exc, plugins[data.id].info)
+			Stacktrace(exc, plugins[0].info)
 		},
 	}.Do()
 }
