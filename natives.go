@@ -1635,16 +1635,20 @@ func GetVectorDataInt64To[V ~int64, T ~[]V](v *PlgVector, arr *T) {
 func GetVectorDataIntTo[V ~int, T ~[]V](v *PlgVector, arr *T) {
 	if is32bit {
 		size := int(C.Plugify_GetVectorSizeInt32(v))
-		if len(*arr) < size {
+		if cap(*arr) < size {
 			*arr = make(T, size)
+		} else {
+			*arr = (*arr)[:size]
 		}
 
 		dataPtr := C.Plugify_GetVectorDataInt32(v)
 		C.memcpy(unsafe.Pointer(&(*arr)[0]), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int32_t)
 	} else {
 		size := int(C.Plugify_GetVectorSizeInt64(v))
-		if len(*arr) < size {
+		if cap(*arr) < size {
 			*arr = make(T, size)
+		} else {
+			*arr = (*arr)[:size]
 		}
 
 		dataPtr := C.Plugify_GetVectorDataInt64(v)

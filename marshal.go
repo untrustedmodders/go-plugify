@@ -1016,34 +1016,6 @@ func paramToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) re
 
 func setRefParam(vt valueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 	switch vt {
-	/*case Bool:
-		setArgument(p, i, val.Elem().Bool())
-	case Char8:
-		setArgument(p, i, int8(val.Elem().Int()))
-	case Char16:
-		setArgument(p, i, uint16(val.Elem().Uint()))
-	case Int8:
-		setArgument(p, i, int8(val.Elem().Int()))
-	case Int16:
-		setArgument(p, i, int16(val.Elem().Int()))
-	case Int32:
-		setArgument(p, i, int32(val.Elem().Int()))
-	case Int64:
-		setArgument(p, i, int64(val.Elem().Int()))
-	case UInt8:
-		setArgument(p, i, uint8(val.Elem().Uint()))
-	case UInt16:
-		setArgument(p, i, uint16(val.Elem().Uint()))
-	case UInt32:
-		setArgument(p, i, uint32(val.Elem().Uint()))
-	case UInt64:
-		setArgument(p, i, uint64(val.Elem().Uint()))
-	case Pointer:
-		setArgument(p, i, uintptr(val.Elem().Uint()))
-	case Float:
-		setArgument(p, i, float32(val.Elem().Float()))
-	case Double:
-		setArgument(p, i, float64(val.Elem().Float()))*/
 	case Bool:
 	case Char8:
 	case Char16:
@@ -1102,14 +1074,6 @@ func setRefParam(vt valueType, p *C.Parameters, i C.size_t, val reflect.Value) {
 		reflectAssignVectorVector4(getArgument[*PlgVector](p, i), val.Elem())
 	case ArrayMatrix4x4:
 		reflectAssignVectorMatrix4x4(getArgument[*PlgVector](p, i), val.Elem())
-	/*case Vector2Type:
-		setArgumentCopy(p, i, val.Elem())
-	case Vector3Type:
-		setArgumentCopy(p, i, val.Elem())
-	case Vector4Type:
-		setArgumentCopy(p, i, val.Elem())
-	case Matrix4x4Type:
-		setArgumentCopy(p, i, val.Elem())*/
 	case Vector2Type:
 	case Vector3Type:
 	case Vector4Type:
