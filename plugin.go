@@ -6,15 +6,10 @@ package plugify
 import "C"
 import (
 	"context"
-	"runtime"
-	"runtime/debug"
-	"sync"
 	"unsafe"
 )
 
 type Plugin interface {
-	Info() *debug.BuildInfo
-
 	ID() int
 	Name() string
 	Description() string
@@ -25,18 +20,16 @@ type Plugin interface {
 	Location() string
 	Dependencies() []string
 
-	OnInit(handle unsafe.Pointer)
-	OnStart() error
-	OnUpdate(dt float32) error
-	OnEnd() error
-	OnShutdown()
-
-	Call(method unsafe.Pointer, data unsafe.Pointer, params unsafe.Pointer, count int, ret unsafe.Pointer)
+	onInit(name string)
+	onStart() error
+	onUpdate(dt float32) error
+	onEnd() error
 
 	Starting() bool
 	Updating() bool
 	Ending() bool
 	Loaded() bool
+
 	Context() context.Context
 	Handle() unsafe.Pointer
 }
@@ -46,17 +39,14 @@ type PluginUpdate func(dt float32) error
 type PluginEnd func() error
 
 type plugin struct {
-	info   *debug.BuildInfo
 	start  PluginStart
 	update PluginUpdate
 	end    PluginEnd
 
-	loaded bool
-	once   sync.Once
-	ctx    context.Context
-	cancel context.CancelFunc
-	handle unsafe.Pointer
-
+	loaded       bool
+	ctx          context.Context
+	cancel       context.CancelFunc
+	handle       unsafe.Pointer
 	id           int
 	name         string
 	description  string
@@ -68,11 +58,7 @@ type plugin struct {
 	dependencies []string
 }
 
-var plugins []plugin
-
-func (p *plugin) Info() *debug.BuildInfo {
-	return p.info
-}
+var pluginsMap = make(map[string]*plugin)
 
 func (p *plugin) ID() int {
 	return p.id
@@ -110,10 +96,10 @@ func (p *plugin) Dependencies() []string {
 	return p.dependencies
 }
 
-func (p *plugin) OnInit(handle unsafe.Pointer) {
-	p.handle = handle
+func (p *plugin) onInit(name string) {
+	h := C.Plugify_GetPlugin(name)
 
-	h := C.PluginHandle(p.handle)
+	p.handle = unsafe.Pointer(h)
 	p.id = int(C.Plugify_GetPluginId(h))
 
 	nameStr := C.Plugify_GetPluginName(h)
@@ -149,7 +135,7 @@ func (p *plugin) OnInit(handle unsafe.Pointer) {
 	C.Plugify_DestroyVectorString(&dependenciesStr)
 }
 
-func (p *plugin) OnStart() error {
+func (p *plugin) onStart() error {
 	p.loaded = true
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 
@@ -159,14 +145,14 @@ func (p *plugin) OnStart() error {
 	return nil
 }
 
-func (p *plugin) OnUpdate(dt float32) error {
+func (p *plugin) onUpdate(dt float32) error {
 	if p.update != nil {
 		return p.update(dt)
 	}
 	return nil
 }
 
-func (p *plugin) OnEnd() error {
+func (p *plugin) onEnd() error {
 	defer func() {
 		p.cancel()
 		p.loaded = false
@@ -177,25 +163,7 @@ func (p *plugin) OnEnd() error {
 	return nil
 }
 
-func (p *plugin) OnShutdown() {
-	clear(functionMap)
-
-	for _, v := range calls {
-		C.Plugify_DeleteCall(v)
-	}
-	clear(calls)
-
-	for _, v := range callbacks {
-		C.Plugify_DeleteCallback(v)
-	}
-	clear(callbacks)
-
-	runtime.GC()
-	runtime.Gosched()
-}
-
-func (p *plugin) Call(method unsafe.Pointer, data unsafe.Pointer, params unsafe.Pointer, count int, ret unsafe.Pointer) {
-	internalCall(C.MethodHandle(method), data, (*C.Parameters)(params), C.size_t(count), (*C.Return)(ret))
+func (p *plugin) onShutdown() {
 }
 
 func (p *plugin) Starting() bool {
@@ -223,18 +191,23 @@ func (p *plugin) Handle() unsafe.Pointer {
 }
 
 func NewPlugin(
-	info *debug.BuildInfo,
+	name string,
 	start PluginStart,
 	update PluginUpdate,
 	end PluginEnd,
 ) Plugin {
-
-	plugins = append(plugins, plugin{
-		info:   info,
+	p := &plugin{
 		start:  start,
 		update: update,
 		end:    end,
-	})
+	}
+	pluginsMap[name] = p
+	return p
+}
 
-	return &plugins[len(plugins)-1]
+func plg() *plugin {
+	for _, p := range pluginsMap {
+		return p
+	}
+	return nil
 }

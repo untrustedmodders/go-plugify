@@ -79,11 +79,6 @@ typedef struct Return {
 	uint64_t ret[2];
 } Return;
 
-typedef struct Data {
-    void* ptr;
-    ptrdiff_t id;
-} Data;
-
 typedef enum Severity {
 	Unknown,
 	Trace,

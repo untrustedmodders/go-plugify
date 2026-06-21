@@ -25,7 +25,7 @@ const (
 	Fatal
 )
 
-func Log(msg string, sev Severity, info *debug.BuildInfo, skip int) {
+func Log(msg string, sev Severity, mod string, skip int) {
 	line, file, funk := caller(skip)
 
 	C.Plugify_Log(
@@ -34,11 +34,11 @@ func Log(msg string, sev Severity, info *debug.BuildInfo, skip int) {
 		C.ptrdiff_t(line),
 		file,
 		funk,
-		info.Main.Path,
+		mod,
 	)
 }
 
-func Scope(name string, info *debug.BuildInfo, skip int) func() {
+func Scope(name string, mod string, skip int) func() {
 	if !isProfiling && !isLogging {
 		return func() {}
 	}
@@ -52,7 +52,7 @@ func Scope(name string, info *debug.BuildInfo, skip int) func() {
 	}
 
 	if isLogging {
-		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(line), file, funk, info.Main.Path)
+		C.Plugify_Log(name, C.Severity(Trace), C.ptrdiff_t(line), file, funk, mod)
 	}
 
 	return func() {
@@ -62,13 +62,13 @@ func Scope(name string, info *debug.BuildInfo, skip int) func() {
 	}
 }
 
-func Stacktrace(err any, info *debug.BuildInfo) {
+func stacktrace(err any) {
 	msg := fmt.Sprintf("%v", err)
 	stack := debug.Stack()
 	if len(stack) > 0 {
 		msg += fmt.Sprintf("\nStack Trace: \n%s", stack)
 	}
-	Log(msg, Error, info, 3)
+	Log(msg, Error, plg().name, 3)
 }
 
 func caller(skip int) (line int, file string, funk string) {
@@ -80,6 +80,6 @@ func caller(skip int) (line int, file string, funk string) {
 }
 
 func panicker(err any) {
-	Stacktrace(err, plugins[0].info)
+	stacktrace(err)
 	panic(err)
 }
