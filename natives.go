@@ -682,6 +682,155 @@ func getVectorDataInt32ToSlice(v *PlgVector, s reflect.Value) {
 	}
 }
 
+func getVectorDataInt64ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeInt64(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataInt64(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int64_t)
+	}
+}
+
+func getVectorDataUInt8ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeUInt8(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataUInt8(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint8_t)
+	}
+}
+
+func getVectorDataUInt16ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeUInt16(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataUInt16(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint16_t)
+	}
+}
+
+func getVectorDataUInt32ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeUInt32(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataUInt32(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint32_t)
+	}
+}
+
+func getVectorDataUInt64ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeUInt64(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataUInt64(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint64_t)
+	}
+}
+
+func getVectorDataPointerToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizePointer(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataPointer(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_intptr_t)
+	}
+}
+
+func getVectorDataFloatToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeFloat(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataFloat(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_float)
+	}
+}
+
+func getVectorDataDoubleToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeDouble(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataDouble(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_double)
+	}
+}
+
+func getVectorDataStringToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeString(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
+		for i := range size {
+			str := (*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))
+			s.Index(i).SetString(GetStringData[string](str))
+		}
+	}
+}
+
+func getVectorDataVariantToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeVariant(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
+		for i := range size {
+			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
+			data := GetVariantData(variant)
+			if data != nil {
+				s.Index(i).Set(reflect.ValueOf(data))
+			}
+		}
+	}
+}
+
+func getVectorDataVector2ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeVector2(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector2(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector2)
+	}
+}
+
+func getVectorDataVector3ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeVector3(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector3(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector3)
+	}
+}
+
+func getVectorDataVector4ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeVector4(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataVector4(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector4)
+	}
+}
+
+func getVectorDataMatrix4x4ToSlice(v *PlgVector, s reflect.Value) {
+	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
+	sliceSize(s, size)
+
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataMatrix4x4(v)
+		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Matrix4x4)
+	}
+}
+
 func getVectorDataBoolReturn(v *PlgVector, out reflect.Type) reflect.Value {
 	size := int(C.Plugify_GetVectorSizeBool(v))
 	slice := reflect.MakeSlice(out, size, size)
@@ -839,12 +988,6 @@ func getVectorDataDoubleReturn(v *PlgVector, out reflect.Type) reflect.Value {
 func getVectorDataStringReturn(v *PlgVector, out reflect.Type) reflect.Value {
 	size := int(C.Plugify_GetVectorSizeString(v))
 	slice := reflect.MakeSlice(out, size, size)
-	/* if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-		for i := range size {
-			slice.Index(i).Set(reflect.ValueOf(GetStringData[string]((*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String)))))
-		}
-	} */
 
 	if size > 0 {
 		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
@@ -860,21 +1003,15 @@ func getVectorDataStringReturn(v *PlgVector, out reflect.Type) reflect.Value {
 func getVectorDataAnyReturn(v *PlgVector, out reflect.Type) reflect.Value {
 	size := int(C.Plugify_GetVectorSizeVariant(v))
 	slice := reflect.MakeSlice(out, size, size)
-	/* if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
-		for i := range size {
-			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			slice.Index(i).Set(reflect.ValueOf(GetVariantData(variant)))
-		}
-	} */
 
 	if size > 0 {
-		slicePtr := slice.UnsafePointer()
-
 		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
 		for i := range size {
 			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			*(*any)(unsafe.Add(slicePtr, i)) = GetVariantData(variant)
+			data := GetVariantData(variant)
+			if data != nil {
+				slice.Index(i).Set(reflect.ValueOf(data))
+			}
 		}
 	}
 
@@ -927,16 +1064,6 @@ func getVectorDataMatrix4x4Return(v *PlgVector, out reflect.Type) reflect.Value 
 	}
 
 	return slice
-}
-
-func getVectorDataInt64ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeInt64(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataInt64(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_int64_t)
-	}
 }
 
 func getVectorDataBoolReflect(v *PlgVector, t reflect.Type) reflect.Value {
@@ -1130,7 +1257,10 @@ func getVectorDataAnyReflect(v *PlgVector, t reflect.Type) reflect.Value {
 		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
 		for i := range size {
 			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			slice.Index(i).Set(reflect.ValueOf(GetVariantData(variant)))
+			data := GetVariantData(variant)
+			if data != nil {
+				slice.Index(i).Set(reflect.ValueOf(data))
+			}
 		}
 	}
 
@@ -1185,222 +1315,6 @@ func getVectorDataMatrix4x4Reflect(v *PlgVector, t reflect.Type) reflect.Value {
 	return slice
 }
 
-func getVectorDataUInt8ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeUInt8(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataUInt8(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint8_t)
-	}
-}
-
-func getVectorDataUInt16ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeUInt16(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataUInt16(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint16_t)
-	}
-}
-
-func getVectorDataUInt32ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeUInt32(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataUInt32(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint32_t)
-	}
-}
-
-func getVectorDataUInt64ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeUInt64(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataUInt64(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_uint64_t)
-	}
-}
-
-func getVectorDataPointerToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizePointer(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataPointer(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_intptr_t)
-	}
-}
-
-func getVectorDataFloatToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeFloat(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataFloat(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_float)
-	}
-}
-
-func getVectorDataDoubleToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeDouble(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataDouble(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_double)
-	}
-}
-
-func getVectorDataStringToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeString(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
-		for i := range size {
-			str := (*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))
-			s.Index(i).SetString(GetStringData[string](str))
-		}
-	}
-}
-
-func GetVectorDataVariant[V any, T ~[]V](v *PlgVector) T {
-	size := int(C.Plugify_GetVectorSizeVariant(v))
-	arr := make(T, size)
-	/* for i := range size {
-		variant := C.Plugify_GetVectorDataVariant(v, C.ptrdiff_t(i))
-		//reflect.ValueOf(arr[i]).Set(reflect.ValueOf(GetVariantData(variant)))
-	} */
-
-	//slice := reflect.ValueOf(arr)
-	//slicePtr := slice.UnsafePointer()
-
-	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
-		for i := range size {
-			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			data := GetVariantData(variant)
-
-			if data != nil {
-				arr[i] = data.(V)
-			}
-
-			//*(*uint)(unsafe.Pointer(uintptr(slicePtr) + uintptr(i) * unsafe.Sizeof(any(nil)))) = *(*uint)(unsafe.Pointer(&data))
-
-			// TODO: check memory leak
-			// runtime.Pinner
-			//C.memcpy(unsafe.Pointer(uintptr(C.size_t(uintptr(slicePtr))+i*C.sizeof_Variant)), unsafe.Pointer(&data), C.sizeof_Variant)
-			//entry := unsafe.Pointer(&arr[i])
-			//*(*uint)(entry) = *(*uint)(unsafe.Pointer(&data))
-
-			//reflect.ValueOf((arr)[i]).Set(reflect.ValueOf(GetVariantData(variant)))
-		}
-	}
-
-	return arr
-}
-
-func getVectorDataVariantToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeVariant(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
-		for i := range size {
-			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			data := GetVariantData(variant)
-
-			if data != nil {
-				s.Index(i).Set(reflect.ValueOf(data))
-			}
-		}
-	}
-}
-
-func GetVectorDataVector2[T ~struct{ X, Y float32 }](v *PlgVector) []T {
-	size := int(C.Plugify_GetVectorSizeVector2(v))
-	arr := make([]T, size)
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector2(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector2)
-	}
-	return arr
-}
-
-func getVectorDataVector2ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeVector2(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector2(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector2)
-	}
-}
-
-func GetVectorDataVector3[T ~struct{ X, Y, Z float32 }](v *PlgVector) []T {
-	size := int(C.Plugify_GetVectorSizeVector3(v))
-	arr := make([]T, size)
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector3(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector3)
-	}
-	return arr
-}
-
-func getVectorDataVector3ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeVector3(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector3(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector3)
-	}
-}
-
-func GetVectorDataVector4[T ~struct{ X, Y, Z, W float32 }](v *PlgVector) []T {
-	size := int(C.Plugify_GetVectorSizeVector4(v))
-	arr := make([]T, size)
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector4(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector4)
-	}
-	return arr
-}
-
-func getVectorDataVector4ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeVector4(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataVector4(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Vector4)
-	}
-}
-
-func GetVectorDataMatrix4x4[T ~struct{ M [4][4]float32 }](v *PlgVector) []T {
-	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
-	arr := make([]T, size)
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataMatrix4x4(v)
-		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Matrix4x4)
-	}
-	return arr
-}
-
-func getVectorDataMatrix4x4ToSlice(v *PlgVector, s reflect.Value) {
-	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
-	sliceSize(s, size)
-
-	if size > 0 {
-		dataPtr := C.Plugify_GetVectorDataMatrix4x4(v)
-		C.memcpy(unsafe.Pointer(s.UnsafePointer()), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Matrix4x4)
-	}
-}
-
 func GetVectorDataBool[T ~bool](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeBool(v))
 	arr := make([]T, size)
@@ -1451,7 +1365,7 @@ func GetVectorDataInt16[T ~int16](v *PlgVector) []T {
 	return arr
 }
 
-func GetVectorDataIntT[T ~int](v *PlgVector) []T {
+/*func GetVectorDataInt[T ~int](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeInt32(v))
 	arr := make([]T, size)
 
@@ -1466,7 +1380,7 @@ func GetVectorDataIntT[T ~int](v *PlgVector) []T {
 	}
 
 	return arr
-}
+}*/
 
 func GetVectorDataInt32[T ~int32](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeInt32(v))
@@ -1571,7 +1485,23 @@ func GetVectorDataString[T ~string](v *PlgVector) []T {
 	return arr
 }
 
-func GetVectorDataVector2T[T any](v *PlgVector) []T {
+func GetVectorDataVariant[V any, T ~[]V](v *PlgVector) T {
+	size := int(C.Plugify_GetVectorSizeVariant(v))
+	arr := make(T, size)
+	if size > 0 {
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
+		for i := range size {
+			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
+			data := GetVariantData(variant)
+			if data != nil {
+				arr[i] = data.(V)
+			}
+		}
+	}
+	return arr
+}
+
+func GetVectorDataVector2[T ~struct{ X, Y float32 }](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeVector2(v))
 	arr := make([]T, size)
 	if size > 0 {
@@ -1581,7 +1511,7 @@ func GetVectorDataVector2T[T any](v *PlgVector) []T {
 	return arr
 }
 
-func GetVectorDataVector3T[T any](v *PlgVector) []T {
+func GetVectorDataVector3[T ~struct{ X, Y, Z float32 }](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeVector3(v))
 	arr := make([]T, size)
 	if size > 0 {
@@ -1591,7 +1521,7 @@ func GetVectorDataVector3T[T any](v *PlgVector) []T {
 	return arr
 }
 
-func GetVectorDataVector4T[T any](v *PlgVector) []T {
+func GetVectorDataVector4[T ~struct{ X, Y, Z, W float32 }](v *PlgVector) []T {
 	size := int(C.Plugify_GetVectorSizeVector4(v))
 	arr := make([]T, size)
 	if size > 0 {
@@ -1601,10 +1531,22 @@ func GetVectorDataVector4T[T any](v *PlgVector) []T {
 	return arr
 }
 
+func GetVectorDataMatrix4x4[T ~struct{ M [4][4]float32 }](v *PlgVector) []T {
+	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
+	arr := make([]T, size)
+	if size > 0 {
+		dataPtr := C.Plugify_GetVectorDataMatrix4x4(v)
+		C.memcpy(unsafe.Pointer(unsafe.SliceData(arr)), unsafe.Pointer(dataPtr), C.size_t(size)*C.sizeof_Matrix4x4)
+	}
+	return arr
+}
+
 func GetVectorDataBoolTo[V ~bool, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeBool(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataBool(v)
@@ -1614,8 +1556,10 @@ func GetVectorDataBoolTo[V ~bool, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataChar8To[V ~int8, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeChar8(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar8(v)
@@ -1625,8 +1569,10 @@ func GetVectorDataChar8To[V ~int8, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataChar16To[V ~uint16, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeChar16(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataChar16(v)
@@ -1636,8 +1582,10 @@ func GetVectorDataChar16To[V ~uint16, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataInt8To[V ~int8, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeInt8(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataInt8(v)
@@ -1647,8 +1595,10 @@ func GetVectorDataInt8To[V ~int8, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataInt16To[V ~int16, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeInt16(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataInt16(v)
@@ -1658,8 +1608,10 @@ func GetVectorDataInt16To[V ~int16, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataInt32To[V ~int32, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeInt32(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataInt32(v)
@@ -1669,8 +1621,10 @@ func GetVectorDataInt32To[V ~int32, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataInt64To[V ~int64, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeInt64(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataInt64(v)
@@ -1700,8 +1654,10 @@ func GetVectorDataIntTo[V ~int, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataUInt8To[V ~uint8, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeUInt8(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataUInt8(v)
@@ -1711,8 +1667,10 @@ func GetVectorDataUInt8To[V ~uint8, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataUInt16To[V ~uint16, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeUInt16(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataUInt16(v)
@@ -1722,8 +1680,10 @@ func GetVectorDataUInt16To[V ~uint16, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataUInt32To[V ~uint32, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeUInt32(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataUInt32(v)
@@ -1733,8 +1693,10 @@ func GetVectorDataUInt32To[V ~uint32, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataUInt64To[V ~uint64, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeUInt64(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataUInt64(v)
@@ -1744,8 +1706,10 @@ func GetVectorDataUInt64To[V ~uint64, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataPointerTo[V ~uintptr, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizePointer(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataPointer(v)
@@ -1755,8 +1719,10 @@ func GetVectorDataPointerTo[V ~uintptr, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataFloatTo[V ~float32, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeFloat(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataFloat(v)
@@ -1766,8 +1732,10 @@ func GetVectorDataFloatTo[V ~float32, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataDoubleTo[V ~float64, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeDouble(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataDouble(v)
@@ -1777,8 +1745,10 @@ func GetVectorDataDoubleTo[V ~float64, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataStringTo[V ~string, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeString(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(v))
@@ -1791,9 +1761,10 @@ func GetVectorDataStringTo[V ~string, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataVariantTo[V any, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeVariant(v))
-	// TODO: should use cap
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(v))
@@ -1807,8 +1778,10 @@ func GetVectorDataVariantTo[V any, T ~[]V](v *PlgVector, arr *T) {
 
 func GetVectorDataVector2To[V ~struct{ X, Y float32 }, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeVector2(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataVector2(v)
@@ -1818,8 +1791,10 @@ func GetVectorDataVector2To[V ~struct{ X, Y float32 }, T ~[]V](v *PlgVector, arr
 
 func GetVectorDataVector3To[V ~struct{ X, Y, Z float32 }, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeVector3(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataVector3(v)
@@ -1829,8 +1804,10 @@ func GetVectorDataVector3To[V ~struct{ X, Y, Z float32 }, T ~[]V](v *PlgVector, 
 
 func GetVectorDataVector4To[V ~struct{ X, Y, Z, W float32 }, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeVector4(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataVector4(v)
@@ -1840,8 +1817,10 @@ func GetVectorDataVector4To[V ~struct{ X, Y, Z, W float32 }, T ~[]V](v *PlgVecto
 
 func GetVectorDataMatrix4x4To[V ~struct{ M [4][4]float32 }, T ~[]V](v *PlgVector, arr *T) {
 	size := int(C.Plugify_GetVectorSizeMatrix4x4(v))
-	if len(*arr) < size {
+	if cap(*arr) < size {
 		*arr = make(T, size)
+	} else {
+		*arr = (*arr)[:size]
 	}
 	if size > 0 {
 		dataPtr := C.Plugify_GetVectorDataMatrix4x4(v)
@@ -1885,10 +1864,6 @@ func AssignVectorInt64[T ~int64 | ~int](v *PlgVector, data []T) {
 	C.Plugify_AssignVectorInt64(v, (*C.int64_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
 
-func VAssignVectorInt64(v *PlgVector, data reflect.Value) {
-	C.Plugify_AssignVectorInt64(v, (*C.int64_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
-}
-
 func AssignVectorUInt8[T ~uint8](v *PlgVector, data []T) {
 	C.Plugify_AssignVectorUInt8(v, (*C.uint8_t)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
 }
@@ -1929,17 +1904,6 @@ func AssignVectorString[T ~string](v *PlgVector, data []T) {
 	}
 }
 
-func reflectAssignVectorString(vec *PlgVector, v reflect.Value) {
-	size := v.Len()
-	C.Plugify_AssignVectorString(vec, C.ptrdiff_t(size))
-	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(vec))
-		for i := range size {
-			str := (*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))
-			AssignString(str, v.Index(i).String())
-		}
-	}
-}
 func AssignVectorVariant[T any](v *PlgVector, data []T) {
 	size := len(data)
 	C.Plugify_AssignVectorVariant(v, C.ptrdiff_t(size))
@@ -1948,18 +1912,6 @@ func AssignVectorVariant[T any](v *PlgVector, data []T) {
 		for i := range size {
 			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
 			AssignVariant(variant, data[i])
-		}
-	}
-}
-
-func reflectAssignVectorVariant(vec *PlgVector, v reflect.Value) {
-	size := v.Len()
-	C.Plugify_AssignVectorVariant(vec, C.ptrdiff_t(size))
-	if size > 0 {
-		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(vec))
-		for i := range size {
-			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
-			AssignVariant(variant, v.Index(i).Interface())
 		}
 	}
 }
@@ -1978,4 +1930,100 @@ func AssignVectorVector4[T ~struct{ X, Y, Z, W float32 }](v *PlgVector, data []T
 
 func AssignVectorMatrix4x4[T ~struct{ M [4][4]float32 }](v *PlgVector, data []T) {
 	C.Plugify_AssignVectorMatrix4x4(v, (*PlgMatrix4x4)(unsafe.Pointer(unsafe.SliceData(data))), C.ptrdiff_t(len(data)))
+}
+
+func reflectAssignVectorBool(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorBool(v, (*C.bool)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorChar8(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorChar8(v, (*C.char)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorChar16(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorChar16(v, (*C.char16_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorInt8(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorInt8(v, (*C.int8_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorInt16(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorInt16(v, (*C.int16_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorInt32(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorInt32(v, (*C.int32_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorInt64(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorInt64(v, (*C.int64_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorUInt8(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorUInt8(v, (*C.uint8_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorUInt16(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorUInt16(v, (*C.uint16_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorUInt32(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorUInt32(v, (*C.uint32_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorUInt64(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorUInt64(v, (*C.uint64_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorPointer(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorPointer(v, (*C.uintptr_t)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorFloat(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorFloat(v, (*C.float)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorDouble(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorDouble(v, (*C.double)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorString(vec *PlgVector, v reflect.Value) {
+	size := v.Len()
+	C.Plugify_AssignVectorString(vec, C.ptrdiff_t(size))
+	if size > 0 {
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataString(vec))
+		for i := range size {
+			str := (*PlgString)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_String))
+			AssignString(str, v.Index(i).String())
+		}
+	}
+}
+
+func reflectAssignVectorVariant(vec *PlgVector, v reflect.Value) {
+	size := v.Len()
+	C.Plugify_AssignVectorVariant(vec, C.ptrdiff_t(size))
+	if size > 0 {
+		dataPtr := unsafe.Pointer(C.Plugify_GetVectorDataVariant(vec))
+		for i := range size {
+			variant := (*PlgVariant)(unsafe.Pointer(uintptr(dataPtr) + uintptr(i)*C.sizeof_Variant))
+			AssignVariant(variant, v.Index(i).Interface())
+		}
+	}
+}
+
+func reflectAssignVectorVector2(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorVector2(v, (*PlgVector2)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorVector3(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorVector3(v, (*PlgVector3)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorVector4(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorVector4(v, (*PlgVector4)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
+}
+
+func reflectAssignVectorMatrix4x4(v *PlgVector, data reflect.Value) {
+	C.Plugify_AssignVectorMatrix4x4(v, (*PlgMatrix4x4)(data.UnsafePointer()), C.ptrdiff_t(data.Len()))
 }
