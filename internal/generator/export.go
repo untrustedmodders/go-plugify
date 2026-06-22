@@ -183,7 +183,7 @@ func generateWrapper(fn ExportedFunction) string {
 				var elemTypeName string
 				if param.Type.ElemType != nil {
 					if param.Type.ElemType.IsEnum {
-						elemTypeName = importName + param.Type.ElemType.EnumTypeName
+						elemTypeName = getImportName(param.Type.ElemType.packageImport) + param.Type.ElemType.EnumTypeName
 					} else {
 						elemTypeName = param.Type.ElemType.GoBaseType
 					}
@@ -191,7 +191,7 @@ func generateWrapper(fn ExportedFunction) string {
 
 				var typeName string
 				if param.Type.IsEnum {
-					typeName = getImportName(param.Type.ElemType.packageImport) + param.Type.EnumTypeName
+					typeName = importName + param.Type.EnumTypeName
 				} else {
 					typeName, _ = strings.CutPrefix(param.Type.GoBaseType, "*")
 				}
