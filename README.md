@@ -17,6 +17,7 @@ go get github.com/untrustedmodders/go-plugify@v1.0.0
 ```
 
 ```go
+// go build -buildmode="c-shared" -ldflags="-X main.PluginName=example_plugin" ./
 package main
 
 import (
@@ -24,21 +25,26 @@ import (
 	"github.com/untrustedmodders/go-plugify"
 )
 
+var plugin plugify.Plugin
+var PluginName string // should match name in manifest
+
+func OnPluginStart() error {
+	fmt.Println("Go: OnPluginStart")
+	return nil
+}
+
+func OnPluginUpdate(dt float32) error {
+	fmt.Println("Go: OnPluginUpdate")
+	return nil
+}
+
+func OnPluginEnd() error {
+	fmt.Println("Go: OnPluginEnd")
+	return nil
+}
+
 func init() {
-	plugify.OnPluginStart(func() error {
-		fmt.Println("OnPluginStart")
-		return nil
-	})
-
-	plugify.OnPluginUpdate(func(dt float32) error {
-		fmt.Println("OnPluginUpdate")
-		return nil
-	})
-
-	plugify.OnPluginEnd(func() error {
-		fmt.Println("OnPluginEnd")
-		return nil
-	})
+	plugin = plugify.NewPlugin(PluginName, OnPluginStart, OnPluginUpdate, OnPluginEnd)
 }
 
 func main() {}
