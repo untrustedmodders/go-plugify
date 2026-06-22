@@ -6,14 +6,11 @@ import (
 
 // Grow or shrink the slice to the given length.
 func sliceSize(slice reflect.Value, size int) {
-	sliceLen := slice.Len() // TODO: should use cap
+	sliceCap := slice.Cap()
 
-	if sliceLen < size {
-		reqLen := size - sliceLen
-
-		slice.Grow(reqLen)
-		slice.SetLen(size)
-	} else if sliceLen > size {
-		slice.SetLen(size)
+	if size > sliceCap {
+		slice.Grow(size - sliceCap)
 	}
+
+	slice.SetLen(size)
 }
