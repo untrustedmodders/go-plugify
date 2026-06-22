@@ -43,10 +43,11 @@ type plugin struct {
 	update PluginUpdate
 	end    PluginEnd
 
-	loaded       bool
-	ctx          context.Context
-	cancel       context.CancelFunc
-	handle       unsafe.Pointer
+	loaded bool
+	ctx    context.Context
+	cancel context.CancelFunc
+	handle unsafe.Pointer
+
 	id           int
 	name         string
 	description  string
@@ -209,5 +210,5 @@ func plg() *plugin {
 	for _, p := range pluginsMap {
 		return p
 	}
-	return nil
+	panic("expected to have a registered plugin")
 }

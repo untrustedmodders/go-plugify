@@ -170,257 +170,257 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 			pt := parameterTypes[i]
 			vt := pt.valueType
 			size := sizeOfValueType(vt)
-			var ptrUnsafe unsafe.Pointer
+			var ptr unsafe.Pointer
 			if pt.ref {
 				switch vt {
 				case Bool:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetBool(*(*bool)(ptrUnsafe))
+						arg.Elem().SetBool(*(*bool)(ptr))
 					}()
 				case Char8:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetInt(int64(*(*int8)(ptrUnsafe)))
+						arg.Elem().SetInt(int64(*(*int8)(ptr)))
 					}()
 				case Char16:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(uint64(*(*uint16)(ptrUnsafe)))
+						arg.Elem().SetUint(uint64(*(*uint16)(ptr)))
 					}()
 				case Int8:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetInt(int64(*(*int8)(ptrUnsafe)))
+						arg.Elem().SetInt(int64(*(*int8)(ptr)))
 					}()
 				case Int16:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetInt(int64(*(*int16)(ptrUnsafe)))
+						arg.Elem().SetInt(int64(*(*int16)(ptr)))
 					}()
 				case Int32:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetInt(int64(*(*int32)(ptrUnsafe)))
+						arg.Elem().SetInt(int64(*(*int32)(ptr)))
 					}()
 				case Int64:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetInt(*(*int64)(ptrUnsafe))
+						arg.Elem().SetInt(*(*int64)(ptr))
 					}()
 				case UInt8:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(uint64(*(*uint8)(ptrUnsafe)))
+						arg.Elem().SetUint(uint64(*(*uint8)(ptr)))
 					}()
 				case UInt16:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(uint64(*(*uint16)(ptrUnsafe)))
+						arg.Elem().SetUint(uint64(*(*uint16)(ptr)))
 					}()
 				case UInt32:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(uint64(*(*uint32)(ptrUnsafe)))
+						arg.Elem().SetUint(uint64(*(*uint32)(ptr)))
 					}()
 				case UInt64:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(*(*uint64)(ptrUnsafe))
+						arg.Elem().SetUint(*(*uint64)(ptr))
 					}()
 				case Pointer:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetUint(uint64(*(*uintptr)(ptrUnsafe)))
+						arg.Elem().SetUint(uint64(*(*uintptr)(ptr)))
 					}()
 				case Float:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetFloat(float64(*(*float32)(ptrUnsafe)))
+						arg.Elem().SetFloat(float64(*(*float32)(ptr)))
 					}()
 				case Double:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						arg.Elem().SetFloat(*(*float64)(ptrUnsafe))
+						arg.Elem().SetFloat(*(*float64)(ptr))
 					}()
 				case Vector2Type:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptr, C.size_t(size))
 					}()
 				case Vector3Type:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptr, C.size_t(size))
 					}()
 				case Vector4Type:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptr, C.size_t(size))
 					}()
 				case Matrix4x4Type:
-					ptrUnsafe = pin(arg.UnsafePointer(), &pool, size)
+					ptr = pin(arg.UnsafePointer(), &pool, size)
 					defer func() {
-						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptrUnsafe, C.size_t(size))
+						C.memcpy(unsafe.Pointer(arg.UnsafePointer()), ptr, C.size_t(size))
 					}()
 				case Function:
-					ptrUnsafe = GetFunctionPointerForDelegate(arg)
+					ptr = GetFunctionPointerForDelegate(arg)
 				case String:
 					elem := arg.Elem()
-					ptrUnsafe = pinT(ConstructString(elem.String()), &pool, size)
+					ptr = pinT(ConstructString(elem.String()), &pool, size)
 					defer func() {
-						elem.SetString(GetStringData[string]((*PlgString)(ptrUnsafe)))
-						DestroyString((*PlgString)(ptrUnsafe))
+						elem.SetString(GetStringData[string]((*PlgString)(ptr)))
+						DestroyString((*PlgString)(ptr))
 					}()
 				case Any:
 					elem := arg.Elem()
-					ptrUnsafe = pinT(ConstructVariant(elem.Interface()), &pool, size)
+					ptr = pinT(ConstructVariant(elem.Interface()), &pool, size)
 					defer func() {
-						data := GetVariantData((*PlgVariant)(ptrUnsafe))
+						data := GetVariantData((*PlgVariant)(ptr))
 						if data != nil {
 							elem.Set(reflect.ValueOf(data))
 						}
-						DestroyVariant((*PlgVariant)(ptrUnsafe))
+						DestroyVariant((*PlgVariant)(ptr))
 					}()
 				case ArrayBool:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorBoolToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorBoolToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataBoolToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorBool((*PlgVector)(ptrUnsafe))
+						getVectorDataBoolToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorBool((*PlgVector)(ptr))
 					}()
 				case ArrayChar8:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorChar8ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorChar8ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataChar8ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorChar8((*PlgVector)(ptrUnsafe))
+						getVectorDataChar8ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorChar8((*PlgVector)(ptr))
 					}()
 				case ArrayChar16:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorChar16ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorChar16ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataChar16ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorChar16((*PlgVector)(ptrUnsafe))
+						getVectorDataChar16ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorChar16((*PlgVector)(ptr))
 					}()
 				case ArrayInt8:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorInt8ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorInt8ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataInt8ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorInt8((*PlgVector)(ptrUnsafe))
+						getVectorDataInt8ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorInt8((*PlgVector)(ptr))
 					}()
 				case ArrayInt16:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorInt16ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorInt16ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataInt16ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorInt16((*PlgVector)(ptrUnsafe))
+						getVectorDataInt16ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorInt16((*PlgVector)(ptr))
 					}()
 				case ArrayInt32:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorInt32ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorInt32ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataInt32ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorInt32((*PlgVector)(ptrUnsafe))
+						getVectorDataInt32ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorInt32((*PlgVector)(ptr))
 					}()
 				case ArrayInt64:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorInt64ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorInt64ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataInt64ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorInt32((*PlgVector)(ptrUnsafe))
+						getVectorDataInt64ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorInt32((*PlgVector)(ptr))
 					}()
 				case ArrayUInt8:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorUInt8ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorUInt8ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataUInt8ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorUInt8((*PlgVector)(ptrUnsafe))
+						getVectorDataUInt8ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorUInt8((*PlgVector)(ptr))
 					}()
 				case ArrayUInt16:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorUInt16ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorUInt16ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataUInt16ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorUInt16((*PlgVector)(ptrUnsafe))
+						getVectorDataUInt16ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorUInt16((*PlgVector)(ptr))
 					}()
 				case ArrayUInt32:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorUInt32ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorUInt32ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataUInt32ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorUInt32((*PlgVector)(ptrUnsafe))
+						getVectorDataUInt32ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorUInt32((*PlgVector)(ptr))
 					}()
 				case ArrayUInt64:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorUInt64ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorUInt64ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataUInt64ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorUInt64((*PlgVector)(ptrUnsafe))
+						getVectorDataUInt64ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorUInt64((*PlgVector)(ptr))
 					}()
 				case ArrayPointer:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorPointerToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorPointerToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataPointerToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorPointer((*PlgVector)(ptrUnsafe))
+						getVectorDataPointerToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorPointer((*PlgVector)(ptr))
 					}()
 				case ArrayFloat:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorFloatToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorFloatToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataFloatToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorFloat((*PlgVector)(ptrUnsafe))
+						getVectorDataFloatToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorFloat((*PlgVector)(ptr))
 					}()
 				case ArrayDouble:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorDoubleToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorDoubleToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataDoubleToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorDouble((*PlgVector)(ptrUnsafe))
+						getVectorDataDoubleToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorDouble((*PlgVector)(ptr))
 					}()
 				case ArrayString:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorStringToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorStringToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataStringToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorString((*PlgVector)(ptrUnsafe))
+						getVectorDataStringToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorString((*PlgVector)(ptr))
 					}()
 				case ArrayAny:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorVariantToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorVariantToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataVariantToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorVariant((*PlgVector)(ptrUnsafe))
+						getVectorDataVariantToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorVariant((*PlgVector)(ptr))
 					}()
 				case ArrayVector2:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorVector2ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorVector2ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataVector2ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorVector2((*PlgVector)(ptrUnsafe))
+						getVectorDataVector2ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorVector2((*PlgVector)(ptr))
 					}()
 				case ArrayVector3:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorVector3ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorVector3ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataVector3ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorVector3((*PlgVector)(ptrUnsafe))
+						getVectorDataVector3ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorVector3((*PlgVector)(ptr))
 					}()
 				case ArrayVector4:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorVector4ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorVector4ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataVector4ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorVector4((*PlgVector)(ptrUnsafe))
+						getVectorDataVector4ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorVector4((*PlgVector)(ptr))
 					}()
 				case ArrayMatrix4x4:
 					slice := arg.Elem()
-					ptrUnsafe = pinT(constructVectorMatrix4x4ToSlice(slice), &pool, size)
+					ptr = pinT(constructVectorMatrix4x4ToSlice(slice), &pool, size)
 					defer func() {
-						getVectorDataMatrix4x4ToSlice((*PlgVector)(ptrUnsafe), slice)
-						DestroyVectorMatrix4x4((*PlgVector)(ptrUnsafe))
+						getVectorDataMatrix4x4ToSlice((*PlgVector)(ptr), slice)
+						DestroyVectorMatrix4x4((*PlgVector)(ptr))
 					}()
 				default:
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", retType))
@@ -428,118 +428,118 @@ func GetDelegateForFunctionPointer(fnPtr unsafe.Pointer, fnType reflect.Type) an
 			} else {
 				switch vt {
 				case Bool:
-					ptrUnsafe = raw(arg.Bool())
+					ptr = raw(bool(arg.Bool()))
 				case Char8, Int8:
-					ptrUnsafe = raw(int8(arg.Int()))
+					ptr = raw(int8(arg.Int()))
 				case Int16:
-					ptrUnsafe = raw(int16(arg.Int()))
+					ptr = raw(int16(arg.Int()))
 				case Int32:
-					ptrUnsafe = raw(int32(arg.Int()))
+					ptr = raw(int32(arg.Int()))
 				case Int64:
-					ptrUnsafe = raw(int64(arg.Int()))
+					ptr = raw(int64(arg.Int()))
 				case UInt8:
-					ptrUnsafe = raw(uint8(arg.Uint()))
+					ptr = raw(uint8(arg.Uint()))
 				case Char16, UInt16:
-					ptrUnsafe = raw(uint16(arg.Uint()))
+					ptr = raw(uint16(arg.Uint()))
 				case UInt32:
-					ptrUnsafe = raw(uint32(arg.Uint()))
+					ptr = raw(uint32(arg.Uint()))
 				case UInt64:
-					ptrUnsafe = raw(uint64(arg.Uint()))
+					ptr = raw(uint64(arg.Uint()))
 				case Pointer:
-					ptrUnsafe = raw(uintptr(arg.Uint()))
+					ptr = raw(uintptr(arg.Uint()))
 				case Float:
-					ptrUnsafe = raw(float32(arg.Float()))
+					ptr = raw(float32(arg.Float()))
 				case Double:
-					ptrUnsafe = raw(arg.Float())
+					ptr = raw(arg.Float())
 				case Vector2Type:
 					val := reflect.New(arg.Type())
 					val.Elem().Set(arg)
-					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
+					ptr = pin(val.UnsafePointer(), &pool, size)
 				case Vector3Type:
 					val := reflect.New(arg.Type())
 					val.Elem().Set(arg)
-					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
+					ptr = pin(val.UnsafePointer(), &pool, size)
 				case Vector4Type:
 					val := reflect.New(arg.Type())
 					val.Elem().Set(arg)
-					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
+					ptr = pin(val.UnsafePointer(), &pool, size)
 				case Matrix4x4Type:
 					val := reflect.New(arg.Type())
 					val.Elem().Set(arg)
-					ptrUnsafe = pin(val.UnsafePointer(), &pool, size)
+					ptr = pin(val.UnsafePointer(), &pool, size)
 				case Function:
-					ptrUnsafe = GetFunctionPointerForDelegate(arg)
+					ptr = GetFunctionPointerForDelegate(arg)
 				case String:
-					ptrUnsafe = pinT(ConstructString(arg.String()), &pool, size)
-					defer DestroyString((*PlgString)(ptrUnsafe))
+					ptr = pinT(ConstructString(arg.String()), &pool, size)
+					defer DestroyString((*PlgString)(ptr))
 				case Any:
-					ptrUnsafe = pinT(ConstructVariant(arg.Interface()), &pool, size)
-					defer DestroyVariant((*PlgVariant)(ptrUnsafe))
+					ptr = pinT(ConstructVariant(arg.Interface()), &pool, size)
+					defer DestroyVariant((*PlgVariant)(ptr))
 				case ArrayBool:
-					ptrUnsafe = pinT(constructVectorBoolToSlice(arg), &pool, size)
-					defer DestroyVectorBool((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorBoolToSlice(arg), &pool, size)
+					defer DestroyVectorBool((*PlgVector)(ptr))
 				case ArrayChar8:
-					ptrUnsafe = pinT(constructVectorChar8ToSlice(arg), &pool, size)
-					defer DestroyVectorChar8((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorChar8ToSlice(arg), &pool, size)
+					defer DestroyVectorChar8((*PlgVector)(ptr))
 				case ArrayChar16:
-					ptrUnsafe = pinT(constructVectorChar16ToSlice(arg), &pool, size)
-					defer DestroyVectorChar16((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorChar16ToSlice(arg), &pool, size)
+					defer DestroyVectorChar16((*PlgVector)(ptr))
 				case ArrayInt8:
-					ptrUnsafe = pinT(constructVectorInt8ToSlice(arg), &pool, size)
-					defer DestroyVectorInt8((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorInt8ToSlice(arg), &pool, size)
+					defer DestroyVectorInt8((*PlgVector)(ptr))
 				case ArrayInt16:
-					ptrUnsafe = pinT(constructVectorInt16ToSlice(arg), &pool, size)
-					defer DestroyVectorInt16((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorInt16ToSlice(arg), &pool, size)
+					defer DestroyVectorInt16((*PlgVector)(ptr))
 				case ArrayInt32:
-					ptrUnsafe = pinT(constructVectorInt32ToSlice(arg), &pool, size)
-					defer DestroyVectorInt32((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorInt32ToSlice(arg), &pool, size)
+					defer DestroyVectorInt32((*PlgVector)(ptr))
 				case ArrayInt64:
-					ptrUnsafe = pinT(constructVectorInt64ToSlice(arg), &pool, size)
-					defer DestroyVectorInt64((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorInt64ToSlice(arg), &pool, size)
+					defer DestroyVectorInt64((*PlgVector)(ptr))
 				case ArrayUInt8:
-					ptrUnsafe = pinT(constructVectorUInt8ToSlice(arg), &pool, size)
-					defer DestroyVectorUInt8((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorUInt8ToSlice(arg), &pool, size)
+					defer DestroyVectorUInt8((*PlgVector)(ptr))
 				case ArrayUInt16:
-					ptrUnsafe = pinT(constructVectorUInt16ToSlice(arg), &pool, size)
-					defer DestroyVectorUInt16((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorUInt16ToSlice(arg), &pool, size)
+					defer DestroyVectorUInt16((*PlgVector)(ptr))
 				case ArrayUInt32:
-					ptrUnsafe = pinT(constructVectorUInt32ToSlice(arg), &pool, size)
-					defer DestroyVectorUInt32((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorUInt32ToSlice(arg), &pool, size)
+					defer DestroyVectorUInt32((*PlgVector)(ptr))
 				case ArrayUInt64:
-					ptrUnsafe = pinT(constructVectorUInt64ToSlice(arg), &pool, size)
-					defer DestroyVectorUInt64((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorUInt64ToSlice(arg), &pool, size)
+					defer DestroyVectorUInt64((*PlgVector)(ptr))
 				case ArrayPointer:
-					ptrUnsafe = pinT(constructVectorPointerToSlice(arg), &pool, size)
-					defer DestroyVectorPointer((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorPointerToSlice(arg), &pool, size)
+					defer DestroyVectorPointer((*PlgVector)(ptr))
 				case ArrayFloat:
-					ptrUnsafe = pinT(constructVectorFloatToSlice(arg), &pool, size)
-					defer DestroyVectorFloat((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorFloatToSlice(arg), &pool, size)
+					defer DestroyVectorFloat((*PlgVector)(ptr))
 				case ArrayDouble:
-					ptrUnsafe = pinT(constructVectorDoubleToSlice(arg), &pool, size)
-					defer DestroyVectorDouble((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorDoubleToSlice(arg), &pool, size)
+					defer DestroyVectorDouble((*PlgVector)(ptr))
 				case ArrayString:
-					ptrUnsafe = pinT(constructVectorStringToSlice(arg), &pool, size)
-					defer DestroyVectorString((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorStringToSlice(arg), &pool, size)
+					defer DestroyVectorString((*PlgVector)(ptr))
 				case ArrayAny:
-					ptrUnsafe = pinT(constructVectorVariantToSlice(arg), &pool, size)
-					defer DestroyVectorVariant((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorVariantToSlice(arg), &pool, size)
+					defer DestroyVectorVariant((*PlgVector)(ptr))
 				case ArrayVector2:
-					ptrUnsafe = pinT(constructVectorVector2ToSlice(arg), &pool, size)
-					defer DestroyVectorVector2((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorVector2ToSlice(arg), &pool, size)
+					defer DestroyVectorVector2((*PlgVector)(ptr))
 				case ArrayVector3:
-					ptrUnsafe = pinT(constructVectorVector3ToSlice(arg), &pool, size)
-					defer DestroyVectorVector3((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorVector3ToSlice(arg), &pool, size)
+					defer DestroyVectorVector3((*PlgVector)(ptr))
 				case ArrayVector4:
-					ptrUnsafe = pinT(constructVectorVector4ToSlice(arg), &pool, size)
-					defer DestroyVectorVector4((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorVector4ToSlice(arg), &pool, size)
+					defer DestroyVectorVector4((*PlgVector)(ptr))
 				case ArrayMatrix4x4:
-					ptrUnsafe = pinT(constructVectorMatrix4x4ToSlice(arg), &pool, size)
-					defer DestroyVectorMatrix4x4((*PlgVector)(ptrUnsafe))
+					ptr = pinT(constructVectorMatrix4x4ToSlice(arg), &pool, size)
+					defer DestroyVectorMatrix4x4((*PlgVector)(ptr))
 				default:
 					panicker(fmt.Sprintf("GetDelegateForFunctionPointer parameter type not supported %v", vt))
 				}
 			}
-			params[index] = (uint64)(uintptr(ptrUnsafe))
+			params[index] = (uint64)(uintptr(ptr))
 			index++
 		}
 
@@ -1088,7 +1088,7 @@ func setObjReturn(vt valueType, r *C.Return, ret reflect.Value) {
 	case Void:
 		// Do nothing
 	case Bool:
-		setReturn(r, ret.Bool())
+		setReturn(r, bool(ret.Bool()))
 	case Char8:
 		setReturn(r, int8(ret.Int()))
 	case Char16:
