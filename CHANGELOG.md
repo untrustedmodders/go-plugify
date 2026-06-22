@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.1](https://github.com/untrustedmodders/go-plugify/compare/v1.10.0...v1.10.1) (2026-06-22)
+
+
+### Bug Fixes
+
+* callback param name and description not generated & plugify not exported at autoexports.go (2) ([645eddd](https://github.com/untrustedmodders/go-plugify/commit/645eddd7dbffa32226bcbecfc8da62a2298e1ca1))
+* improvements for marshalling ([a0a6da4](https://github.com/untrustedmodders/go-plugify/commit/a0a6da44b692f214ddf099b01993d11522d6086d))
+* more rework for plugin system ([1d12060](https://github.com/untrustedmodders/go-plugify/commit/1d1206064b04cdc0cf3c195b8d442024fe1839e9))
+* more rework for plugin system (2) ([087246a](https://github.com/untrustedmodders/go-plugify/commit/087246a523cda00906dc6c02228aa49a3965fafd))
+* more rework for plugin system (3) ([73868ec](https://github.com/untrustedmodders/go-plugify/commit/73868ec8fc522dbda0a5b156b9cc8e0395d2536b))
+* some code cleanup ([299ca90](https://github.com/untrustedmodders/go-plugify/commit/299ca907aa3c253468690358d50356c6752afb7e))
+* use cap for slice size ([3348cca](https://github.com/untrustedmodders/go-plugify/commit/3348cca709aaae2b1802e09d5f642f5f02b50056))
+
 ## [1.10.0](https://github.com/untrustedmodders/go-plugify/compare/v1.9.1...v1.10.0) (2026-06-20)
 
 
