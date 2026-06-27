@@ -23,9 +23,12 @@ func (g *Package) generateAutoExports(path string) error {
 	"github.com/untrustedmodders/go-plugify"`)
 
 	for _, imp := range g.imports {
-
 		var impName string
 		if imp.name != "" {
+			if imp.name == "plugify" {
+				continue
+			}
+
 			impName = imp.name + " "
 		}
 
