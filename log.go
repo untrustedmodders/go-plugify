@@ -48,7 +48,7 @@ func Scope(name string, mod string, skip int) func() {
 	var handle C.ZoneHandle
 
 	if isProfiling {
-		handle = C.Plugify_BeginZone(name, C.ptrdiff_t(line), file, funk)
+		handle = C.Plugify_BeginZone(name, C.ptrdiff_t(line), file, funk, mod)
 	}
 
 	if isLogging {

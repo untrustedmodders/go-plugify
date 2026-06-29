@@ -118,7 +118,7 @@ extern String Plugify_GetCacheDir();
 extern bool Plugify_IsLoaded(_GoString_ name, _GoString_ constraint);
 extern void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoString_ file, _GoString_ func, _GoString_ module);
 extern bool Plugify_IsLogging();
-extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func);
+extern ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func, _GoString_ module);
 extern void Plugify_EndZone(ZoneHandle handle);
 extern bool Plugify_IsProfiling();
 

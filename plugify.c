@@ -29,7 +29,7 @@ String (*GetCacheDir)() = NULL;
 bool (*IsLoaded)(_GoString_, _GoString_) = NULL;
 void (*Log)(_GoString_, Severity, ptrdiff_t, _GoString_, _GoString_, _GoString_) = NULL;
 bool (*IsLogging)() = NULL;
-ZoneHandle (*BeginZone)(_GoString_, ptrdiff_t, _GoString_, _GoString_) = NULL;
+ZoneHandle (*BeginZone)(_GoString_, ptrdiff_t, _GoString_, _GoString_, _GoString_) = NULL;
 void (*EndZone)(ZoneHandle) = NULL;
 bool (*IsProfiling)() = NULL;
 
@@ -202,7 +202,7 @@ void Plugify_Log(_GoString_ message, Severity severity, ptrdiff_t line, _GoStrin
 // Function to call IsLogging
 bool Plugify_IsLogging() { return IsLogging(); }
 // Function to call BeginZone
-ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func) { return BeginZone(name, line, file, func); }
+ZoneHandle Plugify_BeginZone(_GoString_ name, ptrdiff_t line, _GoString_ file, _GoString_ func, _GoString_ module) { return BeginZone(name, line, file, func, module); }
 // Function to call EndZone
 void Plugify_EndZone(ZoneHandle handle) { return EndZone(handle); }
 // Function to call IsProfiling
@@ -373,7 +373,7 @@ void Plugify_SetGetCacheDir(void* ptr) { GetCacheDir = (String (*)()) ptr; }
 void Plugify_SetIsLoaded(void* ptr) { IsLoaded = (bool (*)(_GoString_, _GoString_)) ptr; }
 void Plugify_SetLog(void* ptr) { Log = (void (*)(_GoString_, Severity, ptrdiff_t, _GoString_, _GoString_, _GoString_)) ptr; }
 void Plugify_SetIsLogging(void* ptr) { IsLogging = (bool (*)()) ptr; }
-void Plugify_SetBeginZone(void* ptr) { BeginZone = (ZoneHandle (*)(_GoString_, ptrdiff_t, _GoString_, _GoString_)) ptr; }
+void Plugify_SetBeginZone(void* ptr) { BeginZone = (ZoneHandle (*)(_GoString_, ptrdiff_t, _GoString_, _GoString_, _GoString_)) ptr; }
 void Plugify_SetEndZone(void* ptr) { EndZone = (void (*)(ZoneHandle)) ptr; }
 void Plugify_SetIsProfiling(void* ptr) { IsProfiling = (bool (*)()) ptr; }
 void Plugify_SetGetPlugin(void* ptr) { GetPlugin = (PluginHandle (*)(_GoString_)) ptr; }
