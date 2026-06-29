@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.2](https://github.com/untrustedmodders/go-plugify/compare/v1.10.1...v1.10.2) (2026-06-29)
+
+
+### Bug Fixes
+
+* prevent adding two same imports ([58e4716](https://github.com/untrustedmodders/go-plugify/commit/58e47167d51d5a348d44fbb0da8f46e19858e20a))
+* trigger release pipeline ([d7c3592](https://github.com/untrustedmodders/go-plugify/commit/d7c3592cba3b4d218e2cafbf1211c88dd54ac8b4))
+* update profiler ([31c7764](https://github.com/untrustedmodders/go-plugify/commit/31c776424bad7bf22a853a1d10d053a671ca0a91))
+
 ## [1.10.1](https://github.com/untrustedmodders/go-plugify/compare/v1.10.0...v1.10.1) (2026-06-22)
 
 
