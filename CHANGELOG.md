@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.3](https://github.com/untrustedmodders/go-plugify/compare/v1.10.2...v1.10.3) (2026-07-02)
+
+
+### Bug Fixes
+
+* Any type unaddressable reflect panic ([84c59c9](https://github.com/untrustedmodders/go-plugify/commit/84c59c9f2e48be4556bbcbf1caef2fafe97af0f3))
+
 ## [1.10.2](https://github.com/untrustedmodders/go-plugify/compare/v1.10.1...v1.10.2) (2026-06-29)
 
 
