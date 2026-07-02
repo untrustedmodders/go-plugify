@@ -954,7 +954,7 @@ func paramToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) re
 		val.SetString(GetStringData[string](getArgument[*PlgString](p, i)))
 		return val
 	case Any:
-		val := reflect.New(t)
+		val := reflect.New(t).Elem()
 		data := GetVariantData(getArgument[*PlgVariant](p, i))
 		if data != nil {
 			val.Set(reflect.ValueOf(data))
