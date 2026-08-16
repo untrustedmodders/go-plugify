@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.10.4](https://github.com/untrustedmodders/go-plugify/compare/v1.10.3...v1.10.4) (2026-08-16)
+
+
+### Bug Fixes
+
+* improve duplicate validation ([3a51dd3](https://github.com/untrustedmodders/go-plugify/commit/3a51dd36c5adc95f8e9e62486200219b422f08ec))
+* rework manifest generation ([8b7deaf](https://github.com/untrustedmodders/go-plugify/commit/8b7deaf52345afc043cd76ed076299a95ad40152))
+* small refactor ([e2826c4](https://github.com/untrustedmodders/go-plugify/commit/e2826c4e9734ac7e0b280d656c1ff7a8aa0f8dcc))
+
 ## [1.10.3](https://github.com/untrustedmodders/go-plugify/compare/v1.10.2...v1.10.3) (2026-07-02)
 
 
