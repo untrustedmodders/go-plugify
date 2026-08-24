@@ -181,7 +181,10 @@ func generateWrapper(fn ExportedFunction) string {
 				if param.Type.IsRef {
 					deref = ""
 				}
-				callParams = append(callParams, fmt.Sprintf("%s(*%s%s)(unsafe.Pointer(%s))", deref, importName, goType, name))
+				// goType is already package-qualified (mapToGoTypeBasic returns
+				// "plugify.VectorN"/"plugify.Matrix4x4" directly), so prepending
+				// importName here doubled it into "plugify.plugify.VectorN".
+				callParams = append(callParams, fmt.Sprintf("%s(*%s)(unsafe.Pointer(%s))", deref, goType, name))
 			case param.Type.IsArray:
 				var elemTypeName string
 				if param.Type.ElemType != nil {
