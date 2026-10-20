@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.6](https://github.com/untrustedmodders/go-plugify/compare/v1.10.5...v1.10.6) (2026-10-20)
+
+
+### Bug Fixes
+
+* `use [@return](https://github.com/return) description for method return type` ([fa4776c](https://github.com/untrustedmodders/go-plugify/commit/fa4776ce20b547f499554d456c4da3b628f35be9))
+
 ## [1.10.5](https://github.com/untrustedmodders/go-plugify/compare/v1.10.4...v1.10.5) (2026-10-20)
 
 
