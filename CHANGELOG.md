@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.5](https://github.com/untrustedmodders/go-plugify/compare/v1.10.4...v1.10.5) (2026-10-20)
+
+
+### Bug Fixes
+
+* duplicate subpackage exports and missing named type casts ([fe57945](https://github.com/untrustedmodders/go-plugify/commit/fe57945b993f99ce101a7fbe32ff5dbac73a036d))
+* nil delegate and vector4 array marshalling ([adee3e0](https://github.com/untrustedmodders/go-plugify/commit/adee3e05525b45d69137b6fae42925b4ce56c910))
+
 ## [1.10.4](https://github.com/untrustedmodders/go-plugify/compare/v1.10.3...v1.10.4) (2026-08-16)
 
 
