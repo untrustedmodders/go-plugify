@@ -997,7 +997,7 @@ func paramToObject(vt valueType, t reflect.Type, p *C.Parameters, i C.size_t) re
 	case ArrayVector3:
 		return getVectorDataVector3Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayVector4:
-		return getVectorDataVector3Reflect(getArgument[*PlgVector](p, i), t)
+		return getVectorDataVector4Reflect(getArgument[*PlgVector](p, i), t)
 	case ArrayMatrix4x4:
 		return getVectorDataMatrix4x4Reflect(getArgument[*PlgVector](p, i), t)
 	case Vector2Type:
@@ -1231,6 +1231,10 @@ func GetFunctionPointerForDelegate(fn any) unsafe.Pointer {
 	fnVal := reflect.ValueOf(fn)
 	if fnVal.Kind() != reflect.Func {
 		panicker("expected a function")
+	}
+
+	if fnVal.IsNil() {
+		return nil
 	}
 
 	fnType := fnVal.Type()
