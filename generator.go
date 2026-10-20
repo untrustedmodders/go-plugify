@@ -43,22 +43,16 @@ func Generate(
 		return err
 	}
 
-	var exports []generator.ExportedFunction
 	for _, gen := range gens {
-		pkgExports, err := gen.Generate(mainGen)
-		if err != nil {
+		if err := gen.Generate(mainGen); err != nil {
 			return fmt.Errorf("failed to generate package %s: %w", gen.Pkg.Name, err)
 		}
-
-		exports = append(exports, pkgExports...)
 	}
 
-	pkgExports, err := mainGen.GenerateMain()
+	exports, err := mainGen.GenerateMain()
 	if err != nil {
 		return fmt.Errorf("failed to generate main package: %w", err)
 	}
-
-	exports = append(exports, pkgExports...)
 
 	if pluginName == "" {
 		pluginName = mainGen.Pkg.Name

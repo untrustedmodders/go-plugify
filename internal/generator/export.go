@@ -84,7 +84,7 @@ func generateWrapper(fn ExportedFunction) string {
 			switch param.Type.TypeString {
 			case "any":
 				var castType string
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					castType = importName + param.Type.EnumTypeName + "("
 				}
 
@@ -97,7 +97,7 @@ func generateWrapper(fn ExportedFunction) string {
 				assignBack = append(assignBack, fmt.Sprintf("\tplugify.AssignVariant(%s, %s)\n", castName, tempVar))
 			case "string":
 				typeName := "[string]"
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					typeName = fmt.Sprintf("[%s%s]", importName, param.Type.EnumTypeName)
 				}
 				tempVars = append(tempVars, fmt.Sprintf("\t%s := plugify.GetStringData%s(%s)\n", tempVar, typeName, castName))
@@ -108,7 +108,7 @@ func generateWrapper(fn ExportedFunction) string {
 					// Type name of elements
 					var elemTypeName string
 					if param.Type.ElemType != nil {
-						if param.Type.ElemType.IsEnum {
+						if param.Type.ElemType.isNamed {
 							elemTypeName = getImportName(param.Type.ElemType.packageImport) + param.Type.ElemType.EnumTypeName
 						} else {
 							elemTypeName = param.Type.ElemType.GoBaseType
@@ -117,7 +117,7 @@ func generateWrapper(fn ExportedFunction) string {
 
 					// Type name of array itself
 					var typeName string
-					if param.Type.IsEnum {
+					if param.Type.isNamed {
 						typeName = importName + param.Type.EnumTypeName
 					} else {
 						typeName, _ = strings.CutPrefix(param.Type.GoBaseType, "*")
@@ -131,7 +131,7 @@ func generateWrapper(fn ExportedFunction) string {
 					}
 
 					var cast string
-					if param.Type.IsEnum {
+					if param.Type.isNamed {
 						cast = fmt.Sprintf("(%s%s)(", importName, param.Type.EnumTypeName)
 					}
 
@@ -160,7 +160,7 @@ func generateWrapper(fn ExportedFunction) string {
 				callParams = append(callParams, fmt.Sprintf("plugify.GetDelegateForFunctionPointer(%s, reflect.TypeOf(%s(nil))).(%s)", name, funcName, funcName))
 			case param.Type.TypeString == "any":
 				var castType string
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					castType = importName + param.Type.EnumTypeName + "("
 				}
 
@@ -172,7 +172,7 @@ func generateWrapper(fn ExportedFunction) string {
 				callParams = append(callParams, paramCall)
 			case param.Type.TypeString == "string":
 				typeName := "[string]"
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					typeName = fmt.Sprintf("[%s%s]", importName, param.Type.EnumTypeName)
 				}
 				callParams = append(callParams, fmt.Sprintf("plugify.GetStringData%s(%s)", typeName, castName))
@@ -185,7 +185,7 @@ func generateWrapper(fn ExportedFunction) string {
 			case param.Type.IsArray:
 				var elemTypeName string
 				if param.Type.ElemType != nil {
-					if param.Type.ElemType.IsEnum {
+					if param.Type.ElemType.isNamed {
 						elemTypeName = getImportName(param.Type.ElemType.packageImport) + param.Type.ElemType.EnumTypeName
 					} else {
 						elemTypeName = param.Type.ElemType.GoBaseType
@@ -193,7 +193,7 @@ func generateWrapper(fn ExportedFunction) string {
 				}
 
 				var typeName string
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					typeName = importName + param.Type.EnumTypeName
 				} else {
 					typeName, _ = strings.CutPrefix(param.Type.GoBaseType, "*")
@@ -207,7 +207,7 @@ func generateWrapper(fn ExportedFunction) string {
 				}
 
 				var cast string
-				if param.Type.IsEnum {
+				if param.Type.isNamed {
 					cast = fmt.Sprintf("(%s%s)(", importName, param.Type.EnumTypeName)
 				}
 
@@ -217,7 +217,7 @@ func generateWrapper(fn ExportedFunction) string {
 				}
 
 				callParams = append(callParams, paramCall)
-			case param.Type.IsEnum:
+			case param.Type.isNamed:
 				if param.Type.IsRef {
 					callParams = append(callParams, fmt.Sprintf("(*%s%s)(unsafe.Pointer(%s))", importName, param.Type.EnumTypeName, name))
 				} else {
@@ -252,7 +252,7 @@ func %s(%s)%s {
 		wrapper = append(wrapper, strings.Join(tempVars, ""))
 	}
 
-	wrapper = append(wrapper, fmt.Sprintf("\t%s%s%s(%s)\n", resultDest, fnImportName, fn.ExportName, callParamList))
+	wrapper = append(wrapper, fmt.Sprintf("\t%s%s%s(%s)\n", resultDest, fnImportName, fn.originalFuncName, callParamList))
 
 	if len(assignBack) > 0 {
 		wrapper = append(wrapper, strings.Join(assignBack, ""))
@@ -274,13 +274,13 @@ func %s(%s)%s {
 			wrapper = append(wrapper, fmt.Sprintf("\treturn *(*%s)(unsafe.Pointer(&__result))\n", cType))
 		case fn.ReturnType.IsArray:
 			typeName := ""
-			if fn.ReturnType.ElemType != nil && fn.ReturnType.ElemType.IsEnum {
+			if fn.ReturnType.ElemType != nil && fn.ReturnType.ElemType.isNamed {
 				typeName = fmt.Sprintf("[%s%s]", getImportName(fn.ReturnType.ElemType.packageImport), fn.ReturnType.ElemType.EnumTypeName)
 			}
 			wrapper = append(wrapper,
 				fmt.Sprintf("\t__return := plugify.ConstructVector%s%s(__result)\n", varType, typeName),
 				fmt.Sprintf("\treturn *(*%s)(unsafe.Pointer(&__return))\n", cType))
-		case fn.ReturnType.IsEnum:
+		case fn.ReturnType.isNamed:
 			wrapper = append(wrapper, fmt.Sprintf("\treturn %s(__result)\n", fn.ReturnType.GoBaseType))
 		default:
 			wrapper = append(wrapper, "\treturn __result\n")
@@ -498,14 +498,14 @@ func mapToGoType(typeInfo TypeInfo) string {
 	if typeInfo.IsArray && typeInfo.ElemType != nil {
 		elemType := mapToGoTypeBasic(typeInfo.ElemType.TypeString)
 		// Handle arrays of enums
-		if typeInfo.ElemType.IsEnum {
+		if typeInfo.ElemType.isNamed {
 			return "[]" + typeInfo.ElemType.EnumTypeName
 		}
 		return "[]" + elemType
 	}
 
 	// Handle enum types - use the actual enum type name
-	if typeInfo.IsEnum {
+	if typeInfo.isNamed {
 		return typeInfo.EnumTypeName
 	}
 

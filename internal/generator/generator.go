@@ -29,7 +29,7 @@ type Package struct {
 }
 
 func (g *Package) GenerateMain() ([]ExportedFunction, error) {
-	_, err := g.Generate(nil)
+	err := g.Generate(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -51,48 +51,58 @@ func (g *Package) GenerateMain() ([]ExportedFunction, error) {
 	return g.Exports, nil
 }
 
-func (g *Package) Generate(mainGen *Package) ([]ExportedFunction, error) {
+func (g *Package) Generate(mainGen *Package) error {
 	g.mainPkg = mainGen
 
-	err := g.extractExportedFunctions()
+	exports, err := g.extractExportedFunctions()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if len(g.Exports) == 0 {
+	if len(exports) == 0 {
 		if g.verbose {
 			fmt.Fprintf(os.Stderr, "Warning: No functions with //plugify:export comment found for %s\n", g.Pkg.Dir)
 		}
 
-		return nil, nil
+		return nil
 	}
 
+	target := g
 	if mainGen != nil {
-		for _, exp := range g.Exports {
-			idx := slices.IndexFunc(mainGen.Exports, func(e ExportedFunction) bool {
-				return e.ExportName == exp.ExportName
-			})
-			if idx != -1 {
-
-				exp.FuncName = fmt.Sprintf("%s_%d", exp.FuncName, g.exportsRenameIndex)
-
-				g.exportsRenameIndex++
-
-				if g.verbose {
-					existExport := mainGen.Exports[idx]
-
-					fmt.Fprintf(os.Stderr, "Warning: Name collision:\n\t%s.%s and %s.%s (solved by indexing)\n",
-						existExport.packageImport.path, existExport.ExportName,
-						g.Pkg.PkgPath, exp.ExportName,
-					)
-				}
-			}
-
-			mainGen.Exports = append(mainGen.Exports, exp)
-		}
+		target = mainGen
 	}
 
-	return g.Exports, nil
+	for _, exp := range exports {
+		target.addExport(exp, g.Pkg.PkgPath)
+	}
+
+	return nil
+}
+
+func (g *Package) addExport(exp ExportedFunction, pkgPath string) {
+	baseName := exp.FuncName
+	for {
+		idx := slices.IndexFunc(g.Exports, func(e ExportedFunction) bool {
+			return e.FuncName == exp.FuncName
+		})
+		if idx == -1 {
+			break
+		}
+
+		if g.verbose {
+			existExport := g.Exports[idx]
+
+			fmt.Fprintf(os.Stderr, "Warning: Name collision:\n\t%s.%s and %s.%s (solved by indexing)\n",
+				existExport.packageImport.path, existExport.originalFuncName,
+				pkgPath, exp.originalFuncName,
+			)
+		}
+
+		exp.FuncName = fmt.Sprintf("%s_%d", baseName, g.exportsRenameIndex)
+		g.exportsRenameIndex++
+	}
+
+	g.Exports = append(g.Exports, exp)
 }
 
 type packageImport struct {
@@ -131,7 +141,7 @@ func (g *Package) GetFileLinePosNumber(pos token.Pos) string {
 	return fmt.Sprintf("%d:%d", fpos.Line, fpos.Column)
 }
 
-func (g *Package) extractExportedFunctions() (retErr error) {
+func (g *Package) extractExportedFunctions() (exports []ExportedFunction, retErr error) {
 	for _, file := range g.Pkg.Syntax {
 		ast.Inspect(file, func(n ast.Node) bool {
 			funcDecl, ok := n.(*ast.FuncDecl)
@@ -214,7 +224,7 @@ func (g *Package) extractExportedFunctions() (retErr error) {
 				pkgImport = packageImport{name: importName, path: g.Pkg.PkgPath}
 			}
 
-			g.Exports = append(g.Exports, ExportedFunction{
+			exports = append(exports, ExportedFunction{
 				ExportName:  exportName,
 				FuncName:    "__" + funcDecl.Name.Name,
 				Description: docComment.Description,

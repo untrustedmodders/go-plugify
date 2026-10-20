@@ -47,6 +47,7 @@ type TypeInfo struct {
 	FuncSig       *FuncSignature
 	Description   string
 
+	isNamed       bool
 	packageImport packageImport
 }
 
@@ -307,6 +308,7 @@ func (g *Package) mapTypeInfo(v *types.Var, bt types.Type, typeName string, info
 			}
 
 			typeInfo.EnumValues = findEnumValues(pkg, t.Obj())
+			typeInfo.isNamed = true
 
 			if len(typeInfo.EnumValues) > 0 {
 				typeInfo.IsEnum = true
