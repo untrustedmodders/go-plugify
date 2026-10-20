@@ -13,7 +13,7 @@ go mod init example.com/my-go-plugin
 Note that you need to include the v in the version tag.
 
 ```sh
-go get github.com/untrustedmodders/go-plugify@v1.10.5
+go get github.com/untrustedmodders/go-plugify@v1.10.6
 ```
 
 ```go
