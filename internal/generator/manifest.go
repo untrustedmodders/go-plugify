@@ -112,7 +112,7 @@ func PopulateManifest(m *manifest.Manifest, funcs []ExportedFunction) error {
 			FuncName:    f.FuncName,
 			Description: f.Description,
 			ParamTypes:  tables.convertParams(f.Params),
-			RetType:     tables.convertReturnType(ParamInfo{"", f.ReturnType, f.Description}),
+			RetType:     tables.convertReturnType(ParamInfo{"", f.ReturnType, f.ReturnType.Description}),
 		}
 	}
 
